@@ -1,0 +1,20 @@
+# Python & Virtual Environment
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+*.env
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+
+# Database & Uploads
+*.sqlite3
+*.dump
+uploads/
+
+# System & Log Files
+*.log
+.DS_Store
