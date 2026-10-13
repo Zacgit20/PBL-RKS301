@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}ITCorner.id - Katalog Produk{% endblock %}
+
+{% block content %}
+    <!-- HERO BANNER -->
+    <section class="max-w-7xl mx-auto px-4 mt-6">
+        <div class="bg-[#0F172A] rounded-2xl p-10 flex flex-col md:flex-row items-center justify-between text-white shadow-lg overflow-hidden relative">
+            <div class="max-w-lg z-10">
+                <span class="inline-block bg-white text-blue-600 text-xs font-bold px-3 py-1 rounded-sm mb-4 uppercase tracking-wider">Tingkatkan Produktivitas Anda</span>
+                <h1 class="text-4xl font-bold mb-4 leading-tight">Performa baru.<br>Kemungkinan baru.</h1>
+                <p class="text-slate-300 mb-8 text-sm">Laptop pilihan untuk ide besar Anda. Lebih cepat bekerja, lebih nyaman berkarya.</p>
+                <div class="flex items-center space-x-4">
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg text-sm transition">Temukan laptop Anda →</button>
+                    <span class="text-xs text-slate-400">Mulai Rp5 jutaan</span>
+                </div>
+            </div>
+            <!-- Placeholder Gambar Laptops -->
+            <div class="mt-6 md:mt-0 z-10 w-80 h-48 bg-slate-800 border border-slate-700 rounded-xl flex items-center justify-center text-slate-500 text-sm">
+                [Gambar Laptops]
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="max-w-7xl mx-auto px-4 mt-8 flex justify-between items-center border-b border-slate-200 pb-6">
+        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-50 text-blue-600 rounded flex items-center justify-center">✓</div><div><p class="text-sm font-bold">Produk pilihan</p><p class="text-xs text-slate-500">Spesifikasi jelas, pilihan tepat</p></div></div>
+        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-50 text-blue-600 rounded flex items-center justify-center">✈</div><div><p class="text-sm font-bold">Kirim ke seluruh Indonesia</p><p class="text-xs text-slate-500">Penuhi multi lokasi/kebutuhan</p></div></div>
+        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-50 text-blue-600 rounded flex items-center justify-center">💬</div><div><p class="text-sm font-bold">Bantuan spesialis</p><p class="text-xs text-slate-500">Konsultasi sebelum membeli</p></div></div>
+        <div class="flex items-center space-x-3"><div class="w-8 h-8 bg-blue-50 text-blue-600 rounded flex items-center justify-center">📄</div><div><p class="text-sm font-bold">Pesanan transparan</p><p class="text-xs text-slate-500">Faktur dan status dalam satu akun</p></div></div>
+    </section>
+
+    <!-- MAIN CONTENT (Katalog Produk & Sidebar) -->
+    <div class="max-w-7xl mx-auto px-4 mt-8 flex flex-col md:flex-row gap-8 mb-16">
+        
+        <!-- SIDEBAR FILTER -->
+        <aside class="w-full md:w-1/4">
+            <h2 class="text-2xl font-bold mb-1">Temukan perangkat Anda</h2>
+            <p class="text-sm text-slate-500 mb-6 pb-6 border-b border-slate-200">Pilihan kurasi untuk produktivitas, kreativitas, dan hiburan.</p>
+            
+            <h3 class="font-bold mb-4 text-lg">Filter produk</h3>
+            
+            <!-- Kategori -->
+            <div class="mb-6">
+                <h4 class="font-semibold text-sm mb-3">Kategori</h4>
+                <label class="flex items-center space-x-2 text-sm text-blue-600 mb-2 cursor-pointer font-medium"><input type="radio" checked class="rounded-full text-blue-600"><span>Semua kategori</span></label>
+                <label class="flex items-center space-x-2 text-sm text-slate-600 mb-2 cursor-pointer"><input type="radio" class="rounded-full text-blue-600"><span>Laptop</span></label>
+                <label class="flex items-center space-x-2 text-sm text-slate-600 mb-2 cursor-pointer"><input type="radio" class="rounded-full text-blue-600"><span>Monitor</span></label>
+                <label class="flex items-center space-x-2 text-sm text-slate-600 mb-2 cursor-pointer"><input type="radio" class="rounded-full text-blue-600"><span>Komponen</span></label>
+                <label class="flex items-center space-x-2 text-sm text-slate-600 mb-2 cursor-pointer"><input type="radio" class="rounded-full text-blue-600"><span>Aksesori</span></label>
+            </div>
+
+            <!-- Merek -->
+            <div class="mb-6">
+                <h4 class="font-semibold text-sm mb-3">Merek</h4>
+                <label class="flex items-center space-x-2 text-sm text-slate-600 mb-2 cursor-pointer"><input type="checkbox" class="rounded text-blue-600"><span>ASUS</span></label>
+                <label class="flex items-center space-x-2 text-sm text-slate-600 mb-2 cursor-pointer"><input type="checkbox" class="rounded text-blue-600"><span>Logitech</span></label>
+                <label class="flex items-center space-x-2 text-sm text-slate-600 mb-2 cursor-pointer"><input type="checkbox" class="rounded text-blue-600"><span>Samsung</span></label>
+                <label class="flex items-center space-x-2 text-sm text-slate-600 mb-2 cursor-pointer"><input type="checkbox" class="rounded text-blue-600"><span>Keychron</span></label>
+            </div>
+
+            <!-- Rentang Harga -->
+            <div class="mb-6">
+                <h4 class="font-semibold text-sm mb-3">Rentang harga</h4>
+                <div class="flex justify-between text-xs text-slate-500 mb-2"><span>Minimum: Rp0</span><span>Maksimum: Rp15.000.000</span></div>
+                <div class="w-full h-1 bg-slate-200 rounded mt-2"><div class="w-2/3 h-1 bg-blue-600 rounded"></div></div>
+            </div>
+
+            <!-- Ketersediaan Stok -->
+            <div class="mb-6">
+                <h4 class="font-semibold text-sm mb-3">Ketersediaan stok</h4>
+                <label class="flex items-center space-x-2 text-sm text-slate-600 mb-2 cursor-pointer"><input type="checkbox" class="rounded text-blue-600"><span>Hanya produk tersedia</span></label>
+            </div>
+
+            <button class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg text-sm mb-3 hover:bg-blue-700">Terapkan filter</button>
+            <button class="w-full text-blue-600 text-sm font-semibold hover:underline">Reset semua filter</button>
+        </aside>
+
+        <!-- GRID PRODUK -->
+        <main class="w-full md:w-3/4">
+            <div class="flex justify-between items-end mb-4">
+                <div class="text-sm text-blue-600 font-semibold cursor-pointer text-right w-full mb-10 -mt-16">24 produk tersedia</div>
+            </div>
+            
+            <div class="flex justify-between items-center mb-6 space-x-4">
+                <div class="relative flex-1">
+                    <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <input type="text" placeholder="Cari nama atau spesifikasi produk..." class="w-full border border-slate-300 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                </div>
+                <button class="border border-slate-300 bg-white px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 flex items-center hover:bg-slate-50">Terpopuler <span class="ml-2 text-xs">▼</span></button>
+            </div>
+            
+            <p class="text-xs text-slate-500 mb-4">Menampilkan 1-3 dari 24 produk • Semua kategori</p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                
+                <!-- Produk 1: ASUS Vivobook -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col relative">
+                    <span class="absolute top-4 left-4 bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded">Pilihan terbaik</span>
+                    <div class="bg-slate-100 h-40 rounded-lg mb-4 mt-6 flex items-center justify-center text-slate-400 text-xs">[Gambar Asus]</div>
+                    <p class="text-[10px] text-slate-500 mb-1">ASUS / Laptop</p>
+                    <h3 class="font-bold text-sm mb-1 text-slate-800 leading-tight">ASUS Vivobook 14 A1404</h3>
+                    <p class="text-[10px] text-slate-500 mb-1">Intel Core i3 • 8GB • SSD 512GB</p>
+                    <p class="text-xs text-amber-500 font-semibold mb-2">★ 4.8 <span class="text-slate-400 font-normal">· 128 ulasan</span></p>
+                    <p class="text-lg font-extrabold mb-4 mt-auto">Rp8.499.000</p>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-emerald-600 text-xs font-semibold">Stok 12</span>
+                        <a href="/detail" class="border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold py-1.5 px-3 rounded-lg text-xs transition text-center">Lihat Detail</a>
+                    </div>
+                </div>
+
+                <!-- Produk 2: Logitech Mouse -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col relative">
+                    <span class="absolute top-4 left-4 bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded">Siap dikirim</span>
+                    <div class="bg-slate-100 h-40 rounded-lg mb-4 mt-6 flex items-center justify-center text-slate-400 text-xs">[Gambar Logitech]</div>
+                    <p class="text-[10px] text-slate-500 mb-1">Logitech / Aksesori</p>
+                    <h3 class="font-bold text-sm mb-1 text-slate-800 leading-tight">Logitech M331 Silent</h3>
+                    <p class="text-[10px] text-slate-500 mb-1">Wireless • Silent click • Black</p>
+                    <p class="text-xs text-amber-500 font-semibold mb-2">★ 4.9 <span class="text-slate-400 font-normal">· 86 ulasan</span></p>
+                    <p class="text-lg font-extrabold mb-4 mt-auto">Rp249.000</p>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-emerald-600 text-xs font-semibold">Stok 38</span>
+                        <button class="border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold py-1.5 px-3 rounded-lg text-xs transition">+ Tambah</button>
+                    </div>
+                </div>
+
+                <!-- Produk 3: Samsung Monitor -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col relative">
+                    <span class="absolute top-4 left-4 bg-blue-50 text-blue-600 text-[10px] font-bold px-2 py-0.5 rounded">Siap dikirim</span>
+                    <div class="bg-slate-100 h-40 rounded-lg mb-4 mt-6 flex items-center justify-center text-slate-400 text-xs">[Gambar Monitor]</div>
+                    <p class="text-[10px] text-slate-500 mb-1">Samsung / Monitor</p>
+                    <h3 class="font-bold text-sm mb-1 text-slate-800 leading-tight">Samsung Monitor 24" S24R</h3>
+                    <p class="text-[10px] text-slate-500 mb-1">Full HD • IPS • 75Hz</p>
+                    <p class="text-xs text-amber-500 font-semibold mb-2">★ 4.8 <span class="text-slate-400 font-normal">· 64 ulasan</span></p>
+                    <p class="text-lg font-extrabold mb-4 mt-auto">Rp1.699.000</p>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-emerald-600 text-xs font-semibold">Stok 5</span>
+                        <button class="border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold py-1.5 px-3 rounded-lg text-xs transition">+ Tambah</button>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Pagination -->
+            <div class="flex justify-center mt-10 space-x-2">
+                <button class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-sm hover:bg-slate-50">←</button>
+                <button class="w-8 h-8 rounded bg-blue-600 text-white font-bold flex items-center justify-center text-sm">1</button>
+                <button class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-sm hover:bg-slate-50">2</button>
+                <button class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-sm hover:bg-slate-50">3</button>
+                <button class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-sm hover:bg-slate-50">→</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- BOTTOM BANNERS -->
+    <div class="max-w-7xl mx-auto px-4 mb-16 flex flex-col md:flex-row gap-6">
+        <div class="flex-1 bg-[#F1F5F9] p-8 rounded-2xl border border-blue-100">
+            <p class="text-blue-600 text-[10px] font-bold uppercase tracking-wider mb-2">Setup yang Lebih Nyaman</p>
+            <h3 class="text-2xl font-bold mb-3">Detail kecil. Dampak besar.</h3>
+            <p class="text-slate-500 text-sm mb-6">Lengkapi meja kerja dengan monitor, keyboard, dan mouse pilihan.</p>
+            <button class="bg-white border border-slate-300 font-semibold py-2 px-5 rounded-lg text-sm shadow-sm">Jelajahi aksesori</button>
+        </div>
+        <div class="flex-1 bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+            <p class="text-blue-600 text-[10px] font-bold uppercase tracking-wider mb-2">Masih Bingung Memilih?</p>
+            <h3 class="text-2xl font-bold mb-3">Ceritakan kebutuhan Anda.</h3>
+            <p class="text-slate-500 text-sm mb-6">Tim kami membantu membandingkan spesifikasi dan menyesuaikan anggaran.</p>
+            <button class="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg text-sm shadow-sm">Konsultasi via WhatsApp</button>
+        </div>
+    </div>
+{% endblock %}
