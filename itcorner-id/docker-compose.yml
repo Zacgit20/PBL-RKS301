@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # 1. Layanan Aplikasi Web (Flask + Gunicorn)
+  web:
+    build: .
+    container_name: itcorner_web
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=itcorner-db
+      - DB_USER=postgres
+      - DB_PASSWORD=postgrespassword
+    depends_on:
+      - db
+    restart: always
+
+  # 2. Layanan Basis Data (PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: itcorner_db
+    environment:
+      - POSTGRES_DB=itcorner-db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+# 3. Penyimpanan Data Persisten untuk PostgreSQL
+volumes:
+  postgres_data:
