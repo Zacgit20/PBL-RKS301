@@ -28,11 +28,37 @@ def login():
         
     return render_template('login.html', email_error=email_error, password_error=password_error, rate_limit_error=rate_limit_error)
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST']) 
 def register():
+    form_error = None
+
     if request.method == 'POST':
+        # Ambil data dari form
+        fullname = request.form.get('fullname', '').strip()
+        email = request.form.get('email', '').strip()
+        phone = request.form.get('phone', '').strip()
+        password = request.form.get('password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+        terms = request.form.get('terms')
+
+        # Validasi 1: Cek jika ada kolom yang kosong
+        if not fullname or not email or not phone or not password or not confirm_password:
+            form_error = "Harap isi semua kolom pendaftaran terlebih dahulu."
+            return render_template('register.html', form_error=form_error)
+
+        # Validasi 2: Cek apakah kata sandi dan konfirmasi kata sandi cocok
+        if password != confirm_password:
+            form_error = "Konfirmasi kata sandi tidak cocok."
+            return render_template('register.html', form_error=form_error)
+        # 3. Cek jika centangnya sengaja dihilangkan user
+        if not terms:
+            form_error = "Anda harus menyetujui Syarat & Ketentuan terlebih dahulu."
+            return render_template('register.html', form_error=form_error)
+
+        # Jika semua data sudah diisi dan valid, baru diproses ke halaman login
         return redirect(url_for('login'))
-    return render_template('register.html')
+
+    return render_template('register.html', form_error=form_error)
 
 @app.route('/detail')
 def detail():
