@@ -35,3 +35,17 @@ document.addEventListener('DOMContentLoaded', function () {
     setupRegisterToggle('togglePassword1', 'password');
     setupRegisterToggle('togglePassword2', 'confirm_password');
 });
+// penambahan script untuk menambahkan produk ke keranjang
+let totalKeranjang = 0;
+
+function tambahKeKeranjang(namaProduk) {
+    totalKeranjang++;
+    
+    // Update angka di navbar secara otomatis
+    const badgeCount = document.getElementById('cart-count');
+    if (badgeCount) {
+        badgeCount.innerText = totalKeranjang;
+    }
+
+    alert(namaProduk + " berhasil ditambahkan ke keranjang!");
+}

@@ -103,6 +103,9 @@ def reset_password():
             return redirect(url_for('login'))
 
     return render_template('reset_password.html', password_error=password_error, confirm_error=confirm_error)
+@app.route('/cart')
+def cart():
+    return render_template('cart.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

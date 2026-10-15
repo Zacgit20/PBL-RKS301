@@ -7,6 +7,7 @@
     <!-- Memanggil Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-[#F8FAFC] font-sans text-slate-800 m-0 flex flex-col min-h-screen">
 
     <!-- TOP BAR (Paling atas) -->
@@ -16,46 +17,79 @@
             <span>Bantuan belanja • WhatsApp 0812-8000-2026</span>
         </div>
     </div>
-
-    <!-- MAIN HEADER / NAVBAR -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
-            <!-- Logo -->
-            <a href="{{ url_for('home') }}" class="text-2xl font-extrabold text-blue-600 tracking-tighter">
-                ITCorner<span class="text-slate-800">.id</span>
-            </a>
+    <!-- HEADER NAVBAR UTAMA -->
+<header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4">
+        
+        <!-- BARIS 1: Logo, Search Bar, & Akun/Keranjang -->
+        <div class="flex items-center justify-between gap-6 py-4">
             
-            <!-- Search Bar -->
-            <div class="hidden md:flex flex-1 mx-8 relative">
-                <svg class="w-4 h-4 absolute left-3 top-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" placeholder="Cari laptop, monitor, atau aksesori favoritmu" 
-                       class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-                <span class="absolute right-3 top-2.5 text-xs text-slate-400">⌘ K</span>
-            </div>
+            <!-- Logo -->
+            <a href="{{ url_for('home') }}" class="text-2xl font-bold text-slate-900 tracking-tight flex-shrink-0">
+                ITCorner<span class="text-blue-600">.id</span>
+            </a>
 
-            <!-- Akun & Keranjang -->
-            <div class="flex items-center space-x-6 text-sm font-semibold">
-                <a href="/login" class="hover:text-blue-600">Akun saya</a>
-                <a href="#" class="hover:text-blue-600 flex items-center">
-                    <svg class="w-5 h-5 mr-1 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    <span class="text-blue-600">3</span>
+            <!-- Search Bar (Lebar & Ditengah) -->
+            <form action="{{ url_for('home') }}" method="GET" class="flex-1 max-w-2xl relative">
+                <input type="text" name="q" placeholder="Cari laptop, monitor, atau aksesori favoritmu..." 
+                       value="{{ request.args.get('q', '') }}"
+                       class="w-full bg-slate-100 border border-transparent rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:bg-white focus:border-blue-500 transition">
+                
+                <!-- Icon Kaca Pembesar -->
+                <svg class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </form>
+
+            <!-- Menu Kanan: Akun & Keranjang -->
+            <div class="flex items-center space-x-6 flex-shrink-0">
+                <a href="{{ url_for('login') }}" class="text-slate-700 hover:text-blue-600 font-semibold text-sm transition">
+                    Akun saya
+                </a>
+
+                <!-- Link Keranjang -->
+                <a href="{{ url_for('cart') }}" class="flex items-center space-x-2 text-slate-700 hover:text-blue-600 font-semibold text-sm transition">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"></path>
+                    </svg>
+                    <span id="cart-count" class="bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        0
+                    </span>
                 </a>
             </div>
+
         </div>
-        
-        <!-- SUB MENU -->
-        <div class="max-w-7xl mx-auto px-4 py-3 flex space-x-6 text-sm text-slate-600 font-medium border-t border-slate-100">
-            <a href="{{ url_for('home') }}" class="text-blue-600 border-b-2 border-blue-600 pb-1">Semua produk</a>
-            <a href="#" class="hover:text-blue-600">Laptop</a>
-            <a href="#" class="hover:text-blue-600">Komputer & komponen</a>
-            <a href="#" class="hover:text-blue-600">Monitor</a>
-            <a href="#" class="hover:text-blue-600">Aksesori</a>
-            <a href="#" class="hover:text-blue-600">Audio</a>
-            <div class="flex-grow text-right">
-                <a href="#" class="text-blue-600 font-semibold hover:underline">Promo pilihan →</a>
+
+        <!-- BARIS 2: Menu Kategori Produk (Di Bawah Search Bar) -->
+        <nav class="flex items-center justify-between border-t border-slate-100 text-sm font-medium pt-3 pb-2 overflow-x-auto">
+            <div class="flex items-center space-x-8">
+                <a href="{{ url_for('home') }}" class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-2">
+                    Semua produk
+                </a>
+                <a href="{{ url_for('home', category='laptop') }}" class="text-slate-600 hover:text-blue-600 pb-2 transition">
+                    Laptop
+                </a>
+                <a href="{{ url_for('home', category='komponen') }}" class="text-slate-600 hover:text-blue-600 pb-2 transition">
+                    Komputer & komponen
+                </a>
+                <a href="{{ url_for('home', category='monitor') }}" class="text-slate-600 hover:text-blue-600 pb-2 transition">
+                    Monitor
+                </a>
+                <a href="{{ url_for('home', category='aksesori') }}" class="text-slate-600 hover:text-blue-600 pb-2 transition">
+                    Aksesori
+                </a>
+                <a href="{{ url_for('home', category='audio') }}" class="text-slate-600 hover:text-blue-600 pb-2 transition">
+                    Audio
+                </a>
             </div>
-        </div>
-    </header>
+
+            <a href="{{ url_for('home', promo='true') }}" class="text-blue-600 hover:underline font-semibold pb-2 flex-shrink-0">
+                Promo pilihan →
+            </a>
+        </nav>
+
+    </div>
+</header>
 
     <!-- TEMPAT KONTEN DINAMIS (Isi halaman lain akan masuk otomatis ke sini) -->
     <main class="flex-grow">

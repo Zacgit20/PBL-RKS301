@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}ITCorner.id - Keranjang Belanja{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    
+    <!-- Title & Breadcrumb -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-900">Keranjang Belanja</h1>
+        <p class="text-sm text-slate-500 mt-1">Tinjau item yang dipilih sebelum melanjutkan ke pembayaran.</p>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-8">
+        
+        <!-- Daftar Produk di Keranjang -->
+        <div class="w-full lg:w-2/3 space-y-4">
+            
+            <!-- Item 1 Placeholder -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between gap-4">
+                <div class="w-20 h-20 bg-slate-100 rounded-lg flex items-center justify-center text-xs text-slate-400 flex-shrink-0">
+                    [Gambar]
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[10px] text-slate-500 uppercase font-semibold">Logitech / Aksesori</p>
+                    <h3 class="font-bold text-slate-800 text-sm truncate">Logitech M331 Silent</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Wireless • Black</p>
+                    <p class="text-sm font-extrabold text-slate-900 mt-2">Rp249.000</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center border border-slate-300 rounded-lg overflow-hidden">
+                        <button class="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold text-sm">-</button>
+                        <span class="px-3 py-1 text-xs font-semibold text-slate-800 bg-white">1</span>
+                        <button class="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold text-sm">+</button>
+                    </div>
+                    <button class="text-red-500 hover:text-red-700 text-xs font-semibold p-1">Hapus</button>
+                </div>
+            </div>
+
+            <!-- Item 2 Placeholder -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between gap-4">
+                <div class="w-20 h-20 bg-slate-100 rounded-lg flex items-center justify-center text-xs text-slate-400 flex-shrink-0">
+                    [Gambar]
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-[10px] text-slate-500 uppercase font-semibold">Samsung / Monitor</p>
+                    <h3 class="font-bold text-slate-800 text-sm truncate">Samsung Monitor 24" S24R</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Full HD • IPS • 75Hz</p>
+                    <p class="text-sm font-extrabold text-slate-900 mt-2">Rp1.699.000</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center border border-slate-300 rounded-lg overflow-hidden">
+                        <button class="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold text-sm">-</button>
+                        <span class="px-3 py-1 text-xs font-semibold text-slate-800 bg-white">1</span>
+                        <button class="px-2.5 py-1 text-slate-600 hover:bg-slate-100 font-bold text-sm">+</button>
+                    </div>
+                    <button class="text-red-500 hover:text-red-700 text-xs font-semibold p-1">Hapus</button>
+                </div>
+            </div>
+
+            <!-- Tombol Kembali Belanja -->
+            <div class="pt-4">
+                <a href="{{ url_for('home') }}" class="text-sm font-semibold text-blue-600 hover:underline">
+                    ← Kembali pilih perangkat lain
+                </a>
+            </div>
+        </div>
+
+        <!-- Ringkasan Belanja & Checkout -->
+        <div class="w-full lg:w-1/3">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm sticky top-24">
+                <h2 class="text-lg font-bold text-slate-900 mb-4 pb-3 border-b border-slate-100">Ringkasan Pesanan</h2>
+                
+                <div class="space-y-3 text-sm text-slate-600 mb-6">
+                    <div class="flex justify-between">
+                        <span>Total Harga (2 barang)</span>
+                        <span class="font-semibold text-slate-800">Rp1.948.000</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Estimasi Ongkos Kirim</span>
+                        <span class="text-emerald-600 font-semibold">Gratis</span>
+                    </div>
+                    <div class="border-t border-slate-100 pt-3 flex justify-between font-bold text-slate-900 text-base">
+                        <span>Total Bayar</span>
+                        <span class="text-blue-600">Rp1.948.000</span>
+                    </div>
+                </div>
+
+                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-md shadow-blue-500/10">
+                    Lanjut ke Pembayaran
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
