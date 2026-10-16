@@ -1,0 +1,13 @@
+# Framework Web & Application Server
+Flask==3.0.0
+gunicorn==21.2.0
+
+# Database Driver untuk PostgreSQL
+psycopg2-binary==2.9.9
+
+# Utility & Validasi Form
+email-validator==2.1.0
+
+# Security & Testing (DevSecOps)
+pytest==7.4.3
+bandit==1.7.5
