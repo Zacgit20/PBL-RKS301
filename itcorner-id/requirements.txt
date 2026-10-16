@@ -11,3 +11,4 @@ email-validator==2.1.0
 # Security & Testing (DevSecOps)
 pytest==7.4.3
 bandit==1.7.5
+pip-audit==2.7.3
