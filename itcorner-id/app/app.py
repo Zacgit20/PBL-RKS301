@@ -1,6 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, session, url_for
 
 app = Flask(__name__)
+
+# TAMBAHKAN BARIS INI (bebas isi string kunci rahasianya):
+app.secret_key = 'itcorner_secret_key_bebas_diisi_bebas'
 
 @app.route('/')
 def home():
@@ -24,9 +27,19 @@ def login():
             password_error = "Password wajib diisi."
         # 2. Jika kedua kolom sudah diisi, baru diproses ke halaman selanjutnya/home
         if email and password:
+            session['user_id'] = 1
+            session['user_name'] = email
             return redirect(url_for('home'))
         
     return render_template('login.html', email_error=email_error, password_error=password_error, rate_limit_error=rate_limit_error)
+
+@app.route('/logout')
+def logout():
+    # Hapus semua data login yang tersimpan di session
+    session.clear()
+    
+    # Kembalikan pengguna ke halaman utama
+    return redirect(url_for('home'))
 
 @app.route('/register', methods=['GET', 'POST']) 
 def register():
@@ -106,6 +119,10 @@ def reset_password():
 @app.route('/cart')
 def cart():
     return render_template('cart.html')
+
+@app.route('/profile')
+def profile():
+    return render_template('profile.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
