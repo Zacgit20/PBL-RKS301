@@ -1,0 +1,104 @@
+erDiagram
+    users ||--o{ cart_items : "memiliki"
+    users ||--o{ orders : "membuat"
+    users ||--o{ reviews : "menulis"
+    users ||--o{ payments : "memverifikasi"
+
+    categories ||--o{ products : "memiliki"
+
+    products ||--o{ cart_items : "ada di"
+    products ||--o{ order_items : "ada di"
+    products ||--o{ reviews : "dinilai"
+
+    orders ||--|{ order_items : "berisi"
+    orders ||--|| payments : "dibayar dengan"
+
+    users {
+        int id PK
+        string username UK
+        string email UK
+        string password_hash
+        string full_name
+        string phone
+        text address
+        string avatar_filename
+        string role
+        boolean is_active
+        int failed_login_attempts
+        timestamp locked_until
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    categories {
+        int id PK
+        string name UK
+        string slug UK
+        text description
+        timestamp created_at
+    }
+
+    products {
+        int id PK
+        int category_id FK
+        string name
+        string brand
+        text description
+        text technical_specs
+        decimal price
+        int stock
+        string image_filename
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    cart_items {
+        int id PK
+        int user_id FK
+        int product_id FK
+        int quantity
+        timestamp created_at
+    }
+
+    orders {
+        int id PK
+        string invoice_number UK
+        int user_id FK
+        text shipping_address
+        decimal total_amount
+        string status
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    order_items {
+        int id PK
+        int order_id FK
+        int product_id FK
+        int quantity
+        decimal unit_price
+        decimal subtotal
+    }
+
+    payments {
+        int id PK
+        int order_id FK
+        string proof_filename
+        string file_mime_type
+        int file_size_bytes
+        string verification_status
+        int verified_by FK
+        text admin_notes
+        timestamp uploaded_at
+        timestamp verified_at
+    }
+
+    reviews {
+        int id PK
+        int product_id FK
+        int user_id FK
+        int rating
+        text comment
+        timestamp created_at
+    }
