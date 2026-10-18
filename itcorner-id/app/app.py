@@ -124,5 +124,18 @@ def cart():
 def profile():
     return render_template('profile.html')
 
+@app.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    # Proteksi: Pastikan pengguna sudah login sebelum masuk ke halaman checkout
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        # Logika ketika tombol "Buat pesanan & invoice" diklik
+        # Nanti di sini bisa proses simpan ke database / buat invoice
+        return redirect(url_for('profile'))  # Atau arahkan ke halaman riwayat pesanan
+
+    return render_template('checkout.html')
+
 if __name__ == '__main__':
     app.run(debug=True)

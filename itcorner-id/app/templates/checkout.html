@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - ITCorner.id{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    
+    <!-- Breadcrumb -->
+    <nav class="text-xs text-slate-500 mb-3 flex items-center gap-2">
+        <a href="{{ url_for('home') }}" class="hover:text-blue-600">Beranda</a>
+        <span>/</span>
+        <a href="#" class="hover:text-blue-600">Keranjang</a>
+        <span>/</span>
+        <span class="text-slate-800 font-medium">Checkout</span>
+    </nav>
+
+    <!-- Header Halaman -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-900">Checkout</h1>
+        <p class="text-sm text-slate-500 mt-1">Lengkapi alamat dan periksa pesanan sebelum membuat invoice.</p>
+    </div>
+
+    <!-- Indicator Stepper -->
+    <div class="flex items-center gap-6 text-sm font-medium border-b border-slate-200 pb-4 mb-8">
+        <div class="flex items-center gap-2 text-emerald-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            <span>Keranjang</span>
+        </div>
+        <div class="flex items-center gap-2 text-blue-600 font-bold">
+            <span>2</span>
+            <span>Checkout</span>
+        </div>
+        <div class="flex items-center gap-2 text-slate-400">
+            <span>→</span>
+            <span>3 Pembayaran</span>
+        </div>
+    </div>
+
+    <form action="#" method="POST" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- KOLOM KIRI (2 Kolom) -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Card 1: Alamat Pengiriman -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Alamat pengiriman</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nama penerima *</label>
+                        <input type="text" name="nama_penerima" value="Andi Pratama" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nomor telepon *</label>
+                        <input type="tel" name="telepon" value="0812 3456 7890" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Alamat lengkap *</label>
+                    <textarea name="alamat_lengkap" rows="2" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition">Jl. Melati No. 18, RT 03 / RW 05, Kebayoran Baru</textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Provinsi *</label>
+                        <select name="provinsi" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition">
+                            <option value="DKI Jakarta" selected>DKI Jakarta</option>
+                            <option value="Jawa Barat">Jawa Barat</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Kota / Kabupaten *</label>
+                        <select name="kota" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition">
+                            <option value="Jakarta Selatan" selected>Jakarta Selatan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Kecamatan *</label>
+                        <input type="text" name="kecamatan" value="Kebayoran Baru" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Kode pos *</label>
+                        <input type="text" name="kode_pos" value="12150" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition">
+                        <span class="text-[10px] text-slate-400 mt-1 block">Kode pos harus 5 digit.</span>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-600">
+                        <input type="checkbox" name="simpan_utama" checked class="rounded text-blue-600 focus:ring-blue-500 border-slate-300">
+                        <span>Simpan sebagai alamat utama. Semua isian * wajib dilengkapi.</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Card 2: Pengiriman -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Pengiriman</h2>
+                
+                <div class="flex items-center justify-between p-3.5 border border-blue-200 bg-blue-50/30 rounded-xl">
+                    <div class="flex items-start gap-3">
+                        <input type="radio" name="kurir" value="jne" checked class="mt-1 text-blue-600 focus:ring-blue-500">
+                        <div>
+                            <span class="font-bold text-xs text-blue-700 block">JNE REG</span>
+                            <span class="text-xs text-slate-500">Estimasi 2-4 hari kerja • Dari Jakarta</span>
+                        </div>
+                    </div>
+                    <span class="font-bold text-sm text-slate-800">Rp35.000</span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Catatan untuk penjual (opsional)</label>
+                    <input type="text" name="catatan" value="Mohon kemas dengan pelindung tambahan." class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition">
+                </div>
+            </div>
+
+            <!-- Card 3: Periksa Barang -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Periksa barang</h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-slate-500 font-semibold uppercase text-[10px]">
+                            <tr>
+                                <th class="p-3 rounded-l-lg">PRODUK</th>
+                                <th class="p-3">JUMLAH</th>
+                                <th class="p-3">SUBTOTAL</th>
+                                <th class="p-3 rounded-r-lg">STOK</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700">
+                            <tr>
+                                <td class="py-3 px-3 font-medium text-slate-900">ASUS Vivobook 14 A1404</td>
+                                <td class="py-3 px-3">1</td>
+                                <td class="py-3 px-3">Rp8.499.000</td>
+                                <td class="py-3 px-3 text-emerald-600 font-medium">● 12 tersedia</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-3 font-medium text-slate-900">Logitech M331 Silent</td>
+                                <td class="py-3 px-3">2</td>
+                                <td class="py-3 px-3">Rp498.000</td>
+                                <td class="py-3 px-3 text-emerald-600 font-medium">● 38 tersedia</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs p-3.5 rounded-xl">
+                    Stok mencukupi: 1 laptop dan 2 mouse. Jumlah dan harga akan diperiksa kembali saat pesanan dibuat.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- KOLOM KANAN (Ringkasan & Pembayaran) -->
+        <div class="space-y-6">
+            
+            <!-- Ringkasan Pesanan -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+                <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Ringkasan pesanan</h2>
+                <span class="text-[11px] text-slate-400 block -mt-2">INV/2026/1005/0281 • 3 barang</span>
+
+                <div class="space-y-2 text-xs text-slate-600 border-b border-slate-100 pb-3">
+                    <div class="flex justify-between">
+                        <span>ASUS Vivobook 14 × 1</span>
+                        <span class="font-medium text-slate-800">Rp8.499.000</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Logitech M331 × 2</span>
+                        <span class="font-medium text-slate-800">Rp498.000</span>
+                    </div>
+                    <div class="flex justify-between font-medium text-slate-800 pt-1">
+                        <span>Subtotal</span>
+                        <span>Rp8.997.000</span>
+                    </div>
+                    <div class="flex justify-between text-slate-500">
+                        <span>Pengiriman JNE REG</span>
+                        <span>Rp35.000</span>
+                    </div>
+                </div>
+
+                <div class="flex items-baseline justify-between pt-1">
+                    <span class="text-xs font-bold text-slate-800">Total pembayaran</span>
+                    <span class="text-xl font-extrabold text-blue-600">Rp9.032.000</span>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm py-3 px-4 rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+                    <span>Buat pesanan & invoice</span>
+                    <span>→</span>
+                </button>
+
+                <p class="text-[10px] text-slate-400 leading-normal">
+                    Harga sudah termasuk pajak. Simpan invoice sebagai referensi pesanan Anda.
+                </p>
+            </div>
+
+            <!-- Metode Pembayaran -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-3">
+                <h2 class="text-base font-bold text-slate-900">Metode pembayaran</h2>
+                
+                <span class="inline-block bg-blue-50 text-blue-700 text-[11px] font-bold px-2.5 py-1 rounded-md">
+                    Transfer bank manual
+                </span>
+
+                <div class="text-xs text-slate-700 space-y-1 pt-1">
+                    <p class="font-bold text-slate-900">BCA • 123 456 7890</p>
+                    <p class="text-slate-500">a.n. PT IT Corner Indonesia</p>
+                </div>
+
+                <p class="text-[11px] text-slate-400 leading-normal pt-2 border-t border-slate-100">
+                    Setelah pesanan dibuat, transfer sesuai total dan unggah bukti pembayaran untuk ditinjau admin.
+                </p>
+            </div>
+
+            <!-- Banner Info Tambahan -->
+            <div class="bg-blue-50/60 border border-blue-100 text-slate-600 text-xs p-4 rounded-2xl leading-relaxed">
+                Pastikan alamat, stok, dan total sudah benar. Invoice tersedia setelah pesanan dibuat.
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}
