@@ -1,0 +1,12 @@
+# ITCorner.id - kandidat rules IDS lokal, 18 Oktober 2026
+# BELUM LULUS suricata -T / replay / uji OPNsense. Semua aksi alert.
+# HTTP URI/body butuh plaintext yang benar-benar terlihat sensor; bukan dekripsi HTTPS.
+# Detektor pola sederhana; bukan cakupan SQLi/XSS lengkap.
+# SID 1003001-1003006 dicadangkan lokal; cek konflik dengan rules terpasang.
+
+alert http any any -> 10.10.10.2 any (msg:"ITCORNER LAB possible SQLi UNION SELECT in URI"; flow:established,to_server; http.uri; content:"union"; nocase; fast_pattern; pcre:"/union\s+select/i"; classtype:web-application-attack; sid:1003001; rev:1;)
+alert http any any -> 10.10.10.2 any (msg:"ITCORNER LAB possible XSS script tag in URI"; flow:established,to_server; http.uri; content:"<script"; nocase; fast_pattern; classtype:web-application-attack; sid:1003002; rev:1;)
+alert http any any -> 10.10.10.2 any (msg:"ITCORNER LAB possible SQLi UNION SELECT in request body"; flow:established,to_server; http.request_body; content:"union"; nocase; fast_pattern; pcre:"/union\s+select/i"; classtype:web-application-attack; sid:1003003; rev:1;)
+alert http any any -> 10.10.10.2 any (msg:"ITCORNER LAB possible XSS script tag in request body"; flow:established,to_server; http.request_body; content:"<script"; nocase; fast_pattern; classtype:web-application-attack; sid:1003004; rev:1;)
+alert http any any -> 10.10.10.2 any (msg:"ITCORNER LAB repeated POST login requests - not auth failure proof"; flow:established,to_server; http.method; content:"POST"; bsize:4; http.uri; content:"/login"; startswith; pcre:"/^\/login(?:\?|$)/"; detection_filter:track by_src,count 6,seconds 60; classtype:attempted-user; sid:1003005; rev:1;)
+alert tcp any any -> 10.10.10.3 22 (msg:"ITCORNER LAB SSH SYN burst to Bastion - not auth failure proof"; flags:S; flow:stateless; detection_filter:track by_src,count 6,seconds 60; classtype:attempted-recon; sid:1003006; rev:1;)
