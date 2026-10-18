@@ -1,6 +1,6 @@
 # Tabel IP dan VLSM ITCorner.id
 
-**Versi:** 0.4 - 18 Oktober 2026  
+**Versi:** 0.5 - 18 Oktober 2026  
 **Status:** baseline target RPP Final; bukan hasil discovery perangkat.
 
 Nama zona dicantumkan pada pembagian subnet, daftar host, dan daftar interface. Alamat yang sudah terpasang di lab tetap perlu diverifikasi sesuai dokumentasi konfigurasi.
@@ -37,8 +37,8 @@ Kapasitas host dihitung dengan rumus `2^(32-prefix)-2` untuk subnet pada tabel. 
 
 | No. VM | Nama VM | Nama zona | VLAN | IP utama / prefix | Gateway | Fungsi | vCPU | RAM (GiB) | Disk (GiB) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 01 | Edge OPNsense | Perimeter / Transit / DMZ | - | 10.10.1.1/30 | Upstream WAN belum diketahui | Router; juga gateway DMZ dan WireGuard | 2 | 4 | 40 |
-| 02 | Internal OPNsense | Transit / gateway VLAN internal | - | 10.10.1.2/30 | 10.10.1.1 | Router; gateway VLAN 20 sampai 60 | 2 | 4 | 40 |
+| 01 | Edge OPNsense | Perimeter / Transit / DMZ | - | 10.10.1.1/30 | Upstream WAN belum diketahui | Router; gateway DMZ/WireGuard; target Suricata IPS | 2 | 4 | 40 |
+| 02 | Internal OPNsense | Transit / gateway VLAN internal | - | 10.10.1.2/30 | 10.10.1.1 | Router; gateway VLAN 20 sampai 60; target Suricata IPS | 2 | 4 | 40 |
 | 03 | Web/App | DMZ | 10 | 10.10.10.2/29 | 10.10.10.1 | Nginx; ModSecurity; Flask; Gunicorn; Docker | 2 | 2 | 32 |
 | 04 | Bastion | DMZ | 10 | 10.10.10.3/29 | 10.10.10.1 | Jump host; VM terpisah | 1 | 1 | 16 |
 | 05 | Management + Runner | DevOps & Management | 20 | 10.10.20.2/29 | 10.10.20.1 | Administrasi; GitHub Actions self-hosted runner | 2 | 2 | 40 |
@@ -91,3 +91,5 @@ Untuk Edge dan Internal, IP utama di tabel adalah IP interface Transit. Keduanya
 - Delapan subnet tidak saling overlap. VLAN ID dan alamat subnet adalah dua pengaturan berbeda. Nama LAN Segment tidak otomatis memberi tag VLAN.
 - Pada desain guest tagging, Windows Server memakai tag 30 dan Windows 11 tag 50; keberhasilan konektivitas perlu dibuktikan.
 - Bastion adalah VM terpisah, runner tetap pada Management, dan TheHive/Cortex/MISP berada pada satu VM SOC-IR. Telegram serta penguji eksternal tidak dihitung sebagai tambahan VM utama.
+
+Target Suricata IPS tidak mengubah alamat IP, subnet atau jumlah VM. Peran sensor dan parent interface dijelaskan pada [rencana IPS](rencana-ips-opnsense.md); konfigurasi aktual dan bukti pemblokiran masih belum tersedia.

@@ -40,3 +40,15 @@ Sumber diperiksa 18 Oktober 2026. Angka pada tabel VM adalah usulan lab berdasar
 **Pembaruan 0.4:** pengguna mengonfirmasi CPU i9-10900K, RAM 32 GB dan sisa ruang kosong sekitar 300 GB pada 18 Oktober 2026. Angka 300 GB bukan kapasitas total disk.
 
 Keputusan kapasitas yang masih terbuka: RAM usable/pemakaian host, kapasitas total/jenis disk, ukuran VM aktual dan pertumbuhan data, versi guest dan container, pemakaian RAM SOC-IR gabungan, serta apakah penilaian mensyaratkan seluruh 13 VM live bersamaan. Total 48 GiB dan batas profil 24 GiB adalah hitungan alokasi, bukan hasil benchmark. Lihat [rencana kapasitas](spesifikasi-vm-32gb.md).
+
+## Revisi 0.5 - target IPS dan rencana bukti
+
+Tim menetapkan target akhir Suricata IPS pada Edge dan Internal. Kandidat Netmap, parent trunk, perubahan aksi efektif terpilih, keterbatasan EVE syslog dan langkah rollback mengikuti sumber resmi, lalu harus diverifikasi terhadap versi lab. Rancangan endpoint, pemilihan SID dan profil P7 merupakan keputusan praktikum, bukan jaminan vendor.
+
+| Sumber resmi | Penggunaan pada revisi IPS |
+| --- | --- |
+| [OPNsense IPS](https://docs.opnsense.org/manual/ips.html) | Capture mode, parent Netmap, offloading, aksi rule dan batas pengiriman drop logs melalui syslog. |
+| [Suricata thresholding 7.0.10](https://docs.suricata.io/en/suricata-7.0.10/rules/thresholding.html) | Perbedaan threshold dan detection_filter; jangan menebak perilaku drop versi lab. |
+| [Suricata EVE JSON output 7.0.10](https://docs.suricata.io/en/suricata-7.0.10/output/eve/eve-json-output.html) | Kategori log alert/drop lokal dan pemilihan output; bukan kepastian semua record diteruskan OPNsense. |
+
+Keputusan yang belum selesai: driver dan mode inline lab, parent Edge, pemuatan custom rules persisten, SID drop yang lulus tuning, metode bukti/koleksi drop lokal, resource IPS, jalur normal serta rollback. Status implementasi dan pengujian tidak berubah menjadi selesai karena revisi dokumen.

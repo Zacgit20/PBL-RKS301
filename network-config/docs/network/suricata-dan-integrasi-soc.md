@@ -1,6 +1,8 @@
-# Rules Suricata dan koordinasi SOC
+# Suricata IPS dan koordinasi SOC
 
-Versi 0.2 - 18 Oktober 2026. Rules dalam paket adalah kandidat IDS alert-only. Belum dimuat pada engine Suricata, belum dipasang di OPNsense, dan belum lulus uji lab.
+Versi 0.5 - 18 Oktober 2026. **Target akhir adalah Suricata IPS pada Edge dan Internal.** Rules yang disertakan masih baseline alert untuk tahap observasi sebelum pemblokiran terpilih. IPS belum diterapkan, rules belum dimuat pada engine/OPNsense, dan pengujian lab belum dimulai.
+
+Panduan mode, interface, aksi per SID, logging drop, rollback dan bukti pemblokiran ada di [rencana IPS OPNsense](rencana-ips-opnsense.md).
 
 ## Batas deteksi yang perlu disepakati
 
@@ -23,12 +25,12 @@ Fixture positif memakai 8 request login dan 8 SYN dalam rentang tersebut agar me
 
 1. Catat versi OPNsense dan `suricata -V`. Backup firewall dan catat ruleset yang sudah aktif.
 2. Jalankan `suricata -T` dan replay offline pada sistem yang memiliki Suricata, mengikuti `tests/suricata/README.md`.
-3. Pastikan keenam SID tidak bentrok. Mulai dalam mode IDS, bukan mengubah semua alert menjadi drop.
+3. Pastikan keenam SID tidak bentrok. Gunakan observasi alert sebagai tahap awal menuju IPS; setelah tuning, evaluasi Netmap IPS dan drop SID terpilih sesuai rencana IPS. SID 1003005/1003006 tetap alert pada rancangan awal.
 4. Tentukan interface capture dari jalur paket nyata. Untuk trafik bertag dan mode IPS netmap, panduan OPNsense mengarahkan pemilihan parent; validasi driver/offload lebih dahulu. Jangan mengaktifkan parent dan child sekaligus tanpa mengevaluasi duplikasi event.
 5. Di OPNsense periksa Services > Intrusion Detection. UI User defined hanya mendukung sebagian rule; jangan menganggap ada tombol impor file .rules penuh tanpa melihat versi lab.
 6. Untuk rules custom penuh, gunakan mekanisme ruleset/plugin yang didukung versi tersebut. Template source OPNsense saat riset memiliki include conf.d, tetapi itu bukan verifikasi versi lab. Jika memakai custom YAML/template, simpan daftar rule aktif dan tambahkan file lokal tanpa menimpa ruleset lain. Periksa hasil render dan ulangi -T sebelum reload. Jangan hanya menyalin file ke suatu folder lalu menganggapnya sudah dimuat.
 7. Setelah metode persistensi dipilih, catat lokasi file, konfigurasi pemuatan, hash, enam SID yang dimuat, hasil -T, dan metode rollback. Verifikasi tetap dimuat setelah Apply/restart.
-8. Jalankan skenario terbatas; ambil alert dan baseline normal. Ubah rev bila isi rule berubah. Uji kembali sebelum IPS/drop.
+8. Jalankan baseline normal dan skenario terbatas; kemudian aktifkan drop terpilih pada mode inline. Simpan aksi efektif, bukti drop lokal, capture dan hasil endpoint. Ubah rev bila isi rule berubah. Ulangi uji normal dan rollback setelah perubahan.
 
 Metode pemuatan persisten untuk OPNsense 26.7 masih perlu diperiksa pada VM aktual. Paket ini tidak menimpa YAML hasil generate, tidak mengubah template vendor, dan tidak menjanjikan file .rules sudah aktif setelah sekadar di-upload. Ini pekerjaan integrasi yang tersisa, bukan hasil pengujian.
 
@@ -41,15 +43,19 @@ Metode pemuatan persisten untuk OPNsense 26.7 masih perlu diperiksa pada VM aktu
 | Bastion | Log autentikasi SSH, lokasi sesuai OS | Wazuh 10.10.40.2 |
 | Aplikasi | Keberhasilan/kegagalan login, tanpa password/token | Wazuh 10.10.40.2 |
 
-OPNsense menyediakan EVE syslog output dan target logging. Gunakan filter aplikasi suricata sesuai dokumentasi, lalu sepakati listener/transport dengan SOC. Path EVE pada template source adalah /var/log/suricata/eve.json; cek konfigurasi hasil generate pada lab sebelum menetapkan path monitoring. WAF `/var/log/modsec_audit.log` dari arahan tugas adalah calon path, bukan bukti file sudah ada.
+OPNsense menyediakan EVE syslog output dan target logging untuk alert, tetapi dokumentasinya menyebut drop logs hanya dikirim ke logger internal. Jangan menganggap raw record drop otomatis diteruskan lewat EVE syslog; verifikasi format alert yang diterima Wazuh dan sediakan bukti drop lokal/metode koleksi yang didukung. Gunakan filter aplikasi suricata sesuai dokumentasi, lalu sepakati listener/transport dengan SOC. Path EVE pada template source adalah /var/log/suricata/eve.json; cek konfigurasi hasil generate pada lab sebelum menetapkan path monitoring. WAF `/var/log/modsec_audit.log` dari arahan tugas adalah calon path, bukan bukti file sudah ada.
 
 Nur Arsyika Juana menangani Threat Matrix dan kesiapan SOC berdasarkan arahan tugas yang dibagikan. Tim Network menyediakan sumber event dan evidence; tim SOC memverifikasi decoder/rule Wazuh, notifikasi Telegram, serta case TheHive 10.10.40.3. Token Telegram, API key, dan private key dikelola terpisah.
 
 ## Acceptance criteria
 
+Target penerimaan akhir adalah IPS dengan drop terpilih yang terbukti pada jalur live. Observasi dan replay merupakan tahap persiapan.
+
 - Enam SID lulus parser engine yang benar, tidak ada rule gagal dimuat.
 - Replay positif memunculkan SID yang diharapkan; replay negatif tidak memicu SID paket.
-- Uji live membuktikan sensor melihat jalur yang diuji, bukan hanya fixture offline.
+- Uji live membuktikan mode inline, aksi drop SID terpilih dan payload uji diblokir oleh IPS; bukan hanya alert, timeout, firewall atau WAF.
+- Trafik normal pada jalur yang sama tetap lolos; false positive serta rollback dicatat.
+- Pemuatan policy/rules tetap benar setelah Apply/restart; lihat IPS-01 sampai IPS-08.
 - Event EVE yang sama dapat ditelusuri ke Wazuh; tim SOC mencatat alert ID/case ID jika diteruskan.
 - Laporan membedakan pola berbahaya, lonjakan request/koneksi, dan kegagalan autentikasi yang terkonfirmasi.
 

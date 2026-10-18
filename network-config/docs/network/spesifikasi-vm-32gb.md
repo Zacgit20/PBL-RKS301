@@ -1,6 +1,6 @@
 # Spesifikasi 13 VM dan rencana pemakaian PC lab 32 GB
 
-**Versi:** 0.4 - 18 Oktober 2026  
+**Versi:** 0.5 - 18 Oktober 2026  
 **Penanggung jawab:** Muhammad Danish - PM & Network Engineer  
 **Status:** usulan alokasi untuk praktikum; belum diukur pada PC lab.
 
@@ -36,6 +36,8 @@ Angka berikut adalah target awal untuk lab ringan, bukan hasil membaca setting V
 
 WireGuard adalah layanan pada Edge, sehingga tidak ditambah sebagai VM ke-14. SOC-IR tetap satu VM; RAM-nya mencakup seluruh container dan dependency di dalamnya. Tabel IP, nama zona, VLAN, dan gateway tersedia di [tabel IP/VLSM](tabel-ip-vlsm.md).
 
+Target fitur jaringan adalah Suricata IPS pada Edge dan Internal, dengan observasi alert sebagai tahap awal. Angka RAM firewall belum dibuktikan untuk ruleset/traffic IPS aktual; lakukan pengukuran sebelum memperluas pemblokiran. [Rencana IPS](rencana-ips-opnsense.md).
+
 ## 3. Dasar alokasi komponen berat
 
 - **OPNsense: 4 GiB per VM.** Ini mengikuti kelas reasonable 4 GB/SSD 40 GB pada dokumentasi untuk fitur standar dengan beban ringan. Rules IDS/IPS dan volume trafik menambah beban; alokasi tersebut bukan janji throughput atau kemampuan menjalankan semua rules. Mulai dengan rules yang diperlukan, lalu ukur. [OPNsense hardware sizing](https://docs.opnsense.org/manual/hardware.html).
@@ -57,6 +59,7 @@ WireGuard adalah layanan pada Edge, sehingga tidak ditambah sebagai VM ke-14. SO
 | P4 - Incident response | 01, 02, 04, 05, 10 | 5 | 23 | 11 | 9 GiB | TheHive/Cortex/MISP, administrasi dan egress; Wazuh serta aplikasi mati. |
 | P5 - Backup data | 01, 02, 05, 06, 07, 09, 12 | 7 | 23 | 15 | 9 GiB | Backup/restore data DB dan data SOC terpilih; AD/DNS dan Web mati. |
 | P6 - API Wazuh ke SOC-IR | 02, 09, 10 | 3 | 24 | 10 | 8 GiB | Integrasi lokal di VLAN 40 dengan data tersimpan; Edge, Internet, client dan aplikasi mati. |
+| P7 - Persiapan uji IPS | 01, 02, 03, 06, 09, 13 | 6 | 22 | 14 | 10 GiB | Edge/Internal, Web/DB, Wazuh dan Kali; SOC-IR, DC, Management dan client lain mati. |
 
 Urutan umum menyalakan VM: Edge jika ada dalam profil, Internal, server yang dibutuhkan, lalu client/runner. Nyalakan satu per satu dan tunggu layanan siap; jangan boot seluruhnya bersamaan. Shutdown guest dengan normal setelah sesi selesai. Profil P6 hanya menyalakan Internal, Wazuh dan SOC-IR.
 
@@ -68,6 +71,7 @@ Urutan umum menyalakan VM: Edge jika ada dalam profil, Internal, server yang dib
 - P4 menggunakan log/alert yang sudah disimpan atau data uji yang diberi label. Wazuh dan Web mati, sehingga tidak membuktikan alur serangan langsung dari aplikasi sampai SOC-IR. Analyzer yang memerlukan Internet hanya diuji jika egress sudah dikonfigurasi dan diizinkan.
 - P5 menargetkan data aplikasi/DB dan data SOC terpilih sesuai kapasitas backup. Ini bukan backup image seluruh 13 VM. AD mati; gunakan akses uji lokal yang diizinkan atau IP bila sesuai skenario. Prosedur backup konsisten dan uji restore tetap diperlukan.
 - P6 menyalakan Wazuh dan SOC-IR pada subnet/VLAN 40 yang sama. Pengujian API dapat dimulai dari console VM; tagging LAN Segment dan konektivitas lokal tetap perlu dibuktikan. Edge mati, maka Telegram, feed eksternal, analyzer online, dan akses Internet tidak termasuk. Tidak ada VM browser/admin tambahan pada anggaran ini.
+- P7 dialokasikan untuk observasi, drop HTTP lab yang terlihat sensor, log Wazuh dan rollback. DNS/domain dari DC dan case TheHive tidak tercakup. GUI admin tidak otomatis tersedia karena Management mati; gunakan console atau revisi komposisi dan rule management bila perlu. Uji SSH ke Bastion tidak dapat dilakukan pada komposisi ini karena Bastion mati. Jangan menyalakan VM tambahan tanpa menghitung ulang.
 - Host Windows tidak otomatis bisa mengakses LAN Segment. Jangan menganggap browser host dapat membuka dashboard hanya karena VM menyala; ikuti akses management yang sudah dirancang.
 
 Profil ini membantu menyelesaikan dan mendemonstrasikan bagian proyek secara bertahap. Jika manajer proyek meminta **13 VM dan seluruh alur live aktif serentak**, kebutuhan itu memerlukan pembagian ke host lain atau penambahan RAM. Berdasarkan anggaran 48 GiB VM + sekitar 8 GiB host = 56 GiB, **64 GB merupakan kandidat kapasitas host**, lalu tetap diuji dengan beban nyata; kebutuhan dapat naik jika SOC-IR membesar. Penggunaan beberapa host juga memerlukan desain jaringan antar-host, karena LAN Segment lokal tidak otomatis menjangkau PC lain.

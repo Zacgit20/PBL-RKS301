@@ -47,3 +47,14 @@ Pemeriksaan revisi format: 13 baris VM memiliki nama zona; 8 subnet dan 10 inter
 ## Pemasukan sebagai draf repository
 
 Pada 18 Oktober 2026, paket disiapkan pada folder `network-config/` di branch `feat/network-config` sesuai instruksi pengguna untuk push melalui SSH WSL. Pernyataan tidak ada perubahan repo pada pemeriksaan sebelumnya merujuk ke waktu paket awal disusun. README diperbarui untuk lokasi paket dan backlog audit; manifest dihitung ulang. Pengujian engine dan lab tetap BELUM DIUJI. Konfigurasi tim di `itcorner-id/` tidak diubah oleh pemasukan paket ini.
+
+## Revisi 0.5 - dokumentasi target IPS
+
+- Target akhir Suricata IPS ditulis pada README, panduan Edge/Internal, tabel peran, panduan SOC, spesifikasi dan topologi.
+- Rencana IPS merinci kandidat Netmap/parent, baseline observasi, drop terpilih SID 1003001-1003004, SID 1003005/1003006 tetap alert, logging lokal/SOC, persistensi dan rollback.
+- Lembar uji ditambah delapan skenario IPS-01 sampai IPS-08; semuanya BELUM DIUJI. Dua puluh skenario lama dipertahankan.
+- Profil ketujuh P7 berisi VM 01/02/03/06/09/13 dengan total 22 GiB RAM dan 14 vCPU; belum ada benchmark.
+- File rules, YAML, script dan PCAP tidak diubah; bug verifier negatif tetap backlog yang telah ditulis di README.
+- Mode inline, parser engine, drop aktual, kompatibilitas driver/VLAN, performa, forwarding log dan uji lab: BELUM DIJALANKAN / BELUM DIUJI.
+
+Pemeriksaan statis revisi IPS: 13 entri VM konsisten; 7 profil RAM maksimal 24 GiB termasuk P7 22 GiB/14 vCPU; 28 skenario tetap BELUM DIUJI; tautan relatif dan kolom tabel valid; hash seluruh 8 berkas rules/YAML/script/PCAP/fixture lain tidak berubah. Dua halaman topologi IPS dirender dan diperiksa secara visual. PASS untuk kelengkapan dokumen dan aritmetika; bukan pengujian IPS live.

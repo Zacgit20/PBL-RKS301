@@ -5,3 +5,5 @@ Isi hasil-uji.md setelah pengujian benar-benar dilakukan. Status awal BELUM DIUJ
 Untuk catatan harian cukup: pekerjaan, tanggal/pelaksana, hasil aktual, bukti, kendala. Simpan screenshot/log dengan nama misalnya NET-06_2026-10-18_transit.png. Jangan menaruh password, token, atau private key dalam evidence.
 
 Paket ini tidak menyertakan ulang screenshot console pribadi. Tambahkan bukti asli pengguna bila akan dikumpulkan ke Drive/repo. validasi-paket.md hanya memeriksa isi berkas, subnet, SID, dan format fixture; bukan hasil uji lab.
+
+Untuk target Suricata IPS, catat mode inline, sensor/interface, SID/rev dan aksi efektif, log lokal, capture serta hasil endpoint. Sertakan trafik normal dan rollback. EVE syslog OPNsense tidak boleh diasumsikan membawa seluruh raw drop logs. IPS-01 sampai IPS-08 tetap BELUM DIUJI sampai ada pengamatan lab; bukti alert/offline tidak menggantikan bukti pemblokiran live.

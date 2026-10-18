@@ -1,6 +1,6 @@
 # Konfigurasi Edge dan Internal Firewall
 
-Penanggung jawab: Muhammad Danish. Versi 0.2, 18 Oktober 2026. Dokumen berisi target dan langkah kerja; status aktual dipisahkan dari target.
+Penanggung jawab: Muhammad Danish. Versi 0.5, 18 Oktober 2026. Dokumen berisi target dan langkah kerja; status aktual dipisahkan dari target. Target keamanan jaringan adalah Suricata IPS pada kedua firewall; pemblokiran belum diterapkan.
 
 ## 1. Kondisi terakhir yang diketahui
 
@@ -89,6 +89,12 @@ Linux membuat child VLAN pada NIC yang terhubung ke LAN Segment yang sesuai. Nam
 Siapkan dua VM firewall dengan versi yang sesuai lab dan pemetaan interface yang dicatat. Export lewat System > Configuration > Backups. Simpan Edge dan Internal sebagai file terpisah, privat/terenkripsi. XML membawa konfigurasi termasuk akun/sertifikat; bukan konfigurasi LAN Segment, driver guest, atau instalasi plugin.
 
 Di lab, backup terlebih dahulu, pertahankan console, restore ke firewall yang tepat, cocokkan interface, lalu uji. Full restore dapat mengganti kredensial/sertifikat. Paket ini tidak menyediakan XML hasil tebakan. Backup nyata dan uji restore belum tersedia.
+
+## 9. Tahap Suricata IPS setelah IP dan firewall siap
+
+Ikuti [rencana IPS](rencana-ips-opnsense.md). Evaluasi Netmap IPS pada parent trunk Internal `em1` dan parent DMZ Edge yang sudah dicocokkan ke MAC; jangan menebak nama adapter Edge. Periksa driver, hardware offloading dan penerusan VLAN. Alternatif mode lain memerlukan rancangan tersendiri.
+
+Selesaikan observasi alert dan tuning sebelum mengaktifkan drop SID terpilih. IPS membutuhkan mode inline dan aksi efektif drop; keberadaan file rules tidak membuktikan keduanya aktif. Periksa trafik normal, bukti drop lokal, endpoint, resource, persistensi dan rollback. Mode IPS tidak mendekripsi HTTPS. Status tahap ini BELUM DITERAPKAN / BELUM DIUJI.
 
 ## Referensi
 

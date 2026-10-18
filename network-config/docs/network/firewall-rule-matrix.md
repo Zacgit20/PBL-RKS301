@@ -1,6 +1,6 @@
 # Matriks aturan firewall ITCorner.id
 
-Versi 0.2 - 18 Oktober 2026. Seluruh baris adalah rencana akses; bukan file konfigurasi yang bisa diimpor langsung. Terapkan setelah memeriksa pemetaan interface dan akses pemulihan console.
+Versi 0.5 - 18 Oktober 2026. Seluruh baris adalah rencana akses; bukan file konfigurasi yang bisa diimpor langsung. Terapkan setelah memeriksa pemetaan interface dan akses pemulihan console.
 
 ## Cara membaca
 
@@ -67,3 +67,11 @@ Aturan dievaluasi pada interface masuk, dengan exception yang spesifik sebelum p
 ## Pemeriksaan sebelum penerapan
 
 Pastikan target DNS/NTP, listener log, port backup, peer VPN, dan alias egress yang belum diketahui sudah diisi dengan nilai nyata. Rule sementara Kali dicabut setelah pengujian. Periksa NAT agar source IP antar-zona tidak berubah tanpa sengaja. Status RENCANA pada dokumen ini tidak sama dengan rule yang sudah aktif atau lulus uji.
+
+## Hubungan aturan firewall dengan Suricata IPS
+
+Target akhir kedua OPNsense adalah IPS sesuai [rencana IPS](rencana-ips-opnsense.md). Baris PASS pada matriks menetapkan izin firewall. Sebuah alur yang diizinkan firewall tetap dapat diblokir oleh rule IPS pada titik inspeksi yang dipilih; ini menjelaskan hubungan kebijakan, bukan urutan hook internal. Matriks firewall dan policy IPS dicatat terpisah agar aksi keduanya bisa ditelusuri.
+
+Untuk uji drop HTTP terkontrol, T01 harus aktif terbatas pada sumber Kali dan endpoint lab yang sudah tersedia. Buktikan request normal pada jalur tersebut lolos sebelum menguji pola kandidat. Bila koneksi diblokir firewall/WAF, jangan mencatatnya sebagai bukti Suricata IPS. Akses management dan console pemulihan harus dipastikan sebelum uji.
+
+Policy drop SID terpilih dicatat terpisah dari firewall ACL: SID/rev, sensor/interface, mode, waktu aktif, scope, hasil normal/serangan dan rollback. Matriks belum mencakup seluruh akses admin SOC, backup Wazuh, ICMP diagnostik dan egress; backlog tersebut tetap perlu diselesaikan sebelum skenario yang bergantung padanya diuji.

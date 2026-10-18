@@ -1,8 +1,10 @@
-# Catatan hasil pengujian jaringan dan IDS
+# Catatan hasil pengujian jaringan dan Suricata IPS
 
-Versi 0.2 - 18 Oktober 2026. Seluruh pengujian lab masih **BELUM DIUJI**. Hasil yang diharapkan adalah kriteria, bukan hasil yang sudah terjadi.
+Versi 0.5 - 18 Oktober 2026. Seluruh pengujian lab masih **BELUM DIUJI**. Hasil yang diharapkan adalah kriteria, bukan hasil yang sudah terjadi.
 
 Isi hasil aktual, tanggal, pelaksana, dan tautan bukti pada bagian skenario yang dikerjakan. Gunakan status PASS, FAIL, SEBAGIAN, atau BELUM DIUJI berdasarkan pengamatan. ID adalah penomoran buatan tim.
+
+Target akhirnya adalah IPS. SEC-01/02/03 merupakan persiapan deteksi offline, sedangkan IPS-01 sampai IPS-08 menilai pemblokiran live, trafik normal dan rollback. Alert atau replay saja tidak membuktikan IPS bekerja. Lihat [rencana IPS](../../docs/network/rencana-ips-opnsense.md).
 
 ## Daftar skenario
 
@@ -28,6 +30,14 @@ Isi hasil aktual, tanggal, pelaksana, dan tautan bukti pada bagian skenario yang
 | SEC-04 | SQLi/XSS pada jalur live yang terlihat | BELUM DIUJI |
 | SOC-01 | Suricata ke Wazuh | BELUM DIUJI |
 | SOC-02 | Korelasi login/SSH | BELUM DIUJI |
+| IPS-01 | Kesiapan interface dan mode inline | BELUM DIUJI |
+| IPS-02 | Aksi efektif drop SID terpilih | BELUM DIUJI |
+| IPS-03 | Trafik normal tetap lolos | BELUM DIUJI |
+| IPS-04 | Pemblokiran kandidat SQLi plaintext | BELUM DIUJI |
+| IPS-05 | Pemblokiran kandidat XSS plaintext | BELUM DIUJI |
+| IPS-06 | Tuning login dan SSH | BELUM DIUJI |
+| IPS-07 | Logging IPS dan penelusuran SOC | BELUM DIUJI |
+| IPS-08 | Persistensi dan rollback IPS | BELUM DIUJI |
 
 ## NET-01 - VLAN20 Management ke gateway
 
@@ -268,3 +278,141 @@ Isi hasil aktual, tanggal, pelaksana, dan tautan bukti pada bagian skenario yang
 | Tanggal | Belum dicatat |
 | Pelaksana | Belum dicatat |
 | Bukti | Belum dilampirkan |
+
+## IPS-01 - Kesiapan interface dan mode inline
+
+| Bagian | Isi |
+| --- | --- |
+| Sumber / tujuan | Console dan konfigurasi Edge/Internal |
+| Hasil yang diharapkan | NIC/driver, parent, offload, VLAN dan mode inline dicatat; jalur normal dan akses pemulihan tersedia. |
+| Mode / sensor / interface | Belum dicatat |
+| SID / rev / aksi efektif | Belum dicatat |
+| Log lokal / capture / hasil endpoint | Belum dicatat |
+| Trafik normal / false positive | Belum dicatat |
+| Resource / rollback | Belum dicatat |
+| Hasil aktual | Belum dicatat |
+| Status | BELUM DIUJI |
+| Tanggal | Belum dicatat |
+| Pelaksana | Belum dicatat |
+| Bukti | Belum dilampirkan |
+
+## IPS-02 - Aksi efektif drop SID terpilih
+
+| Bagian | Isi |
+| --- | --- |
+| Sumber / tujuan | SID kandidat pada satu sensor uji |
+| Hasil yang diharapkan | SID/rev dimuat dan aksi efektif drop terbukti pada konfigurasi engine; tidak ada override yang tidak diketahui. |
+| Mode / sensor / interface | Belum dicatat |
+| SID / rev / aksi efektif | Belum dicatat |
+| Log lokal / capture / hasil endpoint | Belum dicatat |
+| Trafik normal / false positive | Belum dicatat |
+| Resource / rollback | Belum dicatat |
+| Hasil aktual | Belum dicatat |
+| Status | BELUM DIUJI |
+| Tanggal | Belum dicatat |
+| Pelaksana | Belum dicatat |
+| Bukti | Belum dilampirkan |
+
+## IPS-03 - Trafik normal tetap lolos
+
+| Bagian | Isi |
+| --- | --- |
+| Sumber / tujuan | Kali ke endpoint HTTP lab yang disetujui |
+| Hasil yang diharapkan | Request normal pada jalur/port uji yang sama mencapai endpoint; firewall dan WAF tidak menutupi hasil IPS. |
+| Mode / sensor / interface | Belum dicatat |
+| SID / rev / aksi efektif | Belum dicatat |
+| Log lokal / capture / hasil endpoint | Belum dicatat |
+| Trafik normal / false positive | Belum dicatat |
+| Resource / rollback | Belum dicatat |
+| Hasil aktual | Belum dicatat |
+| Status | BELUM DIUJI |
+| Tanggal | Belum dicatat |
+| Pelaksana | Belum dicatat |
+| Bukti | Belum dilampirkan |
+
+## IPS-04 - Pemblokiran kandidat SQLi plaintext
+
+| Bagian | Isi |
+| --- | --- |
+| Sumber / tujuan | Endpoint HTTP lab; SID 1003001 atau 1003003 yang dipilih |
+| Hasil yang diharapkan | Log lokal, capture dan endpoint menunjukkan payload yang cocok diblokir Suricata IPS; bukan hanya alert/timeout. |
+| Mode / sensor / interface | Belum dicatat |
+| SID / rev / aksi efektif | Belum dicatat |
+| Log lokal / capture / hasil endpoint | Belum dicatat |
+| Trafik normal / false positive | Belum dicatat |
+| Resource / rollback | Belum dicatat |
+| Hasil aktual | Belum dicatat |
+| Status | BELUM DIUJI |
+| Tanggal | Belum dicatat |
+| Pelaksana | Belum dicatat |
+| Bukti | Belum dilampirkan |
+
+## IPS-05 - Pemblokiran kandidat XSS plaintext
+
+| Bagian | Isi |
+| --- | --- |
+| Sumber / tujuan | Endpoint HTTP lab; SID 1003002 atau 1003004 yang dipilih |
+| Hasil yang diharapkan | Payload uji yang cocok diblokir dan request normal pembanding tetap lolos; tidak ada klaim dekripsi HTTPS. |
+| Mode / sensor / interface | Belum dicatat |
+| SID / rev / aksi efektif | Belum dicatat |
+| Log lokal / capture / hasil endpoint | Belum dicatat |
+| Trafik normal / false positive | Belum dicatat |
+| Resource / rollback | Belum dicatat |
+| Hasil aktual | Belum dicatat |
+| Status | BELUM DIUJI |
+| Tanggal | Belum dicatat |
+| Pelaksana | Belum dicatat |
+| Bukti | Belum dilampirkan |
+
+## IPS-06 - Tuning login dan SSH
+
+| Bagian | Isi |
+| --- | --- |
+| Sumber / tujuan | SID 1003005/1003006 dan log autentikasi |
+| Hasil yang diharapkan | Keduanya tetap alert pada rancangan awal; aktivitas sah dibandingkan dan kesimpulan gagal login didukung log auth. |
+| Mode / sensor / interface | Belum dicatat |
+| SID / rev / aksi efektif | Belum dicatat |
+| Log lokal / capture / hasil endpoint | Belum dicatat |
+| Trafik normal / false positive | Belum dicatat |
+| Resource / rollback | Belum dicatat |
+| Hasil aktual | Belum dicatat |
+| Status | BELUM DIUJI |
+| Tanggal | Belum dicatat |
+| Pelaksana | Belum dicatat |
+| Bukti | Belum dilampirkan |
+
+## IPS-07 - Logging IPS dan penelusuran SOC
+
+| Bagian | Isi |
+| --- | --- |
+| Sumber / tujuan | Log lokal firewall dan alert yang diterima Wazuh |
+| Hasil yang diharapkan | SID/waktu/sensor/flow dapat ditelusuri; bukti drop lokal disimpan; raw drop tidak diasumsikan otomatis ikut EVE syslog. |
+| Mode / sensor / interface | Belum dicatat |
+| SID / rev / aksi efektif | Belum dicatat |
+| Log lokal / capture / hasil endpoint | Belum dicatat |
+| Trafik normal / false positive | Belum dicatat |
+| Resource / rollback | Belum dicatat |
+| Hasil aktual | Belum dicatat |
+| Status | BELUM DIUJI |
+| Tanggal | Belum dicatat |
+| Pelaksana | Belum dicatat |
+| Bukti | Belum dilampirkan |
+
+## IPS-08 - Persistensi dan rollback IPS
+
+| Bagian | Isi |
+| --- | --- |
+| Sumber / tujuan | Apply/restart terkontrol dan pengembalian SID uji ke alert |
+| Hasil yang diharapkan | Konfigurasi bertahan sesuai target; rollback memulihkan trafik normal; akses console tetap tersedia dan resource dicatat. |
+| Mode / sensor / interface | Belum dicatat |
+| SID / rev / aksi efektif | Belum dicatat |
+| Log lokal / capture / hasil endpoint | Belum dicatat |
+| Trafik normal / false positive | Belum dicatat |
+| Resource / rollback | Belum dicatat |
+| Hasil aktual | Belum dicatat |
+| Status | BELUM DIUJI |
+| Tanggal | Belum dicatat |
+| Pelaksana | Belum dicatat |
+| Bukti | Belum dilampirkan |
+
+IPS-06 memerlukan profil yang menyalakan Bastion bila SSH diuji. P7 hanya menyalakan VM untuk skenario HTTP IPS dan logging Wazuh; SOC-IR/DC/Bastion/Management mati. Sesuaikan profil dan aturan akses sebelum uji yang memerlukan komponen tersebut. Jangan menyalin hasil replay sebagai bukti drop live.

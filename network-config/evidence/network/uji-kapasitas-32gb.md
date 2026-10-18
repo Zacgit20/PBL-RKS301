@@ -1,6 +1,6 @@
 # Lembar uji kapasitas PC lab 32 GB
 
-**Versi:** 0.4 - 18 Oktober 2026  
+**Versi:** 0.5 - 18 Oktober 2026  
 **Status semua pengukuran:** BELUM DIUJI  
 **Acuan:** [spesifikasi dan profil VM](../../docs/network/spesifikasi-vm-32gb.md).
 
@@ -30,6 +30,7 @@ Gunakan satu profil saja. Catat waktu startup, 5 menit idle dan minimal 15 menit
 | P4 - Incident response | 01, 02, 04, 05, 10 | 23 GiB | 11 | BELUM DIUJI | Belum dicatat | Belum ada |
 | P5 - Backup data | 01, 02, 05, 06, 07, 09, 12 | 23 GiB | 15 | BELUM DIUJI | Belum dicatat | Belum ada |
 | P6 - API Wazuh ke SOC-IR | 02, 09, 10 | 24 GiB | 10 | BELUM DIUJI | Belum dicatat | Belum ada |
+| P7 - Persiapan uji IPS | 01, 02, 03, 06, 09, 13 | 22 GiB | 14 | BELUM DIUJI | Belum dicatat | Belum ada |
 
 ## Catatan tiap pelaksanaan
 
@@ -40,6 +41,8 @@ Salin tabel ini untuk setiap profil dan setiap percobaan. Simpan bukti pada fold
 | Profil / nomor percobaan / tanggal | Belum dicatat |
 | VM benar-benar aktif / RAM aktual VMware | Belum dicatat |
 | Versi OS dan layanan utama | Belum dicatat |
+| Mode Suricata / sensor / interface / ruleset / aksi efektif | Belum dicatat |
+| Trafik normal dibanding beban uji IPS / drop atau error resource | Belum dicatat |
 | Skenario / data / jumlah pengguna | Belum dicatat |
 | Waktu mulai / durasi idle / durasi beban | Belum dicatat |
 | RAM available host minimum selama uji | Belum dicatat |
@@ -82,3 +85,5 @@ Isi ukuran terpakai folder VM saat guest shutdown untuk memperoleh titik awal ya
 | Sesudah skenario dan backup | Belum dicatat | Belum dicatat |
 
 Bandingkan pertumbuhan dengan sisa ruang host; pertahankan cadangan awal sekitar 50 GB dan evaluasi ulang bila pekerjaan memerlukan ruang lebih besar. Kecukupan storage belum diuji hanya dari konfirmasi angka 300 GB.
+
+Target fitur Suricata adalah IPS. Anggaran P7 sebesar 22 GiB belum membuktikan kemampuan Netmap/driver atau performa ruleset; ukur CPU/RAM, I/O, packet drop akibat resource dan hasil fungsi. Bedakan drop karena policy keamanan dari packet loss karena resource. Bila perlu menambah RAM firewall, hitung ulang seluruh VM aktif terlebih dahulu. [Rencana IPS](../../docs/network/rencana-ips-opnsense.md).

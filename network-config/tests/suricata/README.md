@@ -1,4 +1,4 @@
-# Uji offline kandidat rules
+# Uji offline baseline rules untuk persiapan IPS
 
 Fixture PCAP dibuat lokal dari data sintetis, bukan capture lab dan bukan bukti serangan ke aplikasi. Tidak ada paket yang dikirim ke jaringan. Positive berisi empat pola HTTP, delapan POST login, dan delapan SYN SSH. Negative berisi pencarian biasa, dua POST login, dan dua SYN SSH. Header IPv4 dan checksum TCP diperiksa saat fixture dibentuk; engine Suricata belum dijalankan.
 
@@ -31,3 +31,9 @@ Setiap perintah Suricata harus selesai berhasil sebelum hasilnya diperiksa. Veri
 Keberhasilan replay tidak membuktikan pemuatan persisten di OPNsense, penerusan VLAN, akses HTTPS, atau integrasi Wazuh. Uji live dan visibility sensor tetap diperlukan. Tidak ada uji IPS drop dalam fixture ini.
 
 Referensi: https://docs.suricata.io/en/suricata-7.0.10/command-line-options.html
+
+## Hubungan dengan target IPS
+
+Target akhir proyek adalah Suricata IPS, tetapi PCAP dan YAML di folder ini tetap baseline deteksi offline dengan rules alert. Menjalankan replay tidak membuat jalur live inline atau membuktikan payload diblokir. Rencana drop terpilih dan uji live IPS-01 sampai IPS-08 ada di `docs/network/rencana-ips-opnsense.md` dan `evidence/network/hasil-uji.md` relatif root paket.
+
+Keterbatasan verifier yang sudah diketahui: kasus negatif dapat memberi PASS pada JSON biasa/event stats tanpa bukti PCAP diproses. Verifier belum diperbaiki pada revisi dokumentasi ini; jangan gunakan hasilnya sebagai acceptance sebelum perbaikan dan validasi input/proses engine selesai. Munculnya alert offline juga bukan bukti IPS aktif.

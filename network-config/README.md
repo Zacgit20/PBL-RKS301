@@ -2,10 +2,14 @@
 
 **Penanggung jawab:** Muhammad Danish - PM & Network Engineer  
 **Target branch:** `feat/network-config`  
-**Versi:** 0.4 - 18 Oktober 2026  
+**Versi:** 0.5 - 18 Oktober 2026  
 **Status:** rancangan dan dokumentasi parsial; belum diterapkan/diuji menyeluruh di lab.
 
 Paket ini mengisi bahan tugas jaringan: gambar topologi 13 VM, tabel IP/VLSM, panduan Edge/Internal, matriks rule, draft Suricata, dan lembar bukti uji. Baseline mengikuti RPP Final yang dibaca pada percakapan proyek; file Final asli belum tersedia di workspace saat paket disusun. Cocokkan lagi dengan file asli sebelum menamai dokumen sebagai konfigurasi final.
+
+## Target Suricata IPS
+
+Target akhir adalah **IPS pada Edge dan Internal OPNsense**. Mulai dengan observasi alert, kemudian evaluasi mode inline dan drop SID terpilih setelah tuning. File rules/YAML/PCAP belum diubah pada revisi dokumentasi ini. Pengujian IPS, normal traffic dan rollback masih BELUM DIUJI.
 
 ## Pemakaian pada PC lab 32 GB
 
@@ -17,7 +21,9 @@ Baca `docs/network/spesifikasi-vm-32gb.md` sebelum menyalakan VM. Dokumen itu me
 
 1. `docs/network/topologi-13vm.pdf` - topologi target dan alamat IP, dua halaman.
 2. `docs/network/konfigurasi-edge-internal.md` - status aktual, urutan pengerjaan, dan verifikasi.
-3. `config/suricata/itcorner-local.rules` - enam kandidat rules IDS, beserta batas deteksinya di panduan Suricata.
+3. `docs/network/rencana-ips-opnsense.md` - target Suricata IPS, fase observasi, drop terpilih, logging dan rollback.
+
+Rules baseline untuk persiapan IPS tersedia di `config/suricata/itcorner-local.rules`; keenam aksi masih alert dan belum menjadi pemblokiran aktif.
 
 ## Status yang dapat dicatat sekarang
 
@@ -29,7 +35,8 @@ Baca `docs/network/spesifikasi-vm-32gb.md` sebelum menyalakan VM. Dokumen itu me
 | LAN Management 10.10.20.1/29 | Pengguna menyatakan sudah setting; perlu cek hasil akhir |
 | VLAN ID pada satu Windows | Opsi sudah muncul; tagging/koneksi belum diuji |
 | Edge; routing; NAT; Internet; firewall; SOC | Perlu konfigurasi/verifikasi di lab |
-| Rules Suricata dalam paket | Draft; engine dan uji lab belum dijalankan |
+| Target Suricata IPS | Ditetapkan tim; belum diterapkan pada VM lab |
+| Rules Suricata dalam paket | Baseline alert untuk observasi; drop terpilih menunggu tuning/uji |
 
 Paket awal menggunakan snapshot repo 15 Oktober. Saat pemasukan draf ini pada 18 Oktober 2026, branch `feat/network-config` disinkronkan ke `6820019785e345ca4770fc2b249cf8bf9510049e` melalui SSH WSL dan struktur repo diperiksa. Ini bukan audit ulang seluruh fitur aplikasi.
 
@@ -40,10 +47,11 @@ Semua keterangan, tabel, dan catatan hasil pemeriksaan tersedia dalam `.md`. PDF
 ## Daftar isi
 
 - `docs/network/tabel-ip-vlsm.md` - nama zona, subnet, VLSM, gateway, dan alokasi CPU/RAM/disk seluruh 13 VM.
-- `docs/network/spesifikasi-vm-32gb.md` - spesifikasi lengkap dan enam profil penggunaan bergantian pada host 32 GB.
+- `docs/network/spesifikasi-vm-32gb.md` - spesifikasi lengkap dan tujuh profil penggunaan bergantian, termasuk P7 persiapan uji IPS pada host 32 GB.
 - `evidence/network/uji-kapasitas-32gb.md` - lembar pengukuran host dan keberhasilan tiap profil; belum diuji.
 - `docs/network/firewall-rule-matrix.md` - rencana akses; bukan file impor firewall.
-- `docs/network/suricata-dan-integrasi-soc.md` - SID, penempatan sensor, pemasangan, dan batas TLS/SSH.
+- `docs/network/suricata-dan-integrasi-soc.md` - SID, pemasangan dan koordinasi SOC.
+- `docs/network/rencana-ips-opnsense.md` - rencana mode inline, aksi terpilih, bukti drop dan rollback.
 - `docs/network/REFERENSI.md` - sumber resmi dan keputusan yang masih terbuka.
 - `tests/suricata/` - PCAP sintetis offline positif/negatif, manifest ekspektasi, prosedur uji.
 - `scripts/build_suricata_fixtures.py` - membangun ulang fixture lokal; tidak mengirim paket.
@@ -53,7 +61,7 @@ Semua keterangan, tabel, dan catatan hasil pemeriksaan tersedia dalam `.md`. PDF
 
 ## Memasukkan ke repository
 
-Paket ini disimpan utuh di `network-config/` pada branch `feat/network-config`, terpisah dari implementasi aplikasi pada `itcorner-id/`. Semua path paket seperti `docs/network/...`, `config/suricata/...`, `scripts/...`, `tests/...` dan `evidence/...` dihitung relatif terhadap folder `network-config/`. Jalankan perintah uji dari folder itu ketika tahap pengujian dimulai.
+Paket ini disimpan utuh di `network-config/` pada branch `feat/network-config`, terpisah dari implementasi aplikasi pada `itcorner-id/`. Semua path paket seperti `docs/network/...`, `config/suricata/...`, `scripts/...`, `tests/...` dan `evidence/...` dihitung relatif terhadap folder `network-config/`. Jalankan perintah uji dari folder itu ketika tahap pengujian dimulai. Replay yang tersedia hanya menguji deteksi offline; uji IPS live memakai skenario IPS-01 sampai IPS-08.
 
 Rules kandidat berada di `network-config/config/suricata/itcorner-local.rules`. Rules tim pada `itcorner-id/config/suricata/itcorner-local.rules` tidak ditimpa atau digabung secara otomatis. Pemilihan ruleset aktif, pemuatan OPNsense, dan pengujian merupakan pekerjaan tahap berikutnya. Manifest paket memakai path relatif terhadap `network-config/` dan dihitung ulang setelah penyesuaian README ini.
 
@@ -71,3 +79,7 @@ Pengguna menetapkan ini sebagai progres pengerjaan firewall dan IP, belum konfig
 - Penerusan tag dan batas isolasi guest tagging perlu dibuktikan. RPP Final asli perlu dicocokkan kembali sebelum menyatakan kesesuaian final.
 
 Temuan tersebut merupakan backlog perbaikan, bukan hasil pengujian yang lulus. Tidak ada perubahan konfigurasi VM lab dalam commit dokumentasi ini.
+
+## Revisi 0.5 - target IPS
+
+Dokumen, gambar topologi dan lembar uji disesuaikan ke target IPS. Tujuh profil RAM mencakup P7 sebesar 22 GiB untuk persiapan uji IPS; belum ada benchmark. Kandidat SID 1003001-1003004 dapat dievaluasi sebagai drop setelah validasi, sedangkan SID 1003005/1003006 tetap alert pada rancangan awal. Tidak ada klaim IPS telah aktif atau pengujian telah lulus. Backlog audit sebelumnya tetap berlaku.
