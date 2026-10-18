@@ -31,7 +31,7 @@
                 </a>
 
                 <!-- Search Bar (Lebar & Ditengah) -->
-                {% if request.path not in ['/profile', '/login', '/register', '/checkout'] %}
+                {% if request.path not in ['/profile', '/login', '/register', '/checkout', '/orders'] %}
                 <form action="{{ url_for('home') }}" method="GET" class="flex-1 max-w-2xl relative">
                     <input type="text" name="q" placeholder="Cari laptop, monitor, atau aksesori favoritmu..." 
                            value="{{ request.args.get('q', '') }}"
@@ -86,7 +86,7 @@
             </div> <!-- Tag Penutup Baris 1 yang Sempat Hilang -->
 
             <!-- BARIS 2: Menu Kategori Produk -->
-             {% if request.path not in ['/profile', '/login', '/register', '/checkout'] %}
+             {% if request.path not in ['/profile', '/login', '/register', '/checkout', '/orders'] %}
             <nav class="flex items-center justify-between border-t border-slate-100 text-sm font-medium pt-3 pb-2 overflow-x-auto">
                 <div class="flex items-center space-x-8">
                     <a href="{{ url_for('home') }}" class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-2">

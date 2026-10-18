@@ -28,13 +28,13 @@
                         <a href="{{ url_for('profile')}}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-600 font-bold transition">
                             <span>Profil saya</span>
                         </a>
-                        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
+                        <a href="{{ url_for('orders') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
                             <span>Riwayat pesanan</span>
                         </a>
                         <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
                             <span>Alamat pengiriman</span>
                         </a>
-                        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition mt-4">
+                        <a href="{{ url_for('logout') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition mt-4">
                             <span>Keluar</span>
                         </a>
                     </nav>

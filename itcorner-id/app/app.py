@@ -137,5 +137,13 @@ def checkout():
 
     return render_template('checkout.html')
 
+@app.route('/orders')
+def orders():
+    # Proteksi login
+    if not session.get('user_id'):
+        return redirect(url_for('login'))
+        
+    return render_template('orders.html')
+
 if __name__ == '__main__':
     app.run(debug=True)
