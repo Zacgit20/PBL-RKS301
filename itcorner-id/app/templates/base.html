@@ -52,7 +52,7 @@
 
                     {% if session.get('user_id') %}
                         <!-- Jika SUDAH Login: Tampilkan Link ke Profil -->
-                        <a href="{{ url_for('profile') }}" class="flex items-center gap-2 text-slate-700 hover:text-blue-600 font-semibold text-sm transition">
+                        <a href="{{ url_for('profile')}}" class="flex items-center gap-2 text-slate-700 hover:text-blue-600 font-semibold text-sm transition">
                             <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
@@ -61,18 +61,18 @@
                     {% else %}
                         <!-- Jika BELUM Login: Tampilkan Tombol Masuk & Daftar -->
                         <div class="flex items-center space-x-3">
-                            <a href="{{ url_for('login') }}" class="text-slate-700 hover:text-blue-600 font-semibold text-sm transition">
+                            <a href="{{ url_for('login')}}" class="text-slate-700 hover:text-blue-600 font-semibold text-sm transition">
                                 Masuk
                             </a>
                             <span class="text-slate-300">|</span>
-                            <a href="{{ url_for('register') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition shadow-sm">
+                            <a href="{{ url_for('register')}}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition shadow-sm">
                                 Daftar
                             </a>
                         </div>
                     {% endif %}
 
                     <!-- Link Keranjang -->
-                    <a href="{{ url_for('cart') if 'cart' in mapper else '#' }}" class="flex items-center space-x-2 text-slate-700 hover:text-blue-600 font-semibold text-sm transition">
+                    <a href="{{ url_for('cart')}}" class="flex items-center space-x-2 text-slate-700 hover:text-blue-600 font-semibold text-sm transition">
                         <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"></path>
                         </svg>
@@ -83,9 +83,9 @@
 
                 </div>
 
-            </div> <!-- Tag Penutup Baris 1 yang Sempat Hilang -->
+            </div> 
 
-            <!-- BARIS 2: Menu Kategori Produk -->
+            <!-- Menu Kategori Produk -->
              {% if request.path not in ['/profile', '/login', '/register', '/checkout', '/orders'] %}
             <nav class="flex items-center justify-between border-t border-slate-100 text-sm font-medium pt-3 pb-2 overflow-x-auto">
                 <div class="flex items-center space-x-8">
