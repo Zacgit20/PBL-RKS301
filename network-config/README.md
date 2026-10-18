@@ -2,10 +2,10 @@
 
 **Penanggung jawab:** Muhammad Danish - PM & Network Engineer  
 **Target branch:** `feat/network-config`  
-**Versi:** 0.5 - 18 Oktober 2026  
+**Versi:** 0.6 - 18 Oktober 2026  
 **Status:** rancangan dan dokumentasi parsial; belum diterapkan/diuji menyeluruh di lab.
 
-Paket ini mengisi bahan tugas jaringan: gambar topologi 13 VM, tabel IP/VLSM, panduan Edge/Internal, matriks rule, draft Suricata, dan lembar bukti uji. Baseline mengikuti RPP Final yang dibaca pada percakapan proyek; file Final asli belum tersedia di workspace saat paket disusun. Cocokkan lagi dengan file asli sebelum menamai dokumen sebagai konfigurasi final.
+Paket ini mengisi bahan tugas jaringan: gambar topologi dari RPP, daftar target 13 VM dan tabel IP/VLSM, panduan Edge/Internal, matriks rule, draft Suricata, dan lembar bukti uji. Baseline mengikuti RPP Final yang dibaca pada percakapan proyek; file Final asli belum tersedia di workspace saat paket disusun. Cocokkan lagi dengan file asli sebelum menamai dokumen sebagai konfigurasi final.
 
 ## Target Suricata IPS
 
@@ -19,7 +19,7 @@ Baca `docs/network/spesifikasi-vm-32gb.md` sebelum menyalakan VM. Dokumen itu me
 
 ## Mulai dari tiga berkas ini
 
-1. `docs/network/topologi-13vm.pdf` - topologi target dan alamat IP, dua halaman.
+1. `docs/network/topologi-rpp.md` - gambar asli RPP beserta sumber dan perbedaannya dengan daftar VM terkini.
 2. `docs/network/konfigurasi-edge-internal.md` - status aktual, urutan pengerjaan, dan verifikasi.
 3. `docs/network/rencana-ips-opnsense.md` - target Suricata IPS, fase observasi, drop terpilih, logging dan rollback.
 
@@ -42,9 +42,12 @@ Paket awal menggunakan snapshot repo 15 Oktober. Saat pemasukan draf ini pada 18
 
 ## Format berkas
 
-Semua keterangan, tabel, dan catatan hasil pemeriksaan tersedia dalam `.md`. PDF tetap tersedia untuk gambar topologi. Berkas `.rules`, `.yaml`, `.json`, `.pcap`, dan `.py` merupakan konfigurasi atau bahan uji, bukan pengganti dokumentasi.
+Semua keterangan, tabel, dan catatan hasil pemeriksaan tersedia dalam `.md`. Gambar topologi asli RPP tersedia sebagai `.png` dan ditampilkan pada `docs/network/topologi-rpp.md`. Berkas `.rules`, `.yaml`, `.json`, `.pcap`, dan `.py` merupakan konfigurasi atau bahan uji, bukan pengganti dokumentasi.
 
 ## Daftar isi
+
+- `docs/network/topologi-rpp.md` - gambar RPP, identitas sumber dan catatan Bastion yang belum tergambar.
+- `docs/network/topologi-rpp.png` - gambar yang diekstrak tanpa mengubah isinya.
 
 - `docs/network/tabel-ip-vlsm.md` - nama zona, subnet, VLSM, gateway, dan alokasi CPU/RAM/disk seluruh 13 VM.
 - `docs/network/spesifikasi-vm-32gb.md` - spesifikasi lengkap dan tujuh profil penggunaan bergantian, termasuk P7 persiapan uji IPS pada host 32 GB.
@@ -83,3 +86,7 @@ Temuan tersebut merupakan backlog perbaikan, bukan hasil pengujian yang lulus. T
 ## Revisi 0.5 - target IPS
 
 Dokumen, gambar topologi dan lembar uji disesuaikan ke target IPS. Tujuh profil RAM mencakup P7 sebesar 22 GiB untuk persiapan uji IPS; belum ada benchmark. Kandidat SID 1003001-1003004 dapat dievaluasi sebagai drop setelah validasi, sedangkan SID 1003005/1003006 tetap alert pada rancangan awal. Tidak ada klaim IPS telah aktif atau pengujian telah lulus. Backlog audit sebelumnya tetap berlaku.
+
+## Revisi 0.6 - gambar topologi mengikuti RPP
+
+Topologi memakai gambar asli dari RPP PBL RKS-301 perbaikan.docx, menggantikan diagram buatan paket. Gambar belum menampilkan Bastion, sedangkan daftar target tetap 13 VM. Perbedaan dicatat pada topologi-rpp.md; file RPP sumber tidak diubah. Status konfigurasi, IPS dan seluruh pengujian tetap sesuai draf sebelumnya.

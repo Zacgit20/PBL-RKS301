@@ -2,6 +2,8 @@
 
 Validasi paket Network Config ITCorner - 18 Oktober 2026
 
+Catatan riwayat: pemeriksaan PDF dua halaman di bagian revisi lama berlaku untuk diagram buatan paket 0.1-0.5. Pada revisi 0.6, diagram tersebut diganti gambar PNG dari RPP. Hasil pemeriksaan lama tidak digunakan untuk mengklaim gambar RPP sudah mencakup 13 VM.
+
 Pemeriksaan yang sudah dilakukan pembuat paket:
 - 13 entri VM: IP unik, prefix tepat, host berada dalam subnet: PASS (data statis).
 - 8 subnet: tidak overlap, netmask dan kapasitas usable tepat: PASS (data statis).
@@ -58,3 +60,12 @@ Pada 18 Oktober 2026, paket disiapkan pada folder `network-config/` di branch `f
 - Mode inline, parser engine, drop aktual, kompatibilitas driver/VLAN, performa, forwarding log dan uji lab: BELUM DIJALANKAN / BELUM DIUJI.
 
 Pemeriksaan statis revisi IPS: 13 entri VM konsisten; 7 profil RAM maksimal 24 GiB termasuk P7 22 GiB/14 vCPU; 28 skenario tetap BELUM DIUJI; tautan relatif dan kolom tabel valid; hash seluruh 8 berkas rules/YAML/script/PCAP/fixture lain tidak berubah. Dua halaman topologi IPS dirender dan diperiksa secara visual. PASS untuk kelengkapan dokumen dan aritmetika; bukan pengujian IPS live.
+
+## Revisi 0.6 - penggantian gambar dengan sumber RPP
+
+- Gambar asli 1287 x 1104 piksel dari RPP PBL RKS-301 perbaikan.docx dipakai tanpa perubahan isi; PNG dapat dibaca penuh dan verifikasi integritas PNG lulus.
+- Gambar diperiksa secara visual. Bastion belum tergambar; perbedaannya dengan daftar target 13 VM ditulis eksplisit.
+- Entri media word/media/image1.png pada arsip DOCX lokal gagal pemeriksaan CRC ZIP. Payload media diekstrak untuk pemeriksaan terpisah; integritas PNG lulus. Pemeriksaan arsip ZIP sumber tidak dinyatakan PASS dan sumber Final perlu dicocokkan pada tahap pengesahan. File sumber tidak diperbaiki atau diubah.
+- Diagram PDF buatan sebelumnya dikeluarkan dari paket agar gambar yang digunakan mengikuti RPP. Pemeriksaan PDF pada riwayat revisi lama tetap catatan historis.
+- Target 13 VM, IP/VLAN/gateway, spesifikasi RAM, rencana IPS, rules dan bahan uji runtime tidak berubah karena penggantian gambar.
+- Konfigurasi dan seluruh uji lab tetap belum selesai / BELUM DIUJI.

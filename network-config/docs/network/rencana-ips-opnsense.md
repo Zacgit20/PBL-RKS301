@@ -1,6 +1,6 @@
 # Rencana Suricata IPS pada OPNsense Edge dan Internal
 
-**Versi:** 0.5 - 18 Oktober 2026  
+**Versi:** 0.6 - 18 Oktober 2026  
 **PIC Network:** Muhammad Danish  
 **Koordinasi SOC:** Nur Arsyika Juana  
 **Status:** TARGET IPS; konfigurasi firewall/IP masih dikerjakan; IPS dan pengujian belum diterapkan.
@@ -83,3 +83,7 @@ Tambahan fitur IPS belum memiliki hasil benchmark lab. Anggaran awal firewall te
 Rollback awal mengembalikan aksi SID uji dari drop ke alert, lalu memeriksa layanan normal. Jika gangguan membuat pengelolaan jaringan terputus, gunakan console dan pulihkan konfigurasi Suricata/interface dari catatan/backup; jangan mematikan seluruh firewall. Catat apakah layanan pulih dan simpan evidence sebelum mengakhiri sesi.
 
 Lembar pengujian IPS-01 sampai IPS-08 tersedia pada [hasil-uji.md](../../evidence/network/hasil-uji.md). Semua status awal BELUM DIUJI. Pembaruan dokumen ini bukan implementasi IPS pada VM lab.
+
+## Gambar arsitektur acuan
+
+Gunakan [gambar topologi dari RPP](topologi-rpp.md). Label Suricata IDS/IPS pada gambar sumber dipertahankan, sedangkan pilihan target tim adalah IPS sesuai dokumen ini. Gambar sumber belum menampilkan Bastion; daftar target 13 VM dan skenario Bastion tetap tercatat pada tabel IP serta lembar pengujian.

@@ -1,6 +1,6 @@
 # Tabel IP dan VLSM ITCorner.id
 
-**Versi:** 0.5 - 18 Oktober 2026  
+**Versi:** 0.6 - 18 Oktober 2026  
 **Status:** baseline target RPP Final; bukan hasil discovery perangkat.
 
 Nama zona dicantumkan pada pembagian subnet, daftar host, dan daftar interface. Alamat yang sudah terpasang di lab tetap perlu diverifikasi sesuai dokumentasi konfigurasi.
@@ -93,3 +93,7 @@ Untuk Edge dan Internal, IP utama di tabel adalah IP interface Transit. Keduanya
 - Bastion adalah VM terpisah, runner tetap pada Management, dan TheHive/Cortex/MISP berada pada satu VM SOC-IR. Telegram serta penguji eksternal tidak dihitung sebagai tambahan VM utama.
 
 Target Suricata IPS tidak mengubah alamat IP, subnet atau jumlah VM. Peran sensor dan parent interface dijelaskan pada [rencana IPS](rencana-ips-opnsense.md); konfigurasi aktual dan bukti pemblokiran masih belum tersedia.
+
+## Gambar acuan RPP
+
+Lihat [topologi dari RPP](topologi-rpp.md). Gambar sumber belum menampilkan Bastion yang ada pada daftar target 13 VM di dokumen ini. Penggantian gambar tidak mengubah IP, VLAN, gateway, spesifikasi atau jumlah VM target.

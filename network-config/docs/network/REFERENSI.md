@@ -22,7 +22,7 @@ Tanggal riset 18 Oktober 2026. Baseline berasal dari RPP Final yang sebelumnya d
 5. Versi Suricata lab, metode custom rules persisten, titik observasi plaintext, dan tuning threshold.
 6. Verifikasi semua langkah melalui evidence; belum ada XML yang siap restore.
 
-Rules menggunakan keyword yang didokumentasikan Suricata 7.0.10; bukan klaim engine lab memakai versi itu. Daftar hasil uji lab sengaja belum diberi PASS. PDF adalah gambar target 13 VM, bukan hasil discovery atau bukti semua jalur aktif.
+Rules menggunakan keyword yang didokumentasikan Suricata 7.0.10; bukan klaim engine lab memakai versi itu. Daftar hasil uji lab sengaja belum diberi PASS. Gambar topologi sekarang berasal dari RPP perbaikan dan belum menampilkan Bastion. Gambar ini merupakan acuan dokumen, bukan hasil discovery atau bukti semua jalur aktif.
 
 ## Sumber kapasitas VM - revisi 0.3
 
@@ -52,3 +52,7 @@ Tim menetapkan target akhir Suricata IPS pada Edge dan Internal. Kandidat Netmap
 | [Suricata EVE JSON output 7.0.10](https://docs.suricata.io/en/suricata-7.0.10/output/eve/eve-json-output.html) | Kategori log alert/drop lokal dan pemilihan output; bukan kepastian semua record diteruskan OPNsense. |
 
 Keputusan yang belum selesai: driver dan mode inline lab, parent Edge, pemuatan custom rules persisten, SID drop yang lulus tuning, metode bukti/koleksi drop lokal, resource IPS, jalur normal serta rollback. Status implementasi dan pengujian tidak berubah menjadi selesai karena revisi dokumen.
+
+## Revisi 0.6 - sumber gambar topologi
+
+Gambar diambil dari RPP PBL RKS-301 perbaikan.docx, bagian Desain Umum, media word/media/image1.png. File PNG dipertahankan tanpa menggambar ulang. Sumber lokal tersebut masih memuat rancangan 12 VM dan belum menggambarkan Bastion; daftar target 13 VM tetap dipertahankan sesuai arahan terbaru. RPP Final asli belum tersedia untuk dicocokkan. Identitas dan hash sumber ada di [topologi-rpp.md](topologi-rpp.md), dengan catatan ekstraksi pada validasi paket.
