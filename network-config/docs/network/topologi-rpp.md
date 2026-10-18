@@ -4,7 +4,7 @@
 **Sumber gambar:** RPP PBL RKS-301 perbaikan.docx, bagian Desain Umum.  
 **Status:** gambar acuan RPP, bukan bukti konfigurasi atau pengujian lab.
 
-![Topologi asli dari RPP PBL RKS-301 perbaikan](topologi-rpp.png)
+![Topologi asli dari RPP PBL RKS-301 perbaikan](topologi-rks301.png)
 
 Gambar dipakai apa adanya dari dokumen RPP yang tersedia pada sumber proyek. Ukuran asli 1287 x 1104 piksel; tulisan, ikon dan koneksi pada gambar tidak diubah. Gambar ini menggantikan diagram buatan paket sebelumnya.
 
