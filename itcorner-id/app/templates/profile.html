@@ -1,137 +1,113 @@
 {% extends "base.html" %}
 
-{% block title %}ITCorner.id - Akun Saya{% endblock %}
+{% block title %}Akun saya - ITCorner.id{% endblock %}
 
 {% block content %}
-<div class="bg-slate-50 min-h-screen py-8">
-    <div class="max-w-7xl mx-auto px-4">
+<div class="max-w-7xl mx-auto px-4 py-8">
+    
+    <!-- BREADCRUMB -->
+    <nav class="text-xs text-slate-400 mb-2">
+        Beranda / Akun saya / <span class="text-slate-700 font-medium">Profil</span>
+    </nav>
+
+    <h1 class="text-2xl font-bold text-slate-900 mb-1">Akun saya</h1>
+    <p class="text-xs text-slate-500 mb-6">Kelola informasi pribadi dan preferensi akun Anda.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         
-        <!-- Breadcrumb & Header -->
-        <div class="mb-6">
-            <p class="text-xs text-slate-500 mb-1">Beranda / Akun saya / Profil</p>
-            <h1 class="text-3xl font-bold text-slate-900">Akun saya</h1>
-            <p class="text-sm text-slate-500 mt-1">Kelola informasi pribadi dan preferensi akun Anda.</p>
+        <!-- SIDEBAR KIRI (MENU AKUN) -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm h-fit space-y-4">
+            <div>
+                <h3 class="font-bold text-slate-900 text-sm mb-0.5">{{ user.name }}</h3>
+                <p class="text-[11px] text-slate-400">
+                    {% if user.role == 'Admin' %}
+                        <span class="text-purple-600 font-semibold">⚡ Administrator</span>
+                    {% else %}
+                        Pelanggan ITCorner.id
+                    {% endif %}
+                </p>
+            </div>
+
+            <nav class="space-y-1 text-xs font-semibold pt-2 border-t border-slate-100">
+                <a href="{{ url_for('profile') }}" class="block bg-blue-50 text-blue-600 px-3 py-2 rounded-xl">Profil saya</a>
+                
+                {% if user.role == 'Admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">⚡ Dashboard Admin</a>
+                    <a href="{{ url_for('admin_products') }}" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">📦 Kelola Produk</a>
+                {% else %}
+                    <a href="#" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">Riwayat pesanan</a>
+                    <a href="#" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">Alamat pengiriman</a>
+                {% endif %}
+
+                <a href="{{ url_for('logout') }}" class="block text-rose-600 hover:bg-rose-50 px-3 py-2 rounded-xl transition pt-2">Keluar</a>
+            </nav>
         </div>
 
-        <!-- Layout Grid 2 Kolom -->
-        <div class="flex flex-col lg:flex-row gap-8">
+        <!-- AREA UTAMA (FORM INFORMASI) -->
+        <div class="md:col-span-3 space-y-6">
             
-            <!-- Sidebar Kiri Menu Akun -->
-            <div class="w-full lg:w-1/4">
-                <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
-                    <div class="pb-4 mb-4 border-b border-slate-100">
-                        <h3 class="font-bold text-slate-900 text-base">Andi Pratama</h3>
-                        <p class="text-xs text-slate-400 mt-0.5">Pelanggan sejak September 2026</p>
+            <!-- FOTO PROFIL -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <h2 class="text-sm font-bold text-slate-900 mb-4">Foto profil</h2>
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xl">
+                        {{ user.name[0] | upper if user.name else 'U' }}
                     </div>
-
-                    <nav class="space-y-1 text-sm font-medium">
-                        <a href="{{ url_for('profile')}}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-600 font-bold transition">
-                            <span>Profil saya</span>
-                        </a>
-                        <a href="{{ url_for('orders') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
-                            <span>Riwayat pesanan</span>
-                        </a>
-                        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition">
-                            <span>Alamat pengiriman</span>
-                        </a>
-                        <a href="{{ url_for('logout') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition mt-4">
-                            <span>Keluar</span>
-                        </a>
-                    </nav>
+                    <div class="space-x-2">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition">Unggah foto baru</button>
+                        <button class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-3.5 py-2 rounded-xl transition">Hapus foto</button>
+                    </div>
                 </div>
+                <p class="text-[10px] text-slate-400 mt-3">JPG atau PNG • Maksimal 2 MB.</p>
             </div>
 
-            <!-- Kolom Kanan: Form Profil (Lanjut Bagian 2) -->
-            <div class="w-full lg:w-3/4 space-y-6">
-                <!-- Kartu 1: Foto Profil -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
-                    <h2 class="text-base font-bold text-slate-900">Foto profil</h2>
-                    
-                    <div class="flex items-center gap-6">
-                        <div class="w-20 h-20 rounded-full bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-200">
-                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300" 
-                                 alt="Foto Profil" class="w-full h-full object-cover">
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition shadow-sm">
-                                Unggah foto baru
-                            </button>
-                            <button type="button" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2.5 rounded-xl transition">
-                                Hapus foto
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <p class="text-[11px] text-slate-400">JPG atau PNG • MIME image/jpeg atau image/png • Maksimal 2 MB.</p>
-
-                    <!-- Peringatan Format File (opsional/sesuai desain) -->
-                    <div class="bg-red-50 border border-red-100 rounded-xl p-3 text-xs text-red-600">
-                        Foto-profil.heic tidak didukung. Pilih file JPG atau PNG dengan ukuran maksimal 2 MB.
-                    </div>
-                </div>
-
-                <!-- Kartu 2: Informasi Pribadi -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
-                    <h2 class="text-base font-bold text-slate-900">Informasi pribadi</h2>
-
-                    <form class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nama lengkap *</label>
-                                <input type="text" value="Andi Pratama" class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500 transition">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Email *</label>
-                                <input type="email" value="andi.pratama@email.com" class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500 transition">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nomor telepon *</label>
-                                <input type="text" value="0812 3456 7890" class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500 transition">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tanggal lahir (opsional)</label>
-                                <input type="text" value="12 Mei 1998" class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500 transition">
-                            </div>
-                        </div>
-
+            <!-- INFORMASI PRIBADI DINAMIS -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <h2 class="text-sm font-bold text-slate-900 mb-4">Informasi pribadi</h2>
+                
+                <form class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Alamat utama</label>
-                            <input type="text" value="Jl. Melati No. 18, Kebayoran Baru, Jakarta Selatan 12150" class="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500 transition">
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Nama lengkap *</label>
+                            <input type="text" value="{{ user.name }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 font-medium focus:outline-none focus:bg-white focus:border-blue-500">
                         </div>
-
-                        <p class="text-[11px] text-slate-400 pt-1">Nama dan kontak digunakan untuk informasi pesanan. Perubahan email memerlukan konfirmasi.</p>
-
-                        <div class="flex items-center gap-3 pt-2">
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-5 py-2.5 rounded-xl transition shadow-sm">
-                                Simpan perubahan
-                            </button>
-                            <button type="button" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-5 py-2.5 rounded-xl transition">
-                                Batal
-                            </button>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Email *</label>
+                            <input type="email" value="{{ user.email }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 font-medium focus:outline-none focus:bg-white focus:border-blue-500" readonly>
                         </div>
-                    </form>
-                </div>
-
-                <!-- Kartu 3: Preferensi Akun -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex items-center justify-between">
-                    <div>
-                        <h2 class="text-base font-bold text-slate-900">Preferensi akun</h2>
-                        <p class="text-xs font-bold text-slate-800 mt-2">Selesai menggunakan akun?</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Keluar dari akun jika menggunakan komputer bersama.</p>
                     </div>
-                    <form action="{{ url_for('logout') }}" method="GET">
-                        <button type="submit" class="bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs px-4 py-2 rounded-xl transition border border-red-200">
-                         Keluar
-                        </button>
-                    </form>
-                </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Role / Peran</label>
+                            <input type="text" value="{{ user.role }}" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-500 font-medium" readonly>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Status Akun</label>
+                            <input type="text" value="Aktif / Terverifikasi" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-emerald-600 font-semibold" readonly>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex gap-3">
+                        <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition">Simpan perubahan</button>
+                        <button type="button" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-2 rounded-xl transition">Batal</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- PREFERENSI AKUN -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex justify-between items-center">
+                <div>
+                    <h2 class="text-sm font-bold text-slate-900 mb-0.5">Selesai menggunakan akun?</h2>
+                    <p class="text-xs text-slate-400">Keluar dari akun jika menggunakan komputer bersama.</p>
+                </div>
+                <a href="{{ url_for('logout') }}" class="border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold px-4 py-2 rounded-xl transition">
+                    Keluar
+                </a>
             </div>
 
         </div>
+
     </div>
 </div>
 {% endblock %}

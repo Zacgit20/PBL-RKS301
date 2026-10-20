@@ -48,7 +48,7 @@
                 <h2 class="text-3xl font-bold text-slate-900 mb-2">Buat akun Anda.</h2>
                 <p class="text-slate-500 text-sm mb-8">Selangkah lebih dekat dengan perangkat pilihan.</p>
 
-                <form action="{{ url_for('register') }}" method="POST" class="space-y-5">
+                <form action="{{ url_for('register') }}" method="POST" class="space-y-5" novalidate>
                     
                     <!-- Input Nama Lengkap -->
                     <div>
@@ -68,7 +68,7 @@
                     <div>
                         <label class="block text-sm font-semibold text-slate-900 mb-1">Nomor telepon </label>
                         <p class="text-xs text-slate-500 mb-2">Gunakan nomor aktif, 10-13 digit.</p>
-                        <input type="tel" name="phone" value="{{ request.form.get('phone', '') }}" placeholder="0812 3456 7890" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        <input type="tel" name="phone" value="{{ request.form.get('phone', '') }}" placeholder="0812 3456 7890" minlength="10" maxlength="13" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                     </div>
 
                     <!-- Input Kata Sandi -->
@@ -130,7 +130,7 @@
 
                 <!-- Link Login -->
                 <div class="mt-10 border-t border-slate-100 pt-6">
-                    <a href="{{ url_for('login') }} " class="text-blue-600 text-sm font-semibold hover:underline flex items-center">
+                    <a href="{{ url_for('login')}}" class="text-blue-600 text-sm font-semibold hover:underline flex items-center">
                         Sudah punya akun? Masuk
                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </a>

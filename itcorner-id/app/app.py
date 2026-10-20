@@ -96,27 +96,53 @@ def register():
         password = request.form.get('password', '').strip()
         confirm_password = request.form.get('confirm_password', '').strip()
         terms = request.form.get('terms')
-
+        # 1. Validasi Kolom Kosong
         if not fullname or not email or not phone or not password or not confirm_password:
             form_error = "Harap isi semua kolom pendaftaran terlebih dahulu."
             return render_template('register.html', form_error=form_error)
-
+        # 2. Validasi Format Email
+        if '@' not in email or '.' not in email:
+            form_error = "Format alamat email tidak valid."
+            return render_template('register.html', form_error=form_error)
+        # 3. Validasi Nomor HP Harus Angka
+        if not phone.isdigit():
+            form_error = "Nomor telepon hanya boleh berisi angka."
+            return render_template('register.html', form_error=form_error)
+        elif len(phone) < 10 or len(phone) > 13:
+            form_error = "Nomor telepon harus terdiri dari 10 hingga 13 digit."
+            return render_template('register.html', form_error=form_error)
+        # 4. Validasi Panjang Password
+        if len(password) < 8:
+            form_error = "Kata sandi minimal 8 karakter."
+            return render_template('register.html', form_error=form_error)
+        # 5. Validasi Konfirmasi Password
         if password != confirm_password:
             form_error = "Konfirmasi kata sandi tidak cocok."
             return render_template('register.html', form_error=form_error)
-            
+        # 6. Validasi Syarat & Ketentuan
         if not terms:
             form_error = "Anda harus menyetujui Syarat & Ketentuan terlebih dahulu."
             return render_template('register.html', form_error=form_error)
-
-        users_db.append({
+        # 7. Cek Duplikasi Email (Sangat Penting!)
+        existing_user = next((u for u in users_db if u['email'].lower() == email), None)
+        if existing_user:
+            form_error = "Email sudah terdaftar. Silakan gunakan email lain atau login."
+            logging.warning(f"REGISTER FAILED: Email '{email}' sudah terdaftar dari IP {request.remote_addr}")
+            return render_template('register.html', form_error=form_error)
+        # 8. Simpan ke Database Dummy
+        new_user = {
             "id": len(users_db) + 1,
             "name": fullname,
             "email": email,
+            "phone": phone,
+            "password": password,
             "role": "Pelanggan",
-            "joined": "18 Okt 2026",
+            "joined": get_current_date_indo(),
             "status": "Aktif"
-        })
+        }
+        users_db.append(new_user)
+        # 9. Log Register Berhasil
+        logging.info(f"REGISTER SUCCESS: User '{email}' ({fullname}) berhasil mendaftar dari IP {request.remote_addr}")
         return redirect(url_for('login'))
 
     return render_template('register.html', form_error=form_error)
@@ -170,7 +196,15 @@ def orders():
 
 @app.route('/profile')
 def profile():
-    return render_template('profile.html')
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    # Ambil data user dari session atau dummy_db
+    user_info = {
+        'name': session.get('user_name', 'Pengguna'),
+        'email': session.get('email', '-'),
+        'role': session.get('role', 'Pelanggan')
+    }
+    return render_template('profile.html', user=user_info)
 
 @app.route('/forgot_password')
 def forgot_password():
@@ -186,12 +220,14 @@ def admin_dashboard():
     if 'role' not in session or session['role'] != 'Admin':
         logging.warning(f"UNAUTHORIZED ACCESS: Percobaan akses admin tanpa izin dari IP {request.remote_addr}")
         return redirect(url_for('login'))
+    current_date = get_current_date_indo()
 
     total_omzet = sum(p['amount_num'] for p in payments_db if p['status'] == 'Disetujui')
 
     status_counts = {
         "menunggu_bayar": len([p for p in payments_db if p['status'] == 'Menunggu Approval']),
-        "disetujui": len([p for p in payments_db if p['status'] == 'Disetujui'])
+        "disetujui": len([p for p in payments_db if p['status'] == 'Disetujui']),
+        "ditolak": len([p for p in payments_db if p['status'] == 'Ditolak'])
     }
 
     stats = {
@@ -207,7 +243,7 @@ def admin_dashboard():
         p_copy['price'] = format_rupiah(p['price_num'])
         formatted_products.append(p_copy)
 
-    return render_template('admin/dashboard.html', stats=stats, products=formatted_products, status_counts=status_counts)
+    return render_template('admin/dashboard.html', stats=stats, products=formatted_products, status_counts=status_counts, current_date=current_date)
 
 @app.route('/admin/products', methods=['GET', 'POST'])
 def admin_products():

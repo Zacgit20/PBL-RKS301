@@ -12,8 +12,9 @@ products_db = [
 
 users_db = [
     {"id": 1, "name": "Budi Santoso", "email": "budi@gmail.com", "password": "user1234","role": "Pelanggan", "joined": "12 Okt 2026", "status": "Aktif"},
-    {"id": 2, "name": "Siti Aminah", "email": "siti@gmail.com", "password": "user1234","role": "Pelanggan", "joined": "15 Okt 2026", "status": "Aktif"},
-    {"id": 3, "name": "Laila Rezky", "email": "laila@itcorner.id", "password": "admin1234", "role": "Admin", "joined": "01 Jan 2026", "status": "Aktif"}
+    {"id": 2, "name": "Siti Aminah", "email": "siti@gmail.com", "password": "user0234","role": "Pelanggan", "joined": "15 Okt 2026", "status": "Aktif"},
+    {"id": 3, "name": "Laila Rezky", "email": "laila@itcorner.id", "password": "admin1234", "role": "Admin", "joined": "01 Jan 2026", "status": "Aktif"},
+    {"id": 4, "name": "Syika arjuna", "email": "syika@itcorner.id", "password": "admin0234", "role": "Admin", "joined": "03 Jan 2026", "status": "Aktif"}
 ]
 
 payments_db = []
