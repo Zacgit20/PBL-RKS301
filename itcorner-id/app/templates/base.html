@@ -34,13 +34,13 @@
                 {% if request.path not in ['/profile', '/login', '/register', '/checkout', '/orders'] %}
                 <form action="{{ url_for('home') }}" method="GET" class="flex-1 max-w-2xl relative">
                     <input type="text" name="q" placeholder="Cari laptop, monitor, atau aksesori favoritmu..." 
-                           value="{{ request.args.get('q', '') }}"
-                           class="w-full bg-slate-100 border border-transparent rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:bg-white focus:border-blue-500 transition">
-                    
-                    <!-- Icon Kaca Pembesar -->
-                    <svg class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
+                    value="{{ request.args.get('q', '') }}" class="w-full bg-slate-100 border border-transparent rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:bg-white focus:border-blue-500 transition">
+                    <!-- Tombol Kaca Pembesar (Dikunci Pakai top-2.5) -->
+                     <button type="submit" class="absolute left-3.5 top-2.5 text-slate-400 hover:text-blue-600 transition p-0.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </button>
                 </form>
                 {% else %}
                 <!-- Spacer Kosong Agar Posisi Logo & Menu Kanan Tetap Rapi di Profile -->
@@ -91,30 +91,30 @@
             </div> 
 
             <!-- Menu Kategori Produk -->
-             {% if request.path not in ['/profile', '/login', '/register', '/checkout', '/orders'] %}
-            <nav class="flex items-center justify-between border-t border-slate-100 text-sm font-medium pt-3 pb-2 overflow-x-auto">
-                <div class="flex items-center space-x-8">
-                    <a href="{{ url_for('home') }}" class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-2">
+            {% if request.path not in ['/profile', '/login', '/register', '/checkout', '/orders'] %}
+            <nav class="flex items-center justify-between gap-8 border-t border-slate-100 text-sm font-medium pt-3 pb-2 overflow-x-auto">
+                <div class="flex shrink-0 items-center gap-8">
+                    <a href="{{ url_for('home') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if not selected_category or selected_category == 'all' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
                         Semua produk
                     </a>
-                    <a href="{{ url_for('home', category='laptop') }}" class="text-slate-600 hover:text-blue-600 pb-2 transition">
+                    <a href="{{ url_for('home', category='Laptop') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if selected_category == 'Laptop' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
                         Laptop
                     </a>
-                    <a href="{{ url_for('home', category='komponen') }}" class="text-slate-600 hover:text-blue-600 pb-2 transition">
+                    <a href="{{ url_for('home', category='Komponen') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if selected_category == 'Komponen' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
                         Komputer & komponen
                     </a>
-                    <a href="{{ url_for('home', category='monitor') }}" class="text-slate-600 hover:text-blue-600 pb-2 transition">
+                    <a href="{{ url_for('home', category='Monitor') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if selected_category == 'Monitor' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
                         Monitor
                     </a>
-                    <a href="{{ url_for('home', category='aksesori') }}" class="text-slate-600 hover:text-blue-600 pb-2 transition">
+                    <a href="{{ url_for('home', category='Aksesori') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if selected_category == 'Aksesori' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
                         Aksesori
                     </a>
-                    <a href="{{ url_for('home', category='audio') }}" class="text-slate-600 hover:text-blue-600 pb-2 transition">
+                    <a href="{{ url_for('home', category='Audio') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if selected_category == 'Audio' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
                         Audio
                     </a>
                 </div>
 
-                <a href="{{ url_for('home', promo='true') }}" class="text-blue-600 hover:underline font-semibold pb-2 flex-shrink-0">
+                <a href="{{ url_for('home', promo='true') }}" class="inline-flex h-10 shrink-0 items-center whitespace-nowrap border-b-2 border-transparent text-blue-600 hover:underline font-semibold">
                     Promo pilihan →
                 </a>
             </nav>
@@ -152,6 +152,5 @@
             </div>
         </div>
     </footer>
-
 </body>
 </html>

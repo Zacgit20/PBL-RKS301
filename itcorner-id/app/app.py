@@ -33,13 +33,41 @@ log_werkzeug.setLevel(logging.ERROR)
 def home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
+    # 1. Ambil kata kunci pencarian ('q') dan kategori ('category') dari URL
+    search_query = request.args.get('q', '').strip()
+    selected_category = request.args.get('category', 'all').strip()
+    
+    filtered_db = products_db
+    
+    # 2. Filter Berdasarkan Kata Kunci Pencarian
+    if search_query:
+        filtered_db = [
+            p for p in filtered_db
+            if search_query.lower() in p['name'].lower() or 
+               search_query.lower() in p.get('description', '').lower() or
+               search_query.lower() in p.get('category', '').lower()
+        ]
         
+    # 3. Filter Berdasarkan Kategori
+    if selected_category and selected_category.lower() != 'all':
+        filtered_db = [
+            p for p in filtered_db
+            if p.get('category', '').lower() == selected_category.lower()
+        ]
+        
+    # 4. Format harga produk DARI HASIL FILTER (filtered_db), bukan products_db
     formatted_products = []
-    for p in products_db:
+    for p in filtered_db:
         p_copy = p.copy()
         p_copy['price'] = format_rupiah(p['price_num'])
         formatted_products.append(p_copy)
-    return render_template('index.html', products=formatted_products)
+        
+    # 5. Kirim data dan status filter ke index.html
+    return render_template('index.html', 
+                           products=formatted_products, 
+                           search_query=search_query,
+                           selected_category=selected_category)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -206,8 +234,24 @@ def profile():
     }
     return render_template('profile.html', user=user_info)
 
-@app.route('/forgot_password')
+@app.route('/forgot_password',methods=['GET', 'POST'])
 def forgot_password():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        
+        if not email:
+            return render_template('forgot_password.html', email_error="Email tidak boleh kosong!")
+        
+        # Cek apakah email terdaftar di database
+        user_exists = any(u['email'].lower() == email for u in users_db)
+        
+        if not user_exists:
+            return render_template('forgot_password.html', email_error="Email tidak terdaftar dalam sistem!")
+        
+        # Jika email ditemukan, berikan pesan sukses (simulasi kirim instruksi)
+        logging.info(f"Permintaan reset password dikirimkan untuk email: {email}")
+        return render_template('forgot_password.html', success_message="Tautan pemulihan kata sandi telah dikirimkan ke email Anda.")
+
     return render_template('forgot_password.html')
 
 
