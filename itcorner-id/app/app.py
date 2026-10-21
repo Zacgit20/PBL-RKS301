@@ -2,14 +2,15 @@ import sys
 import os
 import logging
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, session, url_for
 from dummy_db import products_db, users_db, payments_db, format_rupiah, get_current_date_indo
 
 app = Flask(__name__)
-app.secret_key = 'itcorner_secret_key_bebas_diisi_bebas'
+app.secret_key = 'FLASK_SECRET_KEY_itcorner-id-secret-demo-2026'
 
 # ==========================================
 # KONFIGURASI LOGGING (MODUL 8 / OWASP A09)
@@ -75,7 +76,7 @@ def login():
     password_error = None
 
     if request.method == 'POST':
-        email = request.form.get('email', '').strip()
+        email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '').strip()
         
         if not email: 
@@ -96,6 +97,7 @@ def login():
                 logging.warning(f"LOGIN FAILED: Password salah untuk email '{email}' dari IP {request.remote_addr}")
             else:
                 session['user_id'] = user['id']
+                session['email'] = user['email']
                 session['user_name'] = user['name']
                 session['role'] = user['role']
                 
@@ -119,7 +121,7 @@ def register():
     form_error = None
     if request.method == 'POST':
         fullname = request.form.get('fullname', '').strip()
-        email = request.form.get('email', '').strip()
+        email = request.form.get('email', '').strip().lower()
         phone = request.form.get('phone', '').strip()
         password = request.form.get('password', '').strip()
         confirm_password = request.form.get('confirm_password', '').strip()
@@ -169,7 +171,23 @@ def register():
             "status": "Aktif"
         }
         users_db.append(new_user)
-        # 9. Log Register Berhasil
+
+        # # 9. HASH PASSWORD DI SINI SEBELUM DISIMPAN KE DATABASE DUMMY
+        # hashed_password = generate_password_hash(password)  # <-- Bikin hash di sini
+
+        # new_user = {
+        #     "id": len(users_db) + 1,
+        #     "name": fullname,
+        #     "email": email,
+        #     "phone": phone,
+        #     "password": hashed_password,  # <-- Simpan password yang sudah di-hash
+        #     "role": "Pelanggan",
+        #     "joined": get_current_date_indo(),
+        #     "status": "Aktif"
+        # }
+        # users_db.append(new_user)
+
+        # 10. Log Register Berhasil
         logging.info(f"REGISTER SUCCESS: User '{email}' ({fullname}) berhasil mendaftar dari IP {request.remote_addr}")
         return redirect(url_for('login'))
 
@@ -193,22 +211,32 @@ def checkout():
         qty = request.form.get('quantity', type=int) or 1
         payment_method = request.form.get('payment_method') or "Transfer BCA"
 
-        total_amount = 0
-        for p in products_db:
-            if p['id'] == product_id:
-                if p['stock'] >= qty:
-                    p['stock'] -= qty
-                total_amount = p['price_num'] * qty
-                break
+        # 1. Validasi quantity wajib angka positif
+        if qty <= 0:
+            return "Jumlah barang tidak valid!", 400
 
+        # 2. Cari produk & cek kecukupan stok
+        product = next((p for p in products_db if p['id'] == product_id), None)
+        if not product:
+            return "Produk tidak ditemukan!", 404
+
+        if product['stock'] < qty:
+            return f"Stok {product['name']} tidak mencukupi! Tersisa: {product['stock']}", 400
+
+        # 3. Potong stok jika valid
+        product['stock'] -= qty
+        total_amount = product['price_num'] * qty
+
+        # 4. Simpan ke payments_db dengan user_id & format tanggal aman
         inv_id = f"INV-20261018-0{len(payments_db) + 1}"
         payments_db.append({
             "id": inv_id,
+            "user_id": session.get('user_id'),
             "user": session.get('user_name', 'Pelanggan'),
             "amount_num": total_amount,
             "amount": format_rupiah(total_amount),
             "method": payment_method,
-            "date": "18 Okt 2026",
+            "date": datetime.now().strftime("%d %b %Y"),
             "status": "Menunggu Approval"
         })
 
@@ -220,7 +248,9 @@ def checkout():
 def orders():
     if not session.get('user_id'):
         return redirect(url_for('login'))
-    return render_template('orders.html', payments=payments_db)
+    # Ambil HANYA pesanan milik user aktif
+    user_payments = [o for o in payments_db if o.get('user_id') == session['user_id']]
+    return render_template('orders.html', payments=user_payments)
 
 @app.route('/profile')
 def profile():
