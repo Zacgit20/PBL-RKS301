@@ -36,6 +36,12 @@
         </div>
     </div>
 
+    {% if checkout_error %}
+    <div role="alert" class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+        {{ checkout_error }}
+    </div>
+    {% endif %}
+
     <form action="#" method="POST" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         <!-- KOLOM KIRI (2 Kolom) -->

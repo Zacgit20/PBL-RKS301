@@ -27,7 +27,7 @@
             <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
                 <!-- Profil Singkat -->
                 <div>
-                    <h2 class="font-bold text-slate-900 text-base">Andi Pratama</h2>
+                    <h2 class="font-bold text-slate-900 text-base">{{ session.get('user_name', 'Pengguna') }}</h2>
                     <p class="text-xs text-slate-400 mt-0.5">Pelanggan sejak September 2026</p>
                 </div>
 
@@ -97,213 +97,62 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700 font-medium">
-                            <!-- Pesanan 1 (Terpilih) -->
-                            <tr class="bg-blue-50/30">
-                                <td class="py-3.5 px-3 font-bold text-slate-900">ITC-0281</td>
-                                <td class="py-3.5 px-3 text-slate-500">05 Okt 2026</td>
-                                <td class="py-3.5 px-3 font-semibold text-slate-900">Rp9.032.000</td>
-                                <td class="py-3.5 px-3">
-                                    <span class="inline-flex items-center gap-1.5 text-amber-600 font-bold">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                        Menunggu bayar
-                                    </span>
-                                </td>
-                                <td class="py-3.5 px-3 text-right">
-                                    <span class="text-blue-600 font-bold">Terpilih</span>
-                                </td>
-                            </tr>
-                            <!-- Pesanan 2 -->
+                            {% for payment in payments %}
                             <tr class="hover:bg-slate-50/50 transition">
-                                <td class="py-3.5 px-3 font-bold text-slate-900">ITC-0276</td>
-                                <td class="py-3.5 px-3 text-slate-500">04 Okt 2026</td>
-                                <td class="py-3.5 px-3 font-semibold text-slate-900">Rp934.000</td>
+                                <td class="py-3.5 px-3 font-bold text-slate-900">{{ payment.id }}</td>
+                                <td class="py-3.5 px-3 text-slate-500">{{ payment.date }}</td>
+                                <td class="py-3.5 px-3 font-semibold text-slate-900">{{ payment.amount }}</td>
                                 <td class="py-3.5 px-3">
-                                    <span class="inline-flex items-center gap-1.5 text-blue-600 font-bold">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                        Diverifikasi
+                                    <span class="inline-flex items-center gap-1.5 font-bold {% if payment.status == 'Disetujui' %}text-emerald-600{% elif payment.status == 'Ditolak' %}text-red-600{% else %}text-amber-600{% endif %}">
+                                        <span class="w-1.5 h-1.5 rounded-full {% if payment.status == 'Disetujui' %}bg-emerald-500{% elif payment.status == 'Ditolak' %}bg-red-500{% else %}bg-amber-500{% endif %}"></span>
+                                        {{ payment.status }}
                                     </span>
                                 </td>
-                                <td class="py-3.5 px-3 text-right">
-                                    <a href="#" class="text-blue-600 hover:underline">Detail →</a>
+                                <td class="py-3.5 px-3 text-right text-slate-400">—</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="py-8 px-3 text-center text-slate-500">
+                                    Belum ada pesanan.
                                 </td>
                             </tr>
-                            <!-- Pesanan 3 -->
-                            <tr class="hover:bg-slate-50/50 transition">
-                                <td class="py-3.5 px-3 font-bold text-slate-900">ITC-0274</td>
-                                <td class="py-3.5 px-3 text-slate-500">03 Okt 2026</td>
-                                <td class="py-3.5 px-3 font-semibold text-slate-900">Rp1.734.000</td>
-                                <td class="py-3.5 px-3">
-                                    <span class="inline-flex items-center gap-1.5 text-indigo-600 font-bold">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
-                                        Diproses
-                                    </span>
-                                </td>
-                                <td class="py-3.5 px-3 text-right">
-                                    <a href="#" class="text-blue-600 hover:underline">Detail →</a>
-                                </td>
-                            </tr>
-                            <!-- Pesanan 4 -->
-                            <tr class="hover:bg-slate-50/50 transition">
-                                <td class="py-3.5 px-3 font-bold text-slate-900">ITC-0268</td>
-                                <td class="py-3.5 px-3 text-slate-500">01 Okt 2026</td>
-                                <td class="py-3.5 px-3 font-semibold text-slate-900">Rp284.000</td>
-                                <td class="py-3.5 px-3">
-                                    <span class="inline-flex items-center gap-1.5 text-cyan-600 font-bold">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
-                                        Dikirim
-                                    </span>
-                                </td>
-                                <td class="py-3.5 px-3 text-right">
-                                    <a href="#" class="text-blue-600 hover:underline">Detail →</a>
-                                </td>
-                            </tr>
-                            <!-- Pesanan 5 -->
-                            <tr class="hover:bg-slate-50/50 transition">
-                                <td class="py-3.5 px-3 font-bold text-slate-900">ITC-0251</td>
-                                <td class="py-3.5 px-3 text-slate-500">24 Sep 2026</td>
-                                <td class="py-3.5 px-3 font-semibold text-slate-900">Rp1.334.000</td>
-                                <td class="py-3.5 px-3">
-                                    <span class="inline-flex items-center gap-1.5 text-emerald-600 font-bold">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        Selesai
-                                    </span>
-                                </td>
-                                <td class="py-3.5 px-3 text-right">
-                                    <a href="#" class="text-blue-600 hover:underline">Detail →</a>
-                                </td>
-                            </tr>
-                            <!-- Pesanan 6 -->
-                            <tr class="hover:bg-slate-50/50 transition">
-                                <td class="py-3.5 px-3 font-bold text-slate-900">ITC-0247</td>
-                                <td class="py-3.5 px-3 text-slate-500">22 Sep 2026</td>
-                                <td class="py-3.5 px-3 font-semibold text-slate-900">Rp734.000</td>
-                                <td class="py-3.5 px-3">
-                                    <span class="inline-flex items-center gap-1.5 text-red-600 font-bold">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                                        Ditolak
-                                    </span>
-                                </td>
-                                <td class="py-3.5 px-3 text-right">
-                                    <a href="#" class="text-blue-600 hover:underline">Detail →</a>
-                                </td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
 
-                <p class="text-[11px] text-slate-400">Menampilkan 6 pesanan • Total belum termasuk pesanan yang ditolak.</p>
+                <p class="text-[11px] text-slate-400">Menampilkan {{ payments|length }} pesanan.</p>
             </div>
 
-            <!-- CARD 2: Detail Pesanan Terpilih (#ITC-0281) -->
-            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
-                
-                <!-- Title & Invoice Button -->
-                <div class="flex items-start justify-between border-b border-slate-100 pb-4">
+            {% if latest_payment %}
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-5">
+                <div class="border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-900">Detail pesanan</h2>
+                    <p class="text-xs text-slate-400 mt-1">{{ latest_payment.id }} • {{ latest_payment.date }}</p>
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-900">Pesanan #ITC-0281</h2>
-                        <p class="text-xs text-slate-400 mt-1">INV/2026/1005/0281 • 5 Oktober 2026, 10:20 WIB</p>
+                        <h3 class="text-sm font-bold text-slate-900">{{ latest_payment.product_name }}</h3>
+                        <p class="text-xs text-slate-500 mt-1">{{ latest_payment.quantity }} × {{ latest_payment.unit_price }}</p>
                     </div>
-                    <button class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-4 py-2 rounded-xl transition">
-                        Invoice
-                    </button>
+                    <span class="text-sm font-bold text-slate-900">{{ latest_payment.amount }}</span>
                 </div>
 
-                <!-- Alert Banner Status -->
-                <div class="bg-amber-50 border border-amber-200/80 text-amber-800 text-xs p-3.5 rounded-xl">
-                    Bukti pembayaran sudah terkirim. Menunggu admin mencocokkan nominal dan bukti transfer.
+                <div class="flex justify-between border-t border-slate-100 pt-4 text-sm">
+                    <span class="font-semibold text-slate-700">Status pembayaran</span>
+                    <span class="font-bold text-amber-600">{{ latest_payment.status }}</span>
                 </div>
-
-                <!-- Stepper Progress Tracker -->
-                <div class="space-y-2">
-                    <div class="grid grid-cols-5 gap-2 text-center text-xs font-semibold">
-                        <div class="text-blue-600">Menunggu bayar</div>
-                        <div class="text-slate-400">Diverifikasi</div>
-                        <div class="text-slate-400">Diproses</div>
-                        <div class="text-slate-400">Dikirim</div>
-                        <div class="text-slate-400">Selesai</div>
-                    </div>
-                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                        <div class="bg-blue-600 h-full w-1/5"></div>
-                    </div>
-                    <div class="grid grid-cols-5 gap-2 text-center text-[10px] text-slate-400">
-                        <div>5 Okt, 10:20</div>
-                        <div>Belum dimulai</div>
-                        <div>Belum dimulai</div>
-                        <div>Belum dimulai</div>
-                        <div>Belum dimulai</div>
-                    </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Metode pembayaran</span>
+                    <span class="font-medium text-slate-800">{{ latest_payment.method }}</span>
                 </div>
-
-                <p class="text-[11px] text-slate-400">Jika bukti tidak sesuai, status menjadi Ditolak dan alasan penolakan akan ditampilkan di sini.</p>
-
-                <!-- Items List -->
-                <div class="space-y-4 border-t border-b border-slate-100 py-4">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 flex-shrink-0">
-                                💻
-                            </div>
-                            <div>
-                                <h3 class="text-xs font-bold text-slate-900">ASUS Vivobook 14 A1404</h3>
-                                <p class="text-[11px] text-slate-400">1 × Rp8.499.000</p>
-                            </div>
-                        </div>
-                        <span class="text-xs font-bold text-slate-900">Rp8.499.000</span>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 flex-shrink-0">
-                                🖱️
-                            </div>
-                            <div>
-                                <h3 class="text-xs font-bold text-slate-900">Logitech M331 Silent</h3>
-                                <p class="text-[11px] text-slate-400">2 × Rp249.000</p>
-                            </div>
-                        </div>
-                        <span class="text-xs font-bold text-slate-900">Rp498.000</span>
-                    </div>
+                <div class="flex justify-between border-t border-slate-100 pt-4 text-sm font-extrabold">
+                    <span class="text-slate-800">Total</span>
+                    <span class="text-blue-600">{{ latest_payment.amount }}</span>
                 </div>
-
-                <!-- Footer Info: Alamat & Rincian Harga -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                    <div class="space-y-1 text-xs">
-                        <h4 class="font-bold text-slate-900 mb-2">Alamat pengiriman</h4>
-                        <p class="font-medium text-slate-800">Andi Pratama • 0812 3456 7890</p>
-                        <p class="text-slate-500 leading-relaxed">
-                            Jl. Melati No. 18, Kebayoran Baru<br>
-                            Jakarta Selatan, DKI Jakarta 12150
-                        </p>
-                        <p class="text-slate-400 text-[11px] pt-1">JNE REG • Nomor resi belum tersedia</p>
-                    </div>
-
-                    <div class="space-y-2 text-xs text-slate-600">
-                        <div class="flex justify-between">
-                            <span>Subtotal</span>
-                            <span class="font-medium text-slate-800">Rp8.997.000</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>Pengiriman</span>
-                            <span class="font-medium text-slate-800">Rp35.000</span>
-                        </div>
-                        <div class="flex justify-between text-sm font-extrabold text-blue-600 pt-2 border-t border-slate-100">
-                            <span>Total</span>
-                            <span>Rp9.032.000</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex items-center gap-3 pt-4 border-t border-slate-100">
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition shadow-sm">
-                        Lihat bukti pembayaran
-                    </button>
-                    <button class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs px-5 py-2.5 rounded-xl transition">
-                        Hubungi bantuan
-                    </button>
-                </div>
-
             </div>
+            {% endif %}
 
         </div>
 
