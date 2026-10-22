@@ -22,8 +22,8 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-log_werkzeug = logging.getLogger('werkzeug')
-log_werkzeug.setLevel(logging.ERROR)
+# log_werkzeug = logging.getLogger('werkzeug')
+# log_werkzeug.setLevel(logging.ERROR)
 
 
 # ==========================================
@@ -35,7 +35,7 @@ def home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    # 1. Ambil kata kunci pencarian ('q') dan kategori ('category') dari URL
+    # 1. Ambil kata kunci pencarian ('q') dan kategori ('category') dari URLexit
     search_query = request.args.get('q', '').strip()
     selected_category = request.args.get('category', 'all').strip()
     
@@ -401,26 +401,119 @@ def delete_product(product_id):
 
 @app.route('/admin/users')
 def admin_users():
-    if 'role' not in session or session['role'] != 'Admin':
+    if 'role' not in session or session.get('role') != 'Admin':
         return redirect(url_for('login'))
-    return render_template('admin/users.html', users=users_db)
 
+    q = request.args.get('q', '').strip().lower()
+    role_filter = request.args.get('role', 'all').strip()
+    status_filter = request.args.get('status', 'all').strip()
+    edit_id = request.args.get('edit', type=int)
+
+    # Hitung statistik untuk stat card
+    stats = {
+        "total": len(users_db),
+        "pelanggan_aktif": len([u for u in users_db if u.get('role') == 'Pelanggan' and u.get('status') == 'Aktif']),
+        "admin": len([u for u in users_db if u.get('role') == 'Admin']),
+        "nonaktif": len([u for u in users_db if u.get('status') == 'Nonaktif'])
+    }
+
+    # Filter tabel user
+    filtered_users = users_db
+    if q:
+        filtered_users = [u for u in filtered_users if q in u['name'].lower() or q in u['email'].lower()]
+    if role_filter != 'all':
+        filtered_users = [u for u in filtered_users if u.get('role') == role_filter]
+    if status_filter != 'all':
+        filtered_users = [u for u in filtered_users if u.get('status') == status_filter]
+
+    selected_user = next((u for u in users_db if u['id'] == edit_id), None) if edit_id else None
+
+    return render_template(
+        'admin/users.html',
+        stats=stats,
+        users=filtered_users,
+        selected_user=selected_user,
+        search_query=q,
+        role_filter=role_filter,
+        status_filter=status_filter
+    )
+
+@app.route('/admin/users/save', methods=['POST'])
+def save_user_settings():
+    if 'role' not in session or session.get('role') != 'Admin':
+        return redirect(url_for('login'))
+
+    user_id = request.form.get('user_id', type=int)
+    new_role = request.form.get('role')
+    new_status = request.form.get('status')
+
+    user = next((u for u in users_db if u['id'] == user_id), None)
+    if user:
+        if user['id'] == session.get('user_id') and new_status == 'Nonaktif':
+            return redirect(url_for('admin_users'))
+
+        user['role'] = new_role
+        user['status'] = new_status
+        logging.info(f"USER UPDATED: Admin '{session.get('user_name')}' mengubah user ID {user_id} (Role: {new_role}, Status: {new_status})")
+
+    return redirect(url_for('admin_users'))
+
+
+# ==========================================
+# RUTE ADMIN: APPROVAL PEMBAYARAN
+# ==========================================
 @app.route('/admin/payments')
 def admin_payments():
-    if 'role' not in session or session['role'] != 'Admin':
+    if 'role' not in session or session.get('role') != 'Admin':
         return redirect(url_for('login'))
-    return render_template('admin/payments.html', payments=payments_db)
 
-@app.route('/admin/payments/approve/<payment_id>')
-def approve_payment(payment_id):
-    if 'role' not in session or session['role'] != 'Admin':
+    q = request.args.get('q', '').strip().lower()
+    status_filter = request.args.get('status', 'Menunggu Approval').strip()
+    selected_inv = request.args.get('inv')
+
+    filtered_payments = payments_db
+    if q:
+        filtered_payments = [p for p in filtered_payments if q in p['id'].lower() or q in p['user'].lower()]
+    if status_filter != 'all':
+        filtered_payments = [p for p in filtered_payments if p.get('status') == status_filter]
+
+    selected_payment = None
+    if selected_inv:
+        selected_payment = next((p for p in payments_db if p['id'] == selected_inv), None)
+    elif filtered_payments:
+        selected_payment = filtered_payments[0]
+
+    pending_count = len([p for p in payments_db if p.get('status') == 'Menunggu Approval'])
+
+    return render_template(
+        'admin/payments.html',
+        payments=filtered_payments,
+        selected_payment=selected_payment,
+        pending_count=pending_count,
+        search_query=q,
+        status_filter=status_filter
+    )
+
+@app.route('/admin/payments/action', methods=['POST'])
+def process_payment_action():
+    if 'role' not in session or session.get('role') != 'Admin':
         return redirect(url_for('login'))
-    for p in payments_db:
-        if p['id'] == payment_id:
-            p['status'] = 'Disetujui'
-            break
+
+    payment_id = request.form.get('payment_id')
+    action = request.form.get('action')
+    reason = request.form.get('reason', '').strip()
+
+    payment = next((p for p in payments_db if p['id'] == payment_id), None)
+    if payment:
+        if action == 'approve':
+            payment['status'] = 'Disetujui'
+            logging.info(f"PAYMENT APPROVED: Invoice {payment_id} disetujui oleh Admin '{session.get('user_name')}'")
+        elif action == 'reject':
+            payment['status'] = 'Ditolak'
+            payment['reject_reason'] = reason
+            logging.warning(f"PAYMENT REJECTED: Invoice {payment_id} ditolak oleh Admin '{session.get('user_name')}' (Alasan: {reason})")
+
     return redirect(url_for('admin_payments'))
-
 
 if __name__ == '__main__':
     app.run(debug=True)
