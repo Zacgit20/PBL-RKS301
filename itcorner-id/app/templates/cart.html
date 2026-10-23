@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}ITCorner.id - Keranjang Belanja{% endblock %}
+
+{% block content %}
+<div class="bg-slate-50 min-h-screen py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        
+        <!-- Breadcrumb & Top Bar -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <p class="text-xs text-slate-500 mb-1">Beranda / Keranjang</p>
+                <h1 class="text-3xl font-bold text-slate-900">Keranjang belanja</h1>
+                <p class="text-sm text-slate-500 mt-1">2 produk, 3 barang. Periksa kembali sebelum melanjutkan.</p>
+            </div>
+            <a href="{{ url_for('home') }}" class="border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm transition">
+                Lanjut belanja
+            </a>
+        </div>
+
+        <!-- Stepper Progress -->
+        <div class="flex items-center space-x-6 text-sm mb-8 bg-slate-100/60 p-3 rounded-xl w-fit">
+            <span class="bg-blue-600 text-white font-semibold px-3 py-1 rounded-lg">1 Keranjang</span>
+            <span class="text-slate-400 font-medium">→ 2 Checkout</span>
+            <span class="text-slate-400 font-medium">→ 3 Pembayaran</span>
+        </div>
+
+        <!-- Layout Utama (2 Kolom) -->
+        <div class="flex flex-col lg:flex-row gap-8">
+            
+            <!-- Kolom Kiri: Daftar Produk -->
+            <div class="w-full lg:w-2/3 space-y-6">
+                
+                <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+                    <div class="flex justify-between text-xs text-slate-400 font-semibold pb-4 border-b border-slate-100">
+                        <span>Produk</span>
+                        <span>Jumlah & subtotal</span>
+                    </div>
+
+                    <!-- Item 1: ASUS Vivobook -->
+                    <div class="py-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div class="flex gap-4">
+                            <div class="w-20 h-20 bg-slate-100 rounded-xl flex items-center justify-center text-xs text-slate-400 flex-shrink-0">
+                                [Gambar ASUS]
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-base">ASUS Vivobook 14 A1404</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Cool Silver • 8GB / 512GB</p>
+                                <p class="text-sm font-semibold text-slate-800 mt-1">Rp8.499.000 <span class="text-xs text-slate-400 font-normal">/ unit</span></p>
+                                <span class="inline-block text-[11px] text-emerald-600 font-semibold mt-1">Stok 12 unit</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
+                            <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50 self-start sm:self-auto">
+                                <button class="px-2.5 py-1 text-slate-500 hover:bg-slate-200 font-bold text-sm">-</button>
+                                <span class="px-3 py-1 text-xs font-bold text-slate-800 bg-white">1</span>
+                                <button class="px-2.5 py-1 text-blue-600 hover:bg-slate-200 font-bold text-sm">+</button>
+                            </div>
+                            <p class="font-bold text-slate-900 text-base">Rp8.499.000</p>
+                            <button class="text-red-500 hover:underline text-xs font-medium">Hapus produk</button>
+                        </div>
+                    </div>
+
+                    <!-- Item 2: Logitech Mouse -->
+                    <div class="py-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div class="flex gap-4">
+                            <div class="w-20 h-20 bg-slate-100 rounded-xl flex items-center justify-center text-xs text-slate-400 flex-shrink-0">
+                                [Gambar Logitech]
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-900 text-base">Logitech M331 Silent</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Black • Wireless</p>
+                                <p class="text-sm font-semibold text-slate-800 mt-1">Rp249.000 <span class="text-xs text-slate-400 font-normal">/ unit</span></p>
+                                <span class="inline-block text-[11px] text-emerald-600 font-semibold mt-1">Stok 38 unit</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
+                            <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50 self-start sm:self-auto">
+                                <button class="px-2.5 py-1 text-slate-500 hover:bg-slate-200 font-bold text-sm">-</button>
+                                <span class="px-3 py-1 text-xs font-bold text-slate-800 bg-white">2</span>
+                                <button class="px-2.5 py-1 text-blue-600 hover:bg-slate-200 font-bold text-sm">+</button>
+                            </div>
+                            <p class="font-bold text-slate-900 text-base">Rp498.000</p>
+                            <button class="text-red-500 hover:underline text-xs font-medium">Hapus produk</button>
+                        </div>
+                    </div>
+
+                    <!-- Subtotal Keranjang -->
+                    <div class="pt-6 flex justify-between items-center">
+                        <span class="text-sm font-bold text-slate-800">Subtotal (3 barang)</span>
+                        <span class="text-2xl font-extrabold text-slate-900">Rp8.997.000</span>
+                    </div>
+                </div>
+
+                <!-- Catatan Kecil -->
+                <p class="text-xs text-slate-500 px-2">Jumlah produk dapat diubah sesuai stok. Ketersediaan diperiksa kembali saat checkout.</p>
+
+                <!-- Section Lengkapi Setup Anda -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
+                    <h3 class="font-bold text-slate-900 text-base mb-4">Lengkapi setup Anda</h3>
+                    <div class="flex items-center justify-between gap-4 p-3 border border-slate-100 rounded-xl bg-slate-50/50">
+                        <div class="flex items-center gap-4">
+                            <div class="w-16 h-16 bg-slate-200 rounded-lg flex items-center justify-center text-[10px] text-slate-400">
+                                [Keyboard]
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">Keychron C1 Mechanical</h4>
+                                <p class="text-xs text-slate-500">Keyboard nyaman untuk kerja sehari-hari</p>
+                                <p class="text-sm font-bold text-slate-900 mt-1">Rp899.000</p>
+                            </div>
+                        </div>
+                        <button class="border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-semibold px-4 py-1.5 rounded-lg text-xs transition">
+                            Tambah
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Kolom Kanan: Ringkasan Pesanan -->
+            <div class="w-full lg:w-1/3">
+                <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm sticky top-24">
+                    <h2 class="text-lg font-bold text-slate-900 mb-1">Ringkasan pesanan</h2>
+                    <p class="text-xs text-slate-400 mb-6">INV/2026/1005/0281 • 3 barang</p>
+
+                    <div class="space-y-3 text-xs text-slate-600 pb-4 border-b border-slate-100">
+                        <div class="flex justify-between">
+                            <span>ASUS Vivobook 14 × 1</span>
+                            <span class="font-medium text-slate-800">Rp8.499.000</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Logitech M331 × 2</span>
+                            <span class="font-medium text-slate-800">Rp498.000</span>
+                        </div>
+                        <div class="flex justify-between pt-2">
+                            <span>Subtotal</span>
+                            <span class="font-semibold text-slate-800">Rp8.997.000</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Pengiriman JNE REG</span>
+                            <span class="font-semibold text-slate-800">Rp35.000</span>
+                        </div>
+                    </div>
+
+                    <div class="py-6 flex justify-between items-center">
+                        <span class="text-sm font-bold text-slate-900">Total pembayaran</span>
+                        <span class="text-2xl font-extrabold text-blue-600">Rp9.032.000</span>
+                    </div>
+
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-sm transition shadow-lg shadow-blue-500/20 mb-4">
+                        Checkout (3 barang) →
+                    </button>
+
+                    <p class="text-[11px] text-slate-400 leading-relaxed text-center">
+                        Harga sudah termasuk pajak. Simpan invoice sebagai referensi pesanan Anda.
+                    </p>
+                </div>
+
+                <p class="text-[11px] text-slate-400 mt-4 px-2">
+                    Ongkir di atas merupakan estimasi untuk alamat utama Jakarta Selatan.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}

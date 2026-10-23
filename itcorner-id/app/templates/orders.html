@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}Riwayat Pesanan - ITCorner.id{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    
+    <!-- Breadcrumb -->
+    <nav class="text-xs text-slate-500 mb-3 flex items-center gap-2">
+        <a href="{{ url_for('home') }}" class="hover:text-blue-600">Beranda</a>
+        <span>/</span>
+        <a href="{{ url_for('profile') }}" class="hover:text-blue-600">Akun saya</a>
+        <span>/</span>
+        <span class="text-slate-800 font-medium">Riwayat pesanan</span>
+    </nav>
+
+    <!-- Header Halaman -->
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-slate-900">Riwayat pesanan</h1>
+        <p class="text-sm text-slate-500 mt-1">Semua pembelian dan perkembangan pesanan dalam satu tempat.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        
+        <!-- SIDEBAR KIRI: Menu Profil -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
+                <!-- Profil Singkat -->
+                <div>
+                    <h2 class="font-bold text-slate-900 text-base">{{ session.get('user_name', 'Pengguna') }}</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Pelanggan sejak September 2026</p>
+                </div>
+
+                <!-- Navigasi Sidebar -->
+                <nav class="space-y-1 text-sm font-medium">
+                    <a href="{{ url_for('profile') }}" class="block px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition">
+                        Profil saya
+                    </a>
+                    <a href="{{ url_for('orders') }}" class="block px-4 py-2.5 rounded-xl bg-blue-50/80 text-blue-600 font-semibold transition">
+                        Riwayat pesanan
+                    </a>
+                    <a href="#" class="block px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition">
+                        Alamat pengiriman
+                    </a>
+                    <a href="{{ url_for('logout') if 'logout' in mapper else '#' }}" class="block px-4 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition mt-4">
+                        Keluar
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- KOLOM KANAN: Daftar Pesanan & Detail Pesanan Terpilih -->
+        <div class="lg:col-span-3 space-y-8">
+            
+            <!-- CARD 1: Tabel Daftar Pesanan -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
+                
+                <!-- Filter Tabs & Dropdowns -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <button class="bg-blue-600 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow-sm transition">
+                        Semua pesanan
+                    </button>
+                    
+                    <div class="relative">
+                        <select class="bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-3.5 py-2 rounded-xl focus:outline-none focus:border-blue-500 appearance-none pr-8">
+                            <option>Status: semua</option>
+                            <option>Menunggu bayar</option>
+                            <option>Diverifikasi</option>
+                            <option>Diproses</option>
+                            <option>Dikirim</option>
+                            <option>Selesai</option>
+                            <option>Ditolak</option>
+                        </select>
+                        <span class="absolute right-2.5 top-2.5 text-slate-400 text-xs pointer-events-none">↓</span>
+                    </div>
+
+                    <div class="relative">
+                        <select class="bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-3.5 py-2 rounded-xl focus:outline-none focus:border-blue-500 appearance-none pr-8">
+                            <option>30 hari terakhir</option>
+                            <option>3 bulan terakhir</option>
+                            <option>Tahun 2026</option>
+                        </select>
+                        <span class="absolute right-2.5 top-2.5 text-slate-400 text-xs pointer-events-none">↓</span>
+                    </div>
+                </div>
+
+                <!-- Tabel Pesanan -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-50 text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-100">
+                            <tr>
+                                <th class="p-3">PESANAN</th>
+                                <th class="p-3">TANGGAL</th>
+                                <th class="p-3">TOTAL</th>
+                                <th class="p-3">STATUS</th>
+                                <th class="p-3 text-right">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700 font-medium">
+                            {% for payment in payments %}
+                            <tr class="hover:bg-slate-50/50 transition">
+                                <td class="py-3.5 px-3 font-bold text-slate-900">{{ payment.id }}</td>
+                                <td class="py-3.5 px-3 text-slate-500">{{ payment.date }}</td>
+                                <td class="py-3.5 px-3 font-semibold text-slate-900">{{ payment.amount }}</td>
+                                <td class="py-3.5 px-3">
+                                    <span class="inline-flex items-center gap-1.5 font-bold {% if payment.status == 'Disetujui' %}text-emerald-600{% elif payment.status == 'Ditolak' %}text-red-600{% else %}text-amber-600{% endif %}">
+                                        <span class="w-1.5 h-1.5 rounded-full {% if payment.status == 'Disetujui' %}bg-emerald-500{% elif payment.status == 'Ditolak' %}bg-red-500{% else %}bg-amber-500{% endif %}"></span>
+                                        {{ payment.status }}
+                                    </span>
+                                </td>
+                                <td class="py-3.5 px-3 text-right text-slate-400">—</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="py-8 px-3 text-center text-slate-500">
+                                    Belum ada pesanan.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="text-[11px] text-slate-400">Menampilkan {{ payments|length }} pesanan.</p>
+            </div>
+
+            {% if latest_payment %}
+            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-5">
+                <div class="border-b border-slate-100 pb-4">
+                    <h2 class="text-xl font-bold text-slate-900">Detail pesanan</h2>
+                    <p class="text-xs text-slate-400 mt-1">{{ latest_payment.id }} • {{ latest_payment.date }}</p>
+                </div>
+
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">{{ latest_payment.product_name }}</h3>
+                        <p class="text-xs text-slate-500 mt-1">{{ latest_payment.quantity }} × {{ latest_payment.unit_price }}</p>
+                    </div>
+                    <span class="text-sm font-bold text-slate-900">{{ latest_payment.amount }}</span>
+                </div>
+
+                <div class="flex justify-between border-t border-slate-100 pt-4 text-sm">
+                    <span class="font-semibold text-slate-700">Status pembayaran</span>
+                    <span class="font-bold text-amber-600">{{ latest_payment.status }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-slate-500">Metode pembayaran</span>
+                    <span class="font-medium text-slate-800">{{ latest_payment.method }}</span>
+                </div>
+                <div class="flex justify-between border-t border-slate-100 pt-4 text-sm font-extrabold">
+                    <span class="text-slate-800">Total</span>
+                    <span class="text-blue-600">{{ latest_payment.amount }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
