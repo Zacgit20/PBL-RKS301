@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITCorner.id - Buat Akun</title>
+    <!-- Memanggil Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#F8FAFC] font-sans text-slate-800 m-0 min-h-screen flex flex-col">
+
+    <!-- HEADER/NAVBAR (Sama seperti beranda) -->
+    <header class="bg-white border-b border-slate-200">
+        <div class="max-w-8xl mx-auto px-4 py-4 flex justify-between items-center">
+            <a href="{{ url_for('home') }}" class="text-2xl font-extrabold text-blue-600 tracking-tighter hover:opacity-80">
+                ITCorner<span class="text-slate-800">.id</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- KONTEN UTAMA REGISTRASI -->
+    <main class="flex-grow flex items-center justify-center p-6">
+        <div class="max-w-6xl w-full flex flex-col lg:flex-row gap-12 items-start">
+            
+            <!-- Sisi Kiri: Panel Info (Banner Biru Gelap) -->
+            <div class="w-full lg:w-5/12 bg-[#0F172A] rounded-2xl p-10 text-white shadow-xl">
+                <span class="inline-block bg-white text-blue-600 text-xs font-bold px-3 py-1 rounded-sm mb-6 uppercase tracking-wider">
+                    Selamat Datang di ITCorner.id
+                </span>
+                <h1 class="text-4xl font-bold mb-4 leading-tight">Perangkat tepat.<br>Pengalaman lebih dekat.</h1>
+                <p class="text-slate-300 mb-8 text-sm leading-relaxed">
+                    Simpan pilihan Anda, kelola pesanan, dan temukan teknologi yang menemani setiap hari.
+                </p>
+                
+                <!-- Placeholder Gambar Workspace -->
+                <div class="relative bg-slate-800 rounded-lg overflow-hidden mt-8 mb-6 h-64 w-full flex items-center justify-center">
+                    <img src="{{ url_for('static', filename='images/framework.jpg') }}" 
+                        alt="Ilustrasi ITCorner.id" 
+                        class="w-full h-full object-cover object-center">
+                </div>
+                
+                <p class="text-slate-300 text-sm mb-6">Satu akun untuk seluruh perjalanan belanja Anda.</p>
+            </div>
+
+            <!-- Sisi Kanan: Form Registrasi -->
+            <div class="w-full lg:w-6/12 bg-white p-10 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-blue-600 text-xs font-bold mb-2 uppercase tracking-wider">Mulai dari sini</p>
+                <h2 class="text-3xl font-bold text-slate-900 mb-2">Buat akun Anda.</h2>
+                <p class="text-slate-500 text-sm mb-8">Selangkah lebih dekat dengan perangkat pilihan.</p>
+
+                <form action="{{ url_for('register') }}" method="POST" class="space-y-5" novalidate>
+                    
+                    <!-- Input Nama Lengkap -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-900 mb-1">Nama lengkap</label>
+                        <p class="text-xs text-slate-500 mb-2">Gunakan nama penerima pesanan.</p>
+                        <input type="text" name="fullname"  value="{{ request.form.get('fullname', '') }}" placeholder="nama lengkap" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    </div>
+
+                    <!-- Input Email (State Error) -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-900 mb-1">Email </label>
+                        <p class="text-xs text-slate-500 mb-2">Gunakan email aktif Anda.</p>
+                        <input type="email" name="email" value="{{ request.form.get('email', '') }}" placeholder="email@contoh.com" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    </div>
+
+                    <!-- Input Nomor Telepon -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-900 mb-1">Nomor telepon </label>
+                        <p class="text-xs text-slate-500 mb-2">Gunakan nomor aktif, 10-13 digit.</p>
+                        <input type="tel" name="phone" value="{{ request.form.get('phone', '') }}" placeholder="0812 3456 7890" minlength="10" maxlength="13" class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    </div>
+
+                    <!-- Input Kata Sandi -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-900 mb-1">Kata sandi</label>
+                        <p class="text-xs text-slate-500 mb-2">Minimal 8 karakter, kombinasikan huruf dan angka. Jangan gunakan kata sandi dari layanan lain.</p>
+                        <div class="relative">
+                            <input type="password" id="password" name="password" placeholder="••••••••••••" class="w-full border border-slate-300 rounded-lg pl-4 pr-10 py-2.5 text-sm tracking-widest focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                             <div id="togglePassword1" class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer">
+                                <!-- Eye Icon -->
+                                <svg  id="eyeIcon1" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Konfirmasi Kata Sandi -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-900 mb-1">Konfirmasi kata sandi</label>
+                        <p class="text-xs text-slate-500 mb-2">Harus sama dengan kata sandi di atas.</p>
+                        <div class="relative">
+                            <input type="password" id="confirm_password" name="confirm_password" placeholder="••••••••••••" class="w-full border border-slate-300 rounded-lg pl-4 pr-10 py-2.5 text-sm tracking-widest focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                             <div id="togglePassword2" class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer">
+                                <!-- Eye Icon -->
+                                <svg  id="eyeIcon2" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Checkbox Syarat & Ketentuan -->
+                    <div class="flex items-start mt-6">
+                        <div class="flex items-center h-5">
+                            <input id="terms" name="terms" type="checkbox" {% if request.method == 'GET' or request.form.get('terms') %}checked{% endif %} checked class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="terms" class="text-slate-600">Saya menyetujui Syarat & ketentuan dan Kebijakan privasi ITCorner.id.</label>
+                        </div>
+                    </div>
+
+                    <!-- Pesan Error General (Di bawah centang, di atas tombol) -->
+                     {% if form_error %}
+                     <p class="text-xs text-red-500 font-medium my-2">{{ form_error }}</p>
+                     {% endif %}
+
+                    <!-- Tombol Daftar -->
+                    <div class="pt-2">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-lg text-sm transition flex items-center">
+                            Daftar akun
+                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Link Login -->
+                <div class="mt-10 border-t border-slate-100 pt-6">
+                    <a href="{{ url_for('login')}}" class="text-blue-600 text-sm font-semibold hover:underline flex items-center">
+                        Sudah punya akun? Masuk
+                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </main>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
