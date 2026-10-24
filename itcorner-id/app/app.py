@@ -6,7 +6,7 @@ import logging
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 # from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, session, url_for
+from flask import Flask, render_template, request, redirect, session, url_for, jsonify
 from dummy_db import products_db, users_db, payments_db, format_rupiah, get_current_date_indo
 
 app = Flask(__name__)
@@ -193,13 +193,150 @@ def register():
 
     return render_template('register.html', form_error=form_error)
 
-@app.route('/detail')
-def detail():
-    return render_template('detail.html')
+@app.route('/detail/<int:product_id>')
+def detail(product_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
+    # Cari produk berdasarkan ID
+    product = next((p for p in products_db if p['id'] == product_id), None)
+    if not product:
+        return redirect(url_for('home'))
 
-@app.route('/cart')
+    # Format harga ke Rupiah
+    product_data = product.copy()
+    product_data['price'] = format_rupiah(product['price_num'])
+
+    return render_template('detail.html', product=product_data)
+
+@app.route('/cart', methods=['GET', 'POST'])
 def cart():
-    return render_template('cart.html')
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    if 'cart' not in session:
+        session['cart'] = []
+
+    if request.method == 'POST':
+        try:
+            product_id = int(request.form.get('product_id'))
+            quantity = int(request.form.get('quantity', 1))
+        except (TypeError, ValueError):
+            return redirect(url_for('cart'))
+
+        cart = session['cart']
+        found = False
+        for item in cart:
+            if item['product_id'] == product_id:
+                item['quantity'] += quantity
+                found = True
+                break
+        
+        if not found:
+            cart.append({'product_id': product_id, 'quantity': quantity})
+            
+        session['cart'] = cart
+        session.modified = True
+        return redirect(url_for('cart'))
+
+    cart_items = []
+    total_price = 0
+    for item in session.get('cart', []):
+        prod = next((p for p in products_db if p['id'] == item['product_id']), None)
+        if prod:
+            item_total = prod['price_num'] * item['quantity']
+            total_price += item_total
+            
+            # Buat salinan data produk dan tambahkan harga terformat
+            prod_copy = prod.copy()
+            prod_copy['price'] = format_rupiah(prod['price_num'])
+            
+            cart_items.append({
+                'product': prod_copy,
+                'quantity': item['quantity'],
+                'subtotal': format_rupiah(item_total)
+            })
+
+    return render_template('cart.html', items=cart_items, total=format_rupiah(total_price))
+
+
+@app.route('/add-to-cart', methods=['POST'])
+def add_to_cart():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+        
+    if 'cart' not in session:
+        session['cart'] = []
+
+    try:
+        product_id = int(request.form.get('product_id'))
+        quantity = int(request.form.get('quantity', 1))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid input'}), 400
+
+    cart = session['cart']
+    found = False
+    for item in cart:
+        if item['product_id'] == product_id:
+            item['quantity'] += quantity
+            found = True
+            break
+    
+    if not found:
+        cart.append({'product_id': product_id, 'quantity': quantity})
+        
+    session['cart'] = cart
+    session.modified = True
+    
+    return jsonify({'status': 'success', 'cart_count': sum(item['quantity'] for item in cart)})
+
+
+@app.route('/update-cart', methods=['POST'])
+def update_cart():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        product_id = int(request.form.get('product_id'))
+        action = request.form.get('action')
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid input'}), 400
+
+    cart = session.get('cart', [])
+    for item in cart:
+        if item['product_id'] == product_id:
+            if action == 'increase':
+                item['quantity'] += 1
+            elif action == 'decrease' and item['quantity'] > 1:
+                item['quantity'] -= 1
+            break
+
+    session['cart'] = cart
+    session.modified = True
+    return jsonify({'status': 'success'})
+
+
+@app.route('/remove-from-cart', methods=['POST'])
+def remove_from_cart():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        product_id = int(request.form.get('product_id'))
+    except (TypeError, ValueError):
+        return jsonify({'error': 'Invalid product ID'}), 400
+
+    cart = session.get('cart', [])
+    session['cart'] = [item for item in cart if item['product_id'] != product_id]
+    session.modified = True
+    return jsonify({'status': 'success'})
+
+
+@app.context_processor
+def inject_cart_count():
+    cart = session.get('cart', [])
+    cart_count = sum(item['quantity'] for item in cart)
+    return dict(cart_count=cart_count, format_rupiah=format_rupiah)
 
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
