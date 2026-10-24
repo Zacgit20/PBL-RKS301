@@ -65,7 +65,7 @@
     </section>
 
     <!-- AREA KATALOG PRODUK & SIDEBAR -->
-    <div class="max-w-7xl mx-auto px-4 mt-8 flex flex-col md:flex-row gap-8 mb-16">
+    <div id="katalog" class="scroll-mt-24 max-w-7xl mx-auto px-4 mt-8 flex flex-col md:flex-row gap-8 mb-16">
 
         <!-- SIDEBAR FILTER (TERHUBUNG FLASK) -->
          <aside class="w-full md:w-1/4">
@@ -146,23 +146,31 @@
                     <span class="absolute top-4 left-4 bg-blue-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg z-10 shadow-sm">
                         {{ product.category }}
                     </span>
-                    
-                    <div class="bg-slate-50 h-44 rounded-xl mb-4 mt-6 overflow-hidden relative flex items-center justify-center p-2">
+                    <!-- 1. GAMBAR BISA DIKLIK UNTUK KE DETAIL -->
+                     <a href="{{ url_for('detail', product_id=product.id) }}" class="bg-slate-50 h-44 rounded-xl mb-4 mt-6 overflow-hidden relative flex items-center justify-center p-2 block cursor-pointer">
                         <img src="{{ product.image }}" alt="{{ product.name }}" class="max-h-full object-contain group-hover:scale-105 transition duration-300">
-                    </div>
-                    
+                    </a>
                     <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">{{ product.brand if product.brand else 'ITCorner' }} / {{ product.category }}</p>
-                    <h3 class="font-bold text-sm mb-1 text-slate-900 leading-snug group-hover:text-blue-600 transition">{{ product.name }}</h3>
+                    <!-- 2. NAMA PRODUK BISA DIKLIK UNTUK KE DETAIL -->
+                     <h3 class="font-bold text-sm mb-1 text-slate-900 leading-snug group-hover:text-blue-600 transition">
+                        <a href="{{ url_for('detail', product_id=product.id) }}">
+                            {{ product.name }}
+                        </a>
+                    </h3>
                     <p class="text-[11px] text-slate-500 mb-2 truncate">{{ product.specs if product.specs else (product.description if product.description else 'Spesifikasi standar') }}</p>
                     <p class="text-xs text-amber-500 font-semibold mb-3 flex items-center gap-1">★ 4.8 <span class="text-slate-400 font-normal">· Tersedia</span></p>
-                    
                     <p class="text-base font-extrabold text-slate-900 mb-4 mt-auto">{{ product.price }}</p>
-                    
+
                     <div class="flex justify-between items-center pt-2 border-t border-slate-100">
                         <span class="text-emerald-600 text-[11px] font-semibold">Stok {{ product.stock }}</span>
-                        <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-3.5 rounded-xl text-xs transition shadow-sm">
-                            + Tambah
-                        </button>
+                        <!-- 3. TOMBOL + TAMBAH TETAP ADA UNTUK TRANSAKSI LANGSUNG -->
+                         <form onsubmit="addToCart(event, this)">
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-3.5 rounded-xl text-xs transition shadow-sm">
+                                + Tambah
+                            </button>
+                        </form>
                     </div>
                 </div>
                 {% else %}
@@ -206,4 +214,5 @@
         </div>
     </div>
 </main>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
 {% endblock %}
