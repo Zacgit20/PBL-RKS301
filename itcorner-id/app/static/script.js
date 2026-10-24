@@ -49,3 +49,73 @@ function tambahKeKeranjang(namaProduk) {
 
     alert(namaProduk + " berhasil ditambahkan ke keranjang!");
 }
+
+// AGAR CART TIDAK REALOD JIKA DI KLIK +
+function addToCart(event, formElement) {
+    event.preventDefault(); // Mencegah reload halaman
+
+    const formData = new FormData(formElement);
+
+    fetch("/add-to-cart", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Gagal menambahkan produk.");
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            const cartBadge = document.getElementById("cart-count");
+            if (cartBadge) {
+                cartBadge.innerText = data.cart_count;
+            }
+        }
+    })
+    .catch(error => console.error("Error:", error));
+}
+
+// Fungsi untuk menambah/mengurangi jumlah produk di halaman cart
+function updateCartQuantity(productId, action) {
+    const formData = new FormData();
+    formData.append('product_id', productId);
+    formData.append('action', action);
+
+    fetch('/update-cart', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Gagal mengupdate keranjang");
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            window.location.reload(); // Refresh halaman untuk memperbarui total harga
+        }
+    })
+    .catch(error => console.error("Error:", error));
+}
+
+// Fungsi untuk menghapus produk dari keranjang
+function removeFromCart(productId) {
+    const formData = new FormData();
+    formData.append('product_id', productId);
+
+    fetch('/remove-from-cart', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) throw new Error("Gagal menghapus produk");
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            window.location.reload(); // Refresh halaman setelah hapus
+        }
+    })
+    .catch(error => console.error("Error:", error));
+}
