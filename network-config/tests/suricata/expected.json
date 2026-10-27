@@ -1,0 +1,22 @@
+{
+  "kind": "synthetic offline fixtures; not lab evidence",
+  "engine_test_status": "NOT_RUN",
+  "positive": {
+    "file": "positive.pcap",
+    "expected_sids": [
+      1003001,
+      1003002,
+      1003003,
+      1003004,
+      1003005,
+      1003006
+    ],
+    "packet_count": 128
+  },
+  "negative": {
+    "file": "negative.pcap",
+    "expected_sids": [],
+    "packet_count": 32
+  },
+  "scope": "No sockets opened. HTTP plaintext on port8080; no actual service required for replay."
+}

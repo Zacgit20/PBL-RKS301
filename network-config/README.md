@@ -1,0 +1,92 @@
+# Paket tugas Network Engineer ITCorner.id
+
+**Penanggung jawab:** Muhammad Danish - PM & Network Engineer  
+**Target branch:** `feat/network-config`  
+**Versi:** 0.6 - 18 Oktober 2026  
+**Status:** rancangan dan dokumentasi parsial; belum diterapkan/diuji menyeluruh di lab.
+
+Paket ini mengisi bahan tugas jaringan: gambar topologi dari RPP, daftar target 13 VM dan tabel IP/VLSM, panduan Edge/Internal, matriks rule, draft Suricata, dan lembar bukti uji. Baseline mengikuti RPP Final yang dibaca pada percakapan proyek; file Final asli belum tersedia di workspace saat paket disusun. Cocokkan lagi dengan file asli sebelum menamai dokumen sebagai konfigurasi final.
+
+## Target Suricata IPS
+
+Target akhir adalah **IPS pada Edge dan Internal OPNsense**. Mulai dengan observasi alert, kemudian evaluasi mode inline dan drop SID terpilih setelah tuning. File rules/YAML/PCAP belum diubah pada revisi dokumentasi ini. Pengujian IPS, normal traffic dan rollback masih BELUM DIUJI.
+
+## Pemakaian pada PC lab 32 GB
+
+Spesifikasi seluruh 13 VM berjumlah **48 GiB RAM**. Untuk PC 32 GB, gunakan **satu profil bergantian dengan RAM VM aktif 20-24 GiB**, menyisakan ruang nominal sekitar 8-12 GiB untuk host. Seluruh layanan tidak direncanakan menyala serentak. CPU i9-10900K dan sisa ruang kosong disk sekitar 300 GB sudah dikonfirmasi pengguna. Kinerja, jenis disk, ukuran VM aktual, serta pertumbuhan data masih harus dibuktikan di lab. Target 720 GiB disk virtual total bukan kebutuhan ruang tambahan langsung; mulai dengan data kecil dan sisakan cadangan host sekitar 50 GB.
+
+Baca `docs/network/spesifikasi-vm-32gb.md` sebelum menyalakan VM. Dokumen itu memuat OS/mode, vCPU, RAM, disk, adapter, nama zona, profil, dan ketergantungannya. Rekam hasil di `evidence/network/uji-kapasitas-32gb.md`.
+
+## Mulai dari tiga berkas ini
+
+1. `docs/network/topologi-rpp.md` - gambar asli RPP beserta sumber dan perbedaannya dengan daftar VM terkini.
+2. `docs/network/konfigurasi-edge-internal.md` - status aktual, urutan pengerjaan, dan verifikasi.
+3. `docs/network/rencana-ips-opnsense.md` - target Suricata IPS, fase observasi, drop terpilih, logging dan rollback.
+
+Rules baseline untuk persiapan IPS tersedia di `config/suricata/itcorner-local.rules`; keenam aksi masih alert dan belum menjadi pemblokiran aktif.
+
+## Status yang dapat dicatat sekarang
+
+| Pekerjaan | Status |
+|---|---|
+| Instalasi 13 VM | Selesai menurut konfirmasi pengguna |
+| Assignment VLAN 20/30/40/50/60 Internal | Terlihat pada screenshot console |
+| WAN Internal 10.10.1.2/30 | Terlihat pada screenshot console |
+| LAN Management 10.10.20.1/29 | Pengguna menyatakan sudah setting; perlu cek hasil akhir |
+| VLAN ID pada satu Windows | Opsi sudah muncul; tagging/koneksi belum diuji |
+| Edge; routing; NAT; Internet; firewall; SOC | Perlu konfigurasi/verifikasi di lab |
+| Target Suricata IPS | Ditetapkan tim; belum diterapkan pada VM lab |
+| Rules Suricata dalam paket | Baseline alert untuk observasi; drop terpilih menunggu tuning/uji |
+
+Paket awal menggunakan snapshot repo 15 Oktober. Saat pemasukan draf ini pada 18 Oktober 2026, branch `feat/network-config` disinkronkan ke `6820019785e345ca4770fc2b249cf8bf9510049e` melalui SSH WSL dan struktur repo diperiksa. Ini bukan audit ulang seluruh fitur aplikasi.
+
+## Format berkas
+
+Semua keterangan, tabel, dan catatan hasil pemeriksaan tersedia dalam `.md`. Gambar topologi asli RPP tersedia sebagai `.png` dan ditampilkan pada `docs/network/topologi-rpp.md`. Berkas `.rules`, `.yaml`, `.json`, `.pcap`, dan `.py` merupakan konfigurasi atau bahan uji, bukan pengganti dokumentasi.
+
+## Daftar isi
+
+- `docs/network/topologi-rpp.md` - gambar RPP, identitas sumber dan catatan Bastion yang belum tergambar.
+- `docs/network/topologi-rpp.png` - gambar yang diekstrak tanpa mengubah isinya.
+
+- `docs/network/tabel-ip-vlsm.md` - nama zona, subnet, VLSM, gateway, dan alokasi CPU/RAM/disk seluruh 13 VM.
+- `docs/network/spesifikasi-vm-32gb.md` - spesifikasi lengkap dan tujuh profil penggunaan bergantian, termasuk P7 persiapan uji IPS pada host 32 GB.
+- `evidence/network/uji-kapasitas-32gb.md` - lembar pengukuran host dan keberhasilan tiap profil; belum diuji.
+- `docs/network/firewall-rule-matrix.md` - rencana akses; bukan file impor firewall.
+- `docs/network/suricata-dan-integrasi-soc.md` - SID, pemasangan dan koordinasi SOC.
+- `docs/network/rencana-ips-opnsense.md` - rencana mode inline, aksi terpilih, bukti drop dan rollback.
+- `docs/network/REFERENSI.md` - sumber resmi dan keputusan yang masih terbuka.
+- `tests/suricata/` - PCAP sintetis offline positif/negatif, manifest ekspektasi, prosedur uji.
+- `scripts/build_suricata_fixtures.py` - membangun ulang fixture lokal; tidak mengirim paket.
+- `scripts/verify_suricata_alerts.py` - membandingkan EVE hasil engine dengan ekspektasi.
+- `evidence/network/hasil-uji.md` - seluruh uji lab berstatus BELUM DIUJI.
+- `evidence/network/validasi-paket.md` - hasil pemeriksaan statis paket, bukan bukti sistem lab berhasil.
+
+## Memasukkan ke repository
+
+Paket ini disimpan utuh di `network-config/` pada branch `feat/network-config`, terpisah dari implementasi aplikasi pada `itcorner-id/`. Semua path paket seperti `docs/network/...`, `config/suricata/...`, `scripts/...`, `tests/...` dan `evidence/...` dihitung relatif terhadap folder `network-config/`. Jalankan perintah uji dari folder itu ketika tahap pengujian dimulai. Replay yang tersedia hanya menguji deteksi offline; uji IPS live memakai skenario IPS-01 sampai IPS-08.
+
+Rules kandidat berada di `network-config/config/suricata/itcorner-local.rules`. Rules tim pada `itcorner-id/config/suricata/itcorner-local.rules` tidak ditimpa atau digabung secara otomatis. Pemilihan ruleset aktif, pemuatan OPNsense, dan pengujian merupakan pekerjaan tahap berikutnya. Manifest paket memakai path relatif terhadap `network-config/` dan dihitung ulang setelah penyesuaian README ini.
+
+Tidak ada backup XML, password, private key VPN, atau token dalam paket ini. Backup konfigurasi asli disimpan privat/terenkripsi. Paket ini belum berisi XML siap restore.
+
+## Catatan audit sebelum push draf
+
+Pengguna menetapkan ini sebagai progres pengerjaan firewall dan IP, belum konfigurasi final. Pengujian belum dimulai. Catatan berikut sengaja belum diperbaiki pada draf ini agar tahap pekerjaan tidak disalahartikan:
+
+- Pemeriksa `scripts/verify_suricata_alerts.py` pada kasus negatif dapat memberi PASS pada JSON biasa atau event stats tanpa bukti PCAP diproses. Jangan gunakan hasilnya sebagai acceptance sebelum pemeriksa diperbaiki dan diuji.
+- Matriks firewall perlu melengkapi izin Transit Edge untuk pengelolaan Edge, akses administrasi SOC, jalur backup data Wazuh, ICMP diagnostik, serta tujuan/layanan egress sesuai kebutuhan nyata.
+- Enam rules masih kandidat; parser engine, replay, pemuatan persisten OPNsense, VLAN dan integrasi live belum diuji. Paket tidak berisi XML siap restore.
+- Profil VM bergantian dipakai untuk pengerjaan bertahap; belum tersedia profil seluruh alur live aplikasi sampai SOC-IR pada batas RAM ini.
+- Pengujian dari luar NAT VMware memerlukan pemeriksaan port-forward VMware dan upstream, selain DNAT Edge.
+- Penerusan tag dan batas isolasi guest tagging perlu dibuktikan. RPP Final asli perlu dicocokkan kembali sebelum menyatakan kesesuaian final.
+
+Temuan tersebut merupakan backlog perbaikan, bukan hasil pengujian yang lulus. Tidak ada perubahan konfigurasi VM lab dalam commit dokumentasi ini.
+
+## Revisi 0.5 - target IPS
+
+Dokumen, gambar topologi dan lembar uji disesuaikan ke target IPS. Tujuh profil RAM mencakup P7 sebesar 22 GiB untuk persiapan uji IPS; belum ada benchmark. Kandidat SID 1003001-1003004 dapat dievaluasi sebagai drop setelah validasi, sedangkan SID 1003005/1003006 tetap alert pada rancangan awal. Tidak ada klaim IPS telah aktif atau pengujian telah lulus. Backlog audit sebelumnya tetap berlaku.
+
+## Revisi 0.6 - gambar topologi mengikuti RPP
+
+Topologi memakai gambar asli dari RPP PBL RKS-301 perbaikan.docx, menggantikan diagram buatan paket. Gambar belum menampilkan Bastion, sedangkan daftar target tetap 13 VM. Perbedaan dicatat pada topologi-rpp.md; file RPP sumber tidak diubah. Status konfigurasi, IPS dan seluruh pengujian tetap sesuai draf sebelumnya.
