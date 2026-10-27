@@ -1,4 +1,5 @@
 from datetime import datetime
+from werkzeug.security import generate_password_hash
 
 
 # ==========================================
@@ -13,11 +14,11 @@ products_db = [
 ]
 
 users_db = [
-    {"id": 1, "name": "Budi Santoso", "email": "budi@gmail.com", "password":("user1234"), "role": "Pelanggan", "joined": "12 Okt 2026", "status": "Aktif"},
-    {"id": 2, "name": "Siti Aminah", "email": "siti@gmail.com", "password":("User0234"), "role": "Pelanggan", "joined": "15 Okt 2026", "status": "Aktif"},
-    {"id": 3, "name": "Laila Rezky", "email": "laila@itcorner.id", "password":("admin1234"), "role": "Admin", "joined": "01 Jan 2026", "status": "Aktif"},
-    {"id": 4, "name": "Syika arjuna", "email": "syika@itcorner.id", "password":("Admin0234"), "role": "Admin", "joined": "03 Jan 2026", "status": "Aktif"},
-    {"id": 5, "name": "putri ananda syahri", "email": "terserahboscantik@gmail.com", "password":("User0234"), "role": "Pelanggan", "joined": "05 Jan 2026", "status": "Aktif"}
+    {"id": 1, "name": "Budi Santoso", "email": "budi@gmail.com", "password": generate_password_hash("user1234"), "role": "Pelanggan", "joined": "12 Okt 2026", "status": "Aktif"},
+    {"id": 2, "name": "Siti Aminah", "email": "siti@gmail.com", "password": generate_password_hash("User0234"), "role": "Pelanggan", "joined": "15 Okt 2026", "status": "Aktif"},
+    {"id": 3, "name": "Laila Rezky", "email": "laila@itcorner.id", "password": generate_password_hash("admin1234"), "role": "Admin", "joined": "01 Jan 2026", "status": "Aktif"},
+    {"id": 4, "name": "Syika arjuna", "email": "syika@itcorner.id", "password": generate_password_hash("Admin0234"), "role": "Admin", "joined": "03 Jan 2026", "status": "Aktif"},
+    {"id": 5, "name": "putri ananda syahri", "email": "terserahboscantik@gmail.com", "password": generate_password_hash("User0234"), "role": "Pelanggan", "joined": "05 Jan 2026", "status": "Aktif"}
 ]
 
 payments_db = []

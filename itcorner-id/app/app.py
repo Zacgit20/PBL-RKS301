@@ -4,9 +4,9 @@ import logging
 
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-# from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash 
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, session, url_for, jsonify
+from flask import Flask, render_template, request, redirect, session, url_for, jsonify 
 from dummy_db import products_db, users_db, payments_db, format_rupiah, get_current_date_indo
 
 app = Flask(__name__)
@@ -22,8 +22,8 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
-# log_werkzeug = logging.getLogger('werkzeug')
-# log_werkzeug.setLevel(logging.ERROR)
+log_werkzeug = logging.getLogger('werkzeug')
+log_werkzeug.setLevel(logging.ERROR)
 
 
 # ==========================================
@@ -35,11 +35,15 @@ def home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     
-    # 1. Ambil kata kunci pencarian ('q') dan kategori ('category') dari URLexit
+    # 1. Ambil seluruh parameter filter & pencarian dari URL
     search_query = request.args.get('q', '').strip()
     selected_category = request.args.get('category', 'all').strip()
+    min_price = request.args.get('min_price', type=int)
+    max_price = request.args.get('max_price', type=int)
+    sort_by = request.args.get('sort', '').strip()
+    in_stock_only = request.args.get('in_stock', '').strip()
     
-    filtered_db = products_db
+    filtered_db = products_db.copy()
     
     # 2. Filter Berdasarkan Kata Kunci Pencarian
     if search_query:
@@ -56,15 +60,33 @@ def home():
             p for p in filtered_db
             if p.get('category', '').lower() == selected_category.lower()
         ]
+
+    # 4. Filter Berdasarkan Rentang Harga (Min - Max)
+    if min_price is not None:
+        filtered_db = [p for p in filtered_db if p.get('price_num', 0) >= min_price]
+    if max_price is not None:
+        filtered_db = [p for p in filtered_db if p.get('price_num', 0) <= max_price]
+
+    # 5. Filter Status Ready Stock
+    if in_stock_only == '1':
+        filtered_db = [p for p in filtered_db if p.get('stock', 0) > 0]
+
+    # 6. Sorting / Pengurutan Produk
+    if sort_by == 'price_asc':
+        filtered_db.sort(key=lambda x: x.get('price_num', 0))
+    elif sort_by == 'price_desc':
+        filtered_db.sort(key=lambda x: x.get('price_num', 0), reverse=True)
+    elif sort_by == 'name_asc':
+        filtered_db.sort(key=lambda x: x.get('name', ''))
         
-    # 4. Format harga produk DARI HASIL FILTER (filtered_db), bukan products_db
+    # 7. Format harga produk DARI HASIL FILTER
     formatted_products = []
     for p in filtered_db:
         p_copy = p.copy()
         p_copy['price'] = format_rupiah(p['price_num'])
         formatted_products.append(p_copy)
         
-    # 5. Kirim data dan status filter ke index.html
+    # 8. Kirim data dan status filter ke index.html
     return render_template('index.html', 
                            products=formatted_products, 
                            search_query=search_query,
@@ -92,7 +114,7 @@ def login():
             if not user:
                 email_error = "Email belum terdaftar."
                 logging.warning(f"LOGIN FAILED: Email '{email}' tidak ditemukan dari IP {request.remote_addr}")
-            elif user.get('password') != password:
+            elif not check_password_hash(user['password'], password):
                 password_error = "Kata sandi salah."
                 logging.warning(f"LOGIN FAILED: Password salah untuk email '{email}' dari IP {request.remote_addr}")
             else:
@@ -126,14 +148,17 @@ def register():
         password = request.form.get('password', '').strip()
         confirm_password = request.form.get('confirm_password', '').strip()
         terms = request.form.get('terms')
+
         # 1. Validasi Kolom Kosong
         if not fullname or not email or not phone or not password or not confirm_password:
             form_error = "Harap isi semua kolom pendaftaran terlebih dahulu."
             return render_template('register.html', form_error=form_error)
+
         # 2. Validasi Format Email
         if '@' not in email or '.' not in email:
             form_error = "Format alamat email tidak valid."
             return render_template('register.html', form_error=form_error)
+
         # 3. Validasi Nomor HP Harus Angka
         if not phone.isdigit():
             form_error = "Nomor telepon hanya boleh berisi angka."
@@ -141,58 +166,49 @@ def register():
         elif len(phone) < 10 or len(phone) > 13:
             form_error = "Nomor telepon harus terdiri dari 10 hingga 13 digit."
             return render_template('register.html', form_error=form_error)
+
         # 4. Validasi Panjang Password
         if len(password) < 8:
             form_error = "Kata sandi minimal 8 karakter."
             return render_template('register.html', form_error=form_error)
+
         # 5. Validasi Konfirmasi Password
         if password != confirm_password:
             form_error = "Konfirmasi kata sandi tidak cocok."
             return render_template('register.html', form_error=form_error)
+
         # 6. Validasi Syarat & Ketentuan
         if not terms:
             form_error = "Anda harus menyetujui Syarat & Ketentuan terlebih dahulu."
             return render_template('register.html', form_error=form_error)
-        # 7. Cek Duplikasi Email (Sangat Penting!)
+
+        # 7. Cek Duplikasi Email
         existing_user = next((u for u in users_db if u['email'].lower() == email), None)
         if existing_user:
             form_error = "Email sudah terdaftar. Silakan gunakan email lain atau login."
             logging.warning(f"REGISTER FAILED: Email '{email}' sudah terdaftar dari IP {request.remote_addr}")
             return render_template('register.html', form_error=form_error)
-        # 8. Simpan ke Database Dummy
+
+        # 8. Hash Password & Simpan ke Database Dummy (Cukup Sekali Sahaja)
+        hashed_password = generate_password_hash(password)
+
         new_user = {
             "id": len(users_db) + 1,
             "name": fullname,
             "email": email,
             "phone": phone,
-            "password": password,
+            "password": hashed_password,  # Password tersimpan aman dalam bentuk Hash
             "role": "Pelanggan",
             "joined": get_current_date_indo(),
             "status": "Aktif"
         }
         users_db.append(new_user)
 
-        # # 9. HASH PASSWORD DI SINI SEBELUM DISIMPAN KE DATABASE DUMMY
-        # hashed_password = generate_password_hash(password)  # <-- Bikin hash di sini
-
-        # new_user = {
-        #     "id": len(users_db) + 1,
-        #     "name": fullname,
-        #     "email": email,
-        #     "phone": phone,
-        #     "password": hashed_password,  # <-- Simpan password yang sudah di-hash
-        #     "role": "Pelanggan",
-        #     "joined": get_current_date_indo(),
-        #     "status": "Aktif"
-        # }
-        # users_db.append(new_user)
-
-        # 10. Log Register Berhasil
+        # 9. Log Register Berhasil
         logging.info(f"REGISTER SUCCESS: User '{email}' ({fullname}) berhasil mendaftar dari IP {request.remote_addr}")
         return redirect(url_for('login'))
 
     return render_template('register.html', form_error=form_error)
-
 @app.route('/detail/<int:product_id>')
 def detail(product_id):
     if 'user_id' not in session:

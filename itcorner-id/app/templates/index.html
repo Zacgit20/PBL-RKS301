@@ -18,7 +18,7 @@
                 </h1>
                 <p class="text-slate-300 mb-8 text-sm">Laptop pilihan untuk ide besar Anda. Lebih cepat bekerja, lebih nyaman berkarya.</p>
                 <div class="flex items-center space-x-4 pt-2">
-                    <button class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl text-xs transition shadow-lg shadow-blue-600/25 hover:scale-[1.02]">Temukan laptop Anda →</button>
+                    <a href="#katalog" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl text-xs transition shadow-lg shadow-blue-600/25 hover:scale-[1.02] inline-block">Temukan laptop Anda →</a>
                     <span class="text-xs text-slate-400 font-medium">Mulai <strong class="text-slate-200">Rp5 jutaan</strong></span>
                 </div>
             </div>
@@ -67,53 +67,64 @@
     <!-- AREA KATALOG PRODUK & SIDEBAR -->
     <div id="katalog" class="scroll-mt-24 max-w-7xl mx-auto px-4 mt-8 flex flex-col md:flex-row gap-8 mb-16">
 
-        <!-- SIDEBAR FILTER (TERHUBUNG FLASK) -->
-         <aside class="w-full md:w-1/4">
-            <form action="{{ url_for('home') }}" method="GET" class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm sticky top-24">
-                <!-- Tetapkan kata kunci pencarian jika ada -->
-                 {% if search_query %}
-                 <input type="hidden" name="q" value="{{ search_query }}">
-                 {% endif %}
+        <!-- SIDEBAR FILTER (BARU: HARGA, SORTING, & STOK) -->
+        <aside class="w-full md:w-1/4">
+            <form action="{{ url_for('home') }}" method="GET" class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm sticky top-24 space-y-5">
+                <!-- Tetapkan Kategori & Pencarian Aktif -->
+                {% if request.args.get('category') %}
+                    <input type="hidden" name="category" value="{{ request.args.get('category') }}">
+                {% endif %}
+                {% if search_query %}
+                    <input type="hidden" name="q" value="{{ search_query }}">
+                {% endif %}
 
-                 <h2 class="text-xl font-bold text-slate-900 mb-1">Temukan perangkat</h2>
-                 <p class="text-xs text-slate-500 mb-6 pb-4 border-b border-slate-100">Pilihan kurasi untuk produktivitas, kreativitas, dan hiburan.</p>
-                 <h3 class="font-bold mb-4 text-sm text-slate-900">Filter produk</h3>
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 mb-1">Temukan perangkat</h2>
+                    <p class="text-xs text-slate-500 pb-4 border-b border-slate-100">Pilihan kurasi untuk produktivitas, kreativitas, dan hiburan.</p>
+                </div>
+                
+                <h3 class="font-bold text-sm text-slate-900">Filter produk</h3>
 
-                 <div class="mb-6">
-                    <h4 class="font-semibold text-xs text-slate-500 uppercase tracking-wider mb-3">Kategori</h4>
-                    <div class="space-y-2 text-sm">
-                        <label class="flex items-center space-x-2.5 text-slate-700 font-medium cursor-pointer">
-                            <input type="radio" name="category" value="all" {% if not selected_category or selected_category == 'all' %}checked{% endif %} class="text-blue-600 focus:ring-blue-500">
-                            <span>Semua kategori</span>
-                        </label>
-                        <label class="flex items-center space-x-2.5 text-slate-600 hover:text-slate-900 cursor-pointer">
-                            <input type="radio" name="category" value="Laptop" {% if selected_category == 'Laptop' %}checked{% endif %} class="text-blue-600 focus:ring-blue-500">
-                            <span>Laptop</span>
-                        </label>
-                        <label class="flex items-center space-x-2.5 text-slate-600 hover:text-slate-900 cursor-pointer">
-                            <input type="radio" name="category" value="Komponen" {% if selected_category == 'Komponen' %}checked{% endif %} class="text-blue-600 focus:ring-blue-500">
-                            <span>Komputer & Komponen</span>
-                        </label>
-                        <label class="flex items-center space-x-2.5 text-slate-600 hover:text-slate-900 cursor-pointer">
-                            <input type="radio" name="category" value="Monitor" {% if selected_category == 'Monitor' %}checked{% endif %} class="text-blue-600 focus:ring-blue-500">
-                            <span>Monitor</span>
-                        </label>
-                        <label class="flex items-center space-x-2.5 text-slate-600 hover:text-slate-900 cursor-pointer">
-                            <input type="radio" name="category" value="Aksesori" {% if selected_category == 'Aksesori' %}checked{% endif %} class="text-blue-600 focus:ring-blue-500">
-                            <span>Aksesori</span>
-                        </label>
-                        <label class="flex items-center space-x-2.5 text-slate-600 hover:text-slate-900 cursor-pointer">
-                            <input type="radio" name="category" value="Audio" {% if selected_category == 'Audio' %}checked{% endif %} class="text-blue-600 focus:ring-blue-500">
-                            <span>Audio</span>
-                        </label>
+                <!-- 1. Rentang Harga -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Rentang Harga (Rp)</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" name="min_price" value="{{ request.args.get('min_price', '') }}" placeholder="Min" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500">
+                        <input type="number" name="max_price" value="{{ request.args.get('max_price', '') }}" placeholder="Max" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-md shadow-blue-500/10 mb-2">
-                    Terapkan filter
-                </button>
-                {% if search_query or (selected_category and selected_category != 'all') %}
-                <a href="{{ url_for('home') }}" class="block text-center text-xs text-slate-500 hover:text-red-500 mt-2 font-medium">Reset Filter</a>
-                {% endif %}
+
+                <!-- 2. Urutkan Produk -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Urutkan</label>
+                    <select name="sort" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-blue-500">
+                        <option value="">Paling Sesuai</option>
+                        <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Harga: Termurah</option>
+                        <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Harga: Termahal</option>
+                        <option value="name_asc" {% if request.args.get('sort') == 'name_asc' %}selected{% endif %}>Nama: A - Z</option>
+                    </select>
+                </div>
+
+                <!-- 3. Ketersediaan Stok -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Ketersediaan</label>
+                    <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                        <input type="checkbox" name="in_stock" value="1" {% if request.args.get('in_stock') == '1' %}checked{% endif %} class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        Hanya produk ready stock
+                    </label>
+                </div>
+
+                <!-- Tombol Aksi -->
+                <div class="pt-2 space-y-2">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-md shadow-blue-500/10">
+                        Terapkan filter
+                    </button>
+                    {% if request.args.get('min_price') or request.args.get('max_price') or request.args.get('sort') or request.args.get('in_stock') %}
+                    <a href="{{ url_for('home', category=request.args.get('category', '')) }}" class="block text-center w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2 rounded-xl text-xs transition">
+                        Reset Filter
+                    </a>
+                    {% endif %}
+                </div>
             </form>
         </aside>
 
@@ -121,9 +132,22 @@
         <div class="w-full md:w-3/4">
             <!-- FORM PENCARIAN SEKUNDER -->
             <form action="{{ url_for('home') }}" method="GET" class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm">
-                {% if selected_category %}
-                <input type="hidden" name="category" value="{{ selected_category }}">
+                {% if request.args.get('category') %}
+                <input type="hidden" name="category" value="{{ request.args.get('category') }}">
                 {% endif %}
+                {% if request.args.get('min_price') %}
+                <input type="hidden" name="min_price" value="{{ request.args.get('min_price') }}">
+                {% endif %}
+                {% if request.args.get('max_price') %}
+                <input type="hidden" name="max_price" value="{{ request.args.get('max_price') }}">
+                {% endif %}
+                {% if request.args.get('sort') %}
+                <input type="hidden" name="sort" value="{{ request.args.get('sort') }}">
+                {% endif %}
+                {% if request.args.get('in_stock') %}
+                <input type="hidden" name="in_stock" value="{{ request.args.get('in_stock') }}">
+                {% endif %}
+
                 <div class="relative flex-1 w-full">
                     <button type="submit" class="absolute left-3.5 top-3 text-slate-400 hover:text-blue-600">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,11 +157,12 @@
                     <input type="text" name="q" value="{{ search_query if search_query else '' }}" placeholder="Cari nama atau spesifikasi..." class="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-10 pr-4 py-2 text-xs focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
                 </div>
             </form>
+
             <p class="text-xs text-slate-500 mb-4 px-1">
                 Menampilkan {{ products|length }} produk 
                 {% if is_promo %} • <strong class="text-blue-600">🔥 Promo Pilihan</strong>{% endif %}
                 {% if search_query %} • Kata kunci: "<strong class="text-slate-800">{{ search_query }}</strong>"{% endif %}
-                {% if selected_category and selected_category != 'all' %} • Kategori: <strong class="text-slate-800">{{ selected_category }}</strong>{% endif %}
+                {% if request.args.get('category') and request.args.get('category') != 'Semua produk' %} • Kategori: <strong class="text-slate-800">{{ request.args.get('category') }}</strong>{% endif %}
             </p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -146,25 +171,26 @@
                     <span class="absolute top-4 left-4 bg-blue-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg z-10 shadow-sm">
                         {{ product.category }}
                     </span>
-                    <!-- 1. GAMBAR BISA DIKLIK UNTUK KE DETAIL -->
-                     <a href="{{ url_for('detail', product_id=product.id) }}" class="bg-slate-50 h-44 rounded-xl mb-4 mt-6 overflow-hidden relative flex items-center justify-center p-2 block cursor-pointer">
+                    
+                    <a href="{{ url_for('detail', product_id=product.id) }}" class="bg-slate-50 h-44 rounded-xl mb-4 mt-6 overflow-hidden relative flex items-center justify-center p-2 block cursor-pointer">
                         <img src="{{ product.image }}" alt="{{ product.name }}" class="max-h-full object-contain group-hover:scale-105 transition duration-300">
                     </a>
+
                     <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">{{ product.brand if product.brand else 'ITCorner' }} / {{ product.category }}</p>
-                    <!-- 2. NAMA PRODUK BISA DIKLIK UNTUK KE DETAIL -->
-                     <h3 class="font-bold text-sm mb-1 text-slate-900 leading-snug group-hover:text-blue-600 transition">
+                    
+                    <h3 class="font-bold text-sm mb-1 text-slate-900 leading-snug group-hover:text-blue-600 transition">
                         <a href="{{ url_for('detail', product_id=product.id) }}">
                             {{ product.name }}
                         </a>
                     </h3>
+
                     <p class="text-[11px] text-slate-500 mb-2 truncate">{{ product.specs if product.specs else (product.description if product.description else 'Spesifikasi standar') }}</p>
                     <p class="text-xs text-amber-500 font-semibold mb-3 flex items-center gap-1">★ 4.8 <span class="text-slate-400 font-normal">· Tersedia</span></p>
                     <p class="text-base font-extrabold text-slate-900 mb-4 mt-auto">{{ product.price }}</p>
 
                     <div class="flex justify-between items-center pt-2 border-t border-slate-100">
                         <span class="text-emerald-600 text-[11px] font-semibold">Stok {{ product.stock }}</span>
-                        <!-- 3. TOMBOL + TAMBAH TETAP ADA UNTUK TRANSAKSI LANGSUNG -->
-                         <form onsubmit="addToCart(event, this)">
+                        <form onsubmit="addToCart(event, this)">
                             <input type="hidden" name="product_id" value="{{ product.id }}">
                             <input type="hidden" name="quantity" value="1">
                             <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-3.5 rounded-xl text-xs transition shadow-sm">
@@ -194,9 +220,9 @@
                 <p class="text-slate-500 text-xs leading-relaxed mb-6">Lengkapi meja kerja dengan monitor, keyboard, dan mouse pilihan agar kerja lebih fokus.</p>
             </div>
             <div>
-                <button class="bg-white border border-slate-200 text-slate-800 font-bold py-2.5 px-5 rounded-xl text-xs hover:bg-slate-50 shadow-sm transition">
+                <a href="{{ url_for('home', category='Aksesori') }}" class="inline-block bg-white border border-slate-200 text-slate-800 font-bold py-2.5 px-5 rounded-xl text-xs hover:bg-slate-50 shadow-sm transition">
                     Jelajahi aksesori
-                </button>
+                </a>
             </div>
         </div>
 
