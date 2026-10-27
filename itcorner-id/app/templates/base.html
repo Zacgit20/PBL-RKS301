@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ITCorner.id{% endblock %}</title>
+    <!-- Memanggil Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-[#F8FAFC] font-sans text-slate-800 m-0 flex flex-col min-h-screen">
+
+    <!-- TOP BAR (Paling atas) -->
+    <div class="bg-slate-900 text-slate-300 text-xs py-2 px-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <span>Teknologi yang tepat. Untuk setiap kebutuhan.</span>
+            <span>Bantuan belanja • WhatsApp 0812-8000-2026</span>
+        </div>
+    </div>
+
+    <!-- HEADER NAVBAR UTAMA -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            
+            <!-- BARIS 1: Logo, Search Bar, & Akun/Keranjang -->
+            <div class="flex items-center justify-between gap-6 py-4">
+                
+                <!-- Logo -->
+                <a href="{{ url_for('home') }}" class="text-2xl font-bold text-slate-900 tracking-tight flex-shrink-0">
+                    ITCorner<span class="text-blue-600">.id</span>
+                </a>
+
+                <!-- Search Bar (Lebar & Ditengah) -->
+                {% if request.path not in ['/profile', '/login', '/register', '/checkout', '/orders'] %}
+                <form action="{{ url_for('home') }}" method="GET" class="flex-1 max-w-2xl relative">
+                    <input type="text" name="q" placeholder="Cari laptop, monitor, atau aksesori favoritmu..." 
+                    value="{{ request.args.get('q', '') }}" class="w-full bg-slate-100 border border-transparent rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:bg-white focus:border-blue-500 transition">
+                    <!-- Tombol Kaca Pembesar (Dikunci Pakai top-2.5) -->
+                     <button type="submit" class="absolute left-3.5 top-2.5 text-slate-400 hover:text-blue-600 transition p-0.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </button>
+                </form>
+                {% else %}
+                <!-- Spacer Kosong Agar Posisi Logo & Menu Kanan Tetap Rapi di Profile -->
+                <div class="flex-1"></div>
+                {% endif %}
+
+                <!-- Menu Kanan: Akun & Keranjang -->
+                <div class="flex items-center space-x-6 flex-shrink-0">
+                    {% if session.get('user_id') %}
+                <!-- Jika Admin, Tampilkan Tombol Pintas ke Dashboard Admin -->
+                    {% if session.get('role') == 'Admin' %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                            <span>⚡ Ruang Admin</span>
+                        </a>
+                    {% endif %}
+                    <!-- Link ke Profil User / Admin -->
+                        <a href="{{ url_for('profile') }}" class="flex items-center gap-2 text-slate-700 hover:text-blue-600 font-semibold text-sm transition">
+                            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            <span>Akun saya</span>
+                        </a>
+                    {% else %}
+                    <!-- Jika BELUM Login: Tampilkan Tombol Masuk & Daftar -->
+                        <div class="flex items-center space-x-3">
+                            <a href="{{ url_for('login') }}" class="text-slate-700 hover:text-blue-600 font-semibold text-sm transition">
+                                Masuk
+                            </a>
+                            <span class="text-slate-300">|</span>
+                            <a href="{{ url_for('register') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-2 rounded-xl transition shadow-sm">
+                                Daftar
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    <!-- Link Keranjang -->
+                    <a href="{{ url_for('cart')}}" class="flex items-center space-x-2 text-slate-700 hover:text-blue-600 font-semibold text-sm transition">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"></path>
+                        </svg>
+                        <span id="cart-count" class="bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                            0
+                        </span>
+                    </a>
+
+                </div>
+
+            </div> 
+
+            <!-- Menu Kategori Produk -->
+            {% if request.path not in ['/profile', '/login', '/register', '/checkout', '/orders'] %}
+            <nav class="flex items-center justify-between gap-8 border-t border-slate-100 text-sm font-medium pt-3 pb-2 overflow-x-auto">
+                <div class="flex shrink-0 items-center gap-8">
+                    <a href="{{ url_for('home') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if not selected_category or selected_category == 'all' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
+                        Semua produk
+                    </a>
+                    <a href="{{ url_for('home', category='Laptop') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if selected_category == 'Laptop' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
+                        Laptop
+                    </a>
+                    <a href="{{ url_for('home', category='Komponen') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if selected_category == 'Komponen' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
+                        Komputer & komponen
+                    </a>
+                    <a href="{{ url_for('home', category='Monitor') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if selected_category == 'Monitor' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
+                        Monitor
+                    </a>
+                    <a href="{{ url_for('home', category='Aksesori') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if selected_category == 'Aksesori' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
+                        Aksesori
+                    </a>
+                    <a href="{{ url_for('home', category='Audio') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if selected_category == 'Audio' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
+                        Audio
+                    </a>
+                </div>
+
+                <a href="{{ url_for('home', promo='true') }}" class="inline-flex h-10 shrink-0 items-center whitespace-nowrap border-b-2 border-transparent text-blue-600 hover:underline font-semibold">
+                    Promo pilihan →
+                </a>
+            </nav>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- TEMPAT KONTEN DINAMIS -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER UTAMA -->
+    <footer class="bg-[#0F172A] text-slate-400 py-12 text-sm border-t border-slate-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="col-span-2">
+                <h4 class="text-white font-extrabold text-xl mb-4 tracking-tighter">ITCorner<span class="text-slate-400">.id</span></h4>
+                <p class="max-w-xs leading-relaxed">Pilihan teknologi untuk kerja, belajar, dan bermain. Temukan perangkat yang pas bersama ITCorner.id.</p>
+            </div>
+            <div>
+                <h5 class="text-white font-bold mb-4">Belanja</h5>
+                <ul class="space-y-2">
+                    <li><a href="#" class="hover:text-white">Laptop</a></li>
+                    <li><a href="#" class="hover:text-white">Monitor</a></li>
+                    <li><a href="#" class="hover:text-white">Aksesori</a></li>
+                </ul>
+            </div>
+            <div>
+                <h5 class="text-white font-bold mb-4">Layanan pelanggan</h5>
+                <ul class="space-y-2">
+                    <li><a href="#" class="hover:text-white">Cara belanja</a></li>
+                    <li><a href="#" class="hover:text-white">Pembayaran & pengiriman</a></li>
+                    <li><a href="#" class="hover:text-white">Hubungi kami</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
