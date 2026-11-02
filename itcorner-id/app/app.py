@@ -2,15 +2,42 @@ import sys
 import os
 import logging
 
+from dotenv import load_dotenv
+# Membaca konfigurasi dari file .env
+load_dotenv()
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from werkzeug.security import generate_password_hash, check_password_hash 
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, session, url_for, jsonify 
+from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
 from dummy_db import products_db, users_db, payments_db, format_rupiah, get_current_date_indo
+from models.db import execute_query
+from app.extensions import db, migrate
+from sqlalchemy.engine import URL
+from app.models import Product
+
 
 app = Flask(__name__)
-app.secret_key = 'FLASK_SECRET_KEY_itcorner-id-secret-demo-2026'
+app.secret_key = os.environ["FLASK_SECRET_KEY"]
+
+
+# ==========================================
+# KONFIGURASI DATABASE (SQLAlchemy)
+# ==========================================
+database_url = URL.create(
+    drivername="postgresql+psycopg2",
+    username=os.getenv("DB_USER", "postgres"),
+    password=os.environ["DB_PASSWORD"],
+    host=os.getenv("DB_HOST", "localhost"),
+    port=int(os.getenv("DB_PORT", "5432")),
+    database=os.getenv("DB_NAME", "itcorner-db")
+)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db.init_app(app)
+migrate.init_app(app, db)
 
 # ==========================================
 # KONFIGURASI LOGGING (MODUL 8 / OWASP A09)
@@ -26,6 +53,7 @@ log_werkzeug = logging.getLogger('werkzeug')
 log_werkzeug.setLevel(logging.ERROR)
 
 
+
 # ==========================================
 # RUTE CLIENT / USER
 # ==========================================
@@ -34,63 +62,84 @@ log_werkzeug.setLevel(logging.ERROR)
 def home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
-    # 1. Ambil seluruh parameter filter & pencarian dari URL
+
+    # 1. Ambil parameter filter dan pencarian dari URL
     search_query = request.args.get('q', '').strip()
     selected_category = request.args.get('category', 'all').strip()
     min_price = request.args.get('min_price', type=int)
     max_price = request.args.get('max_price', type=int)
     sort_by = request.args.get('sort', '').strip()
     in_stock_only = request.args.get('in_stock', '').strip()
-    
-    filtered_db = products_db.copy()
-    
-    # 2. Filter Berdasarkan Kata Kunci Pencarian
+
+    # 2. Ambil produk dari PostgreSQL
+    filtered_db = execute_query(
+        """
+        SELECT id, sku, name, category, brand,
+               price_num, stock, description, is_promo,
+               image, specs
+        FROM products
+        ORDER BY id
+        """,
+        fetch_all=True
+    )
+
+    # 4. Filter berdasarkan kata kunci
     if search_query:
         filtered_db = [
             p for p in filtered_db
-            if search_query.lower() in p['name'].lower() or 
-               search_query.lower() in p.get('description', '').lower() or
-               search_query.lower() in p.get('category', '').lower()
+            if search_query.lower() in p['name'].lower()
+            or search_query.lower() in (p.get('description') or '').lower()
+            or search_query.lower() in (p.get('category') or '').lower()
         ]
-        
-    # 3. Filter Berdasarkan Kategori
+
+    # 5. Filter berdasarkan kategori
     if selected_category and selected_category.lower() != 'all':
         filtered_db = [
             p for p in filtered_db
-            if p.get('category', '').lower() == selected_category.lower()
+            if (p.get('category') or '').lower() == selected_category.lower()
         ]
 
-    # 4. Filter Berdasarkan Rentang Harga (Min - Max)
+    # 6. Filter berdasarkan rentang harga
     if min_price is not None:
-        filtered_db = [p for p in filtered_db if p.get('price_num', 0) >= min_price]
+        filtered_db = [
+            p for p in filtered_db if p.get('price_num', 0) >= min_price
+        ]
+
     if max_price is not None:
-        filtered_db = [p for p in filtered_db if p.get('price_num', 0) <= max_price]
+        filtered_db = [
+            p for p in filtered_db if p.get('price_num', 0) <= max_price
+        ]
 
-    # 5. Filter Status Ready Stock
+    # 7. Filter produk yang tersedia
     if in_stock_only == '1':
-        filtered_db = [p for p in filtered_db if p.get('stock', 0) > 0]
+        filtered_db = [
+            p for p in filtered_db if p.get('stock', 0) > 0
+        ]
 
-    # 6. Sorting / Pengurutan Produk
+    # 8. Sorting produk
     if sort_by == 'price_asc':
         filtered_db.sort(key=lambda x: x.get('price_num', 0))
     elif sort_by == 'price_desc':
-        filtered_db.sort(key=lambda x: x.get('price_num', 0), reverse=True)
+        filtered_db.sort(
+            key=lambda x: x.get('price_num', 0), reverse=True
+        )
     elif sort_by == 'name_asc':
         filtered_db.sort(key=lambda x: x.get('name', ''))
-        
-    # 7. Format harga produk DARI HASIL FILTER
+
+    # 9. Format harga
     formatted_products = []
     for p in filtered_db:
         p_copy = p.copy()
         p_copy['price'] = format_rupiah(p['price_num'])
         formatted_products.append(p_copy)
-        
-    # 8. Kirim data dan status filter ke index.html
-    return render_template('index.html', 
-                           products=formatted_products, 
-                           search_query=search_query,
-                           selected_category=selected_category)
+
+    # 10. Kirim data ke template
+    return render_template(
+        'index.html',
+        products=formatted_products,
+        search_query=search_query,
+        selected_category=selected_category
+    )
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -99,36 +148,56 @@ def login():
 
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '').strip()
-        
-        if not email: 
+        password = request.form.get('password', '')
+
+        if not email:
             email_error = "Email wajib diisi."
         if not password:
             password_error = "Password wajib diisi."
         elif len(password) < 8:
             password_error = "Password minimal 8 karakter."
-    
+
         if email and password and len(password) >= 8:
-            user = next((u for u in users_db if u['email'] == email), None)
+            user = execute_query(
+                """
+                SELECT id, name, email, password_hash, role, status
+                FROM users
+                WHERE email = %s
+                """,
+                (email,),
+                fetch_one=True
+            )
 
             if not user:
                 email_error = "Email belum terdaftar."
-                logging.warning(f"LOGIN FAILED: Email '{email}' tidak ditemukan dari IP {request.remote_addr}")
-            elif not check_password_hash(user['password'], password):
+                logging.warning(
+                    f"LOGIN FAILED: Email '{email}' tidak ditemukan dari IP {request.remote_addr}"
+                )
+
+            elif not check_password_hash(user['password_hash'], password):
                 password_error = "Kata sandi salah."
-                logging.warning(f"LOGIN FAILED: Password salah untuk email '{email}' dari IP {request.remote_addr}")
+                logging.warning(
+                    f"LOGIN FAILED: Password salah untuk email '{email}' dari IP {request.remote_addr}"
+                )
+
+            elif user['status'] != 'Aktif':
+                email_error = "Akun tidak aktif. Silakan hubungi admin."
+
             else:
+                session.clear()
                 session['user_id'] = user['id']
                 session['email'] = user['email']
                 session['user_name'] = user['name']
                 session['role'] = user['role']
-                
-                logging.info(f"LOGIN SUCCESS: User '{email}' ({user['role']}) berhasil login dari IP {request.remote_addr}")
-                
+
+                logging.info(
+                    f"LOGIN SUCCESS: User '{email}' ({user['role']}) berhasil login dari IP {request.remote_addr}"
+                )
+
                 if user['role'] == 'Admin':
                     return redirect(url_for('admin_dashboard'))
+
                 return redirect(url_for('home'))
-        
     return render_template('login.html', email_error=email_error, password_error=password_error)
 
 @app.route('/logout')
@@ -138,15 +207,15 @@ def logout():
     session.clear()
     return redirect(url_for('home'))
 
-@app.route('/register', methods=['GET', 'POST']) 
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     form_error = None
     if request.method == 'POST':
         fullname = request.form.get('fullname', '').strip()
         email = request.form.get('email', '').strip().lower()
         phone = request.form.get('phone', '').strip()
-        password = request.form.get('password', '').strip()
-        confirm_password = request.form.get('confirm_password', '').strip()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
         terms = request.form.get('terms')
 
         # 1. Validasi Kolom Kosong
@@ -182,46 +251,70 @@ def register():
             form_error = "Anda harus menyetujui Syarat & Ketentuan terlebih dahulu."
             return render_template('register.html', form_error=form_error)
 
-        # 7. Cek Duplikasi Email
-        existing_user = next((u for u in users_db if u['email'].lower() == email), None)
+
+        # 7. Cek Duplikasi Email di PostgreSQL
+        existing_user = execute_query(
+            "SELECT id FROM users WHERE email = %s",
+            (email,),
+            fetch_one=True
+        )
+
         if existing_user:
             form_error = "Email sudah terdaftar. Silakan gunakan email lain atau login."
-            logging.warning(f"REGISTER FAILED: Email '{email}' sudah terdaftar dari IP {request.remote_addr}")
+            logging.warning(
+                f"REGISTER FAILED: Email '{email}' sudah terdaftar dari IP {request.remote_addr}"
+            )
             return render_template('register.html', form_error=form_error)
 
-        # 8. Hash Password & Simpan ke Database Dummy (Cukup Sekali Sahaja)
+        # 8. Hash Password
         hashed_password = generate_password_hash(password)
 
-        new_user = {
-            "id": len(users_db) + 1,
-            "name": fullname,
-            "email": email,
-            "phone": phone,
-            "password": hashed_password,  # Password tersimpan aman dalam bentuk Hash
-            "role": "Pelanggan",
-            "joined": get_current_date_indo(),
-            "status": "Aktif"
-        }
-        users_db.append(new_user)
+        # 9. Simpan Pengguna ke PostgreSQL
+        execute_query(
+            """
+            INSERT INTO users (name, email, phone, password_hash, role)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (fullname, email, phone, hashed_password, 'Pelanggan'),
+            commit=True
+        )
 
-        # 9. Log Register Berhasil
-        logging.info(f"REGISTER SUCCESS: User '{email}' ({fullname}) berhasil mendaftar dari IP {request.remote_addr}")
+        logging.info(
+            f"REGISTER SUCCESS: User '{email}' ({fullname}) berhasil mendaftar dari IP {request.remote_addr}"
+        )
+
+        # Arahkan pengguna ke halaman login setelah berhasil mendaftar
         return redirect(url_for('login'))
 
+    # Tampilkan halaman register ketika menerima GET
     return render_template('register.html', form_error=form_error)
+
 @app.route('/detail/<int:product_id>')
 def detail(product_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-        
-    # Cari produk berdasarkan ID
-    product = next((p for p in products_db if p['id'] == product_id), None)
+
+    # Ambil produk dari PostgreSQL
+    product = db.session.get(Product, product_id)
+
     if not product:
         return redirect(url_for('home'))
 
-    # Format harga ke Rupiah
-    product_data = product.copy()
-    product_data['price'] = format_rupiah(product['price_num'])
+    # Ubah objek model menjadi dictionary untuk template
+    product_data = {
+        'id': product.id,
+        'sku': product.sku,
+        'name': product.name,
+        'category': product.category,
+        'brand': product.brand,
+        'price_num': product.price_num,
+        'price': format_rupiah(product.price_num),
+        'stock': product.stock,
+        'description': product.description,
+        'is_promo': product.is_promo,
+        'image': product.image,
+        'specs': product.specs
+    }
 
     return render_template('detail.html', product=product_data)
 
@@ -229,7 +322,7 @@ def detail(product_id):
 def cart():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     if 'cart' not in session:
         session['cart'] = []
 
@@ -247,10 +340,10 @@ def cart():
                 item['quantity'] += quantity
                 found = True
                 break
-        
+
         if not found:
             cart.append({'product_id': product_id, 'quantity': quantity})
-            
+
         session['cart'] = cart
         session.modified = True
         return redirect(url_for('cart'))
@@ -262,11 +355,11 @@ def cart():
         if prod:
             item_total = prod['price_num'] * item['quantity']
             total_price += item_total
-            
+
             # Buat salinan data produk dan tambahkan harga terformat
             prod_copy = prod.copy()
             prod_copy['price'] = format_rupiah(prod['price_num'])
-            
+
             cart_items.append({
                 'product': prod_copy,
                 'quantity': item['quantity'],
@@ -280,7 +373,7 @@ def cart():
 def add_to_cart():
     if 'user_id' not in session:
         return jsonify({'error': 'Unauthorized'}), 401
-        
+
     if 'cart' not in session:
         session['cart'] = []
 
@@ -297,13 +390,13 @@ def add_to_cart():
             item['quantity'] += quantity
             found = True
             break
-    
+
     if not found:
         cart.append({'product_id': product_id, 'quantity': quantity})
-        
+
     session['cart'] = cart
     session.modified = True
-    
+
     return jsonify({'status': 'success', 'cart_count': sum(item['quantity'] for item in cart)})
 
 
@@ -421,16 +514,16 @@ def profile():
 def forgot_password():
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
-        
+
         if not email:
             return render_template('forgot_password.html', email_error="Email tidak boleh kosong!")
-        
+
         # Cek apakah email terdaftar di database
         user_exists = any(u['email'].lower() == email for u in users_db)
-        
+
         if not user_exists:
             return render_template('forgot_password.html', email_error="Email tidak terdaftar dalam sistem!")
-        
+
         # Jika email ditemukan, berikan pesan sukses (simulasi kirim instruksi)
         logging.info(f"Permintaan reset password dikirimkan untuk email: {email}")
         return render_template('forgot_password.html', success_message="Tautan pemulihan kata sandi telah dikirimkan ke email Anda.")
@@ -476,7 +569,7 @@ def admin_dashboard():
 def admin_products():
     if 'role' not in session or session['role'] != 'Admin':
         return redirect(url_for('login'))
-    
+
     formatted_products = []
     for p in products_db:
         p_copy = p.copy()
@@ -487,8 +580,8 @@ def admin_products():
     selected_product = next((p for p in products_db if p['id'] == edit_id), None)
 
     return render_template(
-        'admin/products.html', 
-        products=formatted_products, 
+        'admin/products.html',
+        products=formatted_products,
         selected_product=selected_product
     )
 
@@ -667,6 +760,11 @@ def process_payment_action():
             logging.warning(f"PAYMENT REJECTED: Invoice {payment_id} ditolak oleh Admin '{session.get('user_name')}' (Alasan: {reason})")
 
     return redirect(url_for('admin_payments'))
+
+# Endpoint wajib untuk pengecekan kesehatan server oleh CI/CD (healthcheck.sh)
+@app.route("/health", methods=["GET"])
+def healthcheck():
+    return jsonify({"status": "ok", "service": "ITCorner.id Secure E-Commerce"}), 200
 
 if __name__ == '__main__':
     app.run(debug=False)

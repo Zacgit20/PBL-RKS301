@@ -10,9 +10,9 @@ def get_db_connection():
     conn = psycopg2.connect(
         host=os.environ.get("DB_HOST", "localhost"),
         port=int(os.environ.get("DB_PORT", "5432")),
-        dbname=os.environ.get("DB_NAME", "itcorner_db"),
+        dbname=os.environ.get("DB_NAME", "itcorner-db"),
         user=os.environ.get("DB_USER", "postgres"),
-        password=os.environ.get("DB_PASSWORD", "postgrespassword"),
+        password=os.environ["DB_PASSWORD"],
         cursor_factory=RealDictCursor,
     )
     return conn
