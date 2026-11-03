@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // 3. Cek tipe input: jika 'password' ubah jadi 'text', jika tidak kembalikan jadi 'password'
             const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
             password.setAttribute('type', type);
-            
+
             // 4. Tambahkan atau hapus efek warna biru pada ikon saat aktif
             this.classList.toggle('text-blue-600');
         });
@@ -40,7 +40,7 @@ let totalKeranjang = 0;
 
 function tambahKeKeranjang(namaProduk) {
     totalKeranjang++;
-    
+
     // Update angka di navbar secara otomatis
     const badgeCount = document.getElementById('cart-count');
     if (badgeCount) {
@@ -119,3 +119,56 @@ function removeFromCart(productId) {
     })
     .catch(error => console.error("Error:", error));
 }
+// Preview gambar produk pada halaman Admin
+document.addEventListener('DOMContentLoaded', function () {
+    const imageInput = document.getElementById('product-image');
+    const imagePreview = document.getElementById('image-preview');
+    const placeholder = document.getElementById('preview-placeholder');
+
+    // Pastikan elemen tersedia di halaman
+    if (!imageInput || !imagePreview || !placeholder) {
+        return;
+    }
+
+    let currentPreviewUrl = null;
+
+    imageInput.addEventListener('change', function () {
+        const file = this.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        // Memeriksa tipe file
+        const allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp'
+        ];
+
+        if (!allowedTypes.includes(file.type)) {
+            alert('Format gambar harus JPG, PNG, atau WebP.');
+            this.value = '';
+            return;
+        }
+
+        // Memeriksa ukuran file maksimal 2 MB
+        if (file.size > 2 * 1024 * 1024) {
+            alert('Ukuran gambar maksimal 2 MB.');
+            this.value = '';
+            return;
+        }
+
+        // Menghapus URL preview sebelumnya
+        if (currentPreviewUrl) {
+            URL.revokeObjectURL(currentPreviewUrl);
+        }
+
+        // Membuat URL sementara untuk menampilkan gambar
+        currentPreviewUrl = URL.createObjectURL(file);
+
+        imagePreview.src = currentPreviewUrl;
+        imagePreview.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+    });
+});

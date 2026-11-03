@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelola Produk - ITCorner.id Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-slate-50 text-slate-800 flex min-h-screen font-sans">
 
     <!-- SIDEBAR KIRI -->
     <aside class="w-64 bg-slate-900 text-white p-6 flex flex-col justify-between flex-shrink-0 min-h-screen">
         <div>
             <div class="flex items-center gap-2 mb-6">
-                <a href="{{ url_for('home') }}" class="font-bold text-xl tracking-tight text-white hover:text-blue-400 transition">ITCorner.id</a>
+                <a href="{{ url_for('home') }}"
+                    class="font-bold text-xl tracking-tight text-white hover:text-blue-400 transition">ITCorner.id</a>
             </div>
 
             <div class="inline-block bg-blue-600 text-xs font-bold px-2.5 py-1 rounded mb-6 uppercase tracking-wider">
@@ -20,17 +23,20 @@
             </div>
 
             <nav class="space-y-4 text-sm font-medium">
-                <a href="{{ url_for('admin_dashboard') }}" class="block text-slate-400 hover:text-white transition">Ringkasan</a>
+                <a href="{{ url_for('admin_dashboard') }}"
+                    class="block text-slate-400 hover:text-white transition">Ringkasan</a>
                 <a href="{{ url_for('admin_products') }}" class="block text-blue-400 font-semibold">● Produk</a>
                 <a href="{{ url_for('admin_users') }}" class="block text-slate-400 hover:text-white transition">Akun</a>
-                <a href="{{ url_for('admin_payments') }}" class="block text-slate-400 hover:text-white transition">Approval pembayaran</a>
+                <a href="{{ url_for('admin_payments') }}"
+                    class="block text-slate-400 hover:text-white transition">Approval pembayaran</a>
             </nav>
         </div>
 
         <div class="text-xs text-slate-500 space-y-1 pt-6 border-t border-slate-800">
             <p class="font-bold text-slate-400 uppercase tracking-wider">RUANG KERJA TOKO</p>
             <p>ITCorner.id • Jakarta</p>
-            <a href="{{ url_for('home') }}" class="inline-block mt-2 text-[11px] text-blue-400 hover:underline">← Lihat Toko (Pelanggan)</a>
+            <a href="{{ url_for('home') }}" class="inline-block mt-2 text-[11px] text-blue-400 hover:underline">← Lihat
+                Toko (Pelanggan)</a>
         </div>
     </aside>
 
@@ -51,7 +57,8 @@
                 <h1 class="text-2xl font-bold text-slate-900 mb-1">Kelola produk</h1>
                 <p class="text-xs text-slate-500">{{ products|length }} produk terdaftar di katalog</p>
             </div>
-            <a href="{{ url_for('admin_products') }}#form-produk" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-sm inline-block">
+            <a href="{{ url_for('admin_products') }}#form-produk"
+                class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-sm inline-block">
                 + Tambah produk
             </a>
         </div>
@@ -59,12 +66,16 @@
         <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm mb-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Cari produk</label>
-                    <input type="text" placeholder="Nama produk atau SKU..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Cari
+                        produk</label>
+                    <input type="text" placeholder="Nama produk atau SKU..."
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Kategori</label>
-                    <select class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700">
+                    <label
+                        class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Kategori</label>
+                    <select
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700">
                         <option>Semua kategori</option>
                         <option>Laptop</option>
                         <option>Aksessori</option>
@@ -74,8 +85,10 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Stok</label>
-                    <select class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700">
+                    <label
+                        class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Stok</label>
+                    <select
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700">
                         <option>Semua stok</option>
                         <option>Tersedia</option>
                         <option>Stok Menipis</option>
@@ -94,6 +107,7 @@
                             <th class="py-3 px-2">MEREK</th>
                             <th class="py-3 px-2">HARGA</th>
                             <th class="py-3 px-2">STOK</th>
+                            <th class="py-3 px-2">STATUS</th>
                             <th class="py-3 px-2 text-right">AKSI</th>
                         </tr>
                     </thead>
@@ -115,17 +129,54 @@
                                 </span>
                                 {% endif %}
                             </td>
-                            <td class="py-3.5 px-2 text-right space-x-2">
-                                <a href="{{ url_for('admin_products', edit=p.id) }}#form-produk" class="text-blue-600 hover:underline font-semibold">Edit</a>
-                                <span class="text-slate-300">•</span>
-                                <form action="{{ url_for('delete_product', product_id=p.id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus produk ini?');">
-                                    <button type="submit" class="text-rose-600 hover:underline font-semibold">Hapus</button>
+                            <!-- KOLOM STATUS: LETAKNYA DI SINI -->
+                            <td class="py-3.5 px-2">
+                                <form action="{{ url_for('toggle_product_status', product_id=p.id) }}" method="POST">
+
+                                    <button type="submit" class="inline-flex items-center gap-1.5 font-semibold
+                                            {% if p.is_active %}
+                                                text-emerald-600 hover:text-emerald-800
+                                            {% else %}
+                                                text-rose-600 hover:text-rose-800
+                                            {% endif %}" onclick="return confirm('Ubah status produk ini?');">
+
+                                        <span class="w-1.5 h-1.5 rounded-full
+                                            {% if p.is_active %}
+                                                bg-emerald-500
+                                            {% else %}
+                                                bg-rose-500
+                                            {% endif %}">
+                                        </span>
+
+                                        {{ 'Aktif' if p.is_active else 'Nonaktif' }}
+                                    </button>
+                                </form>
+                            </td>
+
+                            <!-- KOLOM AKSI -->
+                            <td class="py-3.5 px-2 text-right whitespace-nowrap">
+
+                                <a href="{{ url_for('admin_products', edit=p.id) }}#form-produk"
+                                    class="text-blue-600 hover:underline font-semibold">
+                                    Edit
+                                </a>
+
+                                <span class="text-slate-300 mx-1">•</span>
+
+                                <form action="{{ url_for('permanently_delete_product', product_id=p.id) }}"
+                                    method="POST" class="inline"
+                                    onsubmit="return confirm('Yakin ingin menghapus produk ini secara permanen?');">
+
+                                    <button type="submit" class="text-rose-600 hover:underline font-semibold">
+                                        Hapus
+                                    </button>
                                 </form>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="6" class="py-6 text-center text-slate-400 italic">Belum ada produk terdaftar.</td>
+                            <td colspan="7" class="py-6 text-center text-slate-400 italic">Belum ada produk terdaftar.
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -137,6 +188,22 @@
             </div>
         </div>
 
+        <!-- NOTIFIKASI FLASH -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="mb-4 rounded-xl border px-4 py-3 text-xs font-medium
+                        {% if category == 'success' %}
+                            border-emerald-200 bg-emerald-50 text-emerald-700
+                        {% else %}
+                            border-rose-200 bg-rose-50 text-rose-700
+                        {% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
         <!-- FORM EDIT / TAMBAH PRODUK -->
         <div id="form-produk" class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
             <div class="flex justify-between items-start mb-6">
@@ -145,11 +212,13 @@
                         {% if selected_product %}Edit produk{% else %}Tambah produk baru{% endif %}
                     </h2>
                     <p class="text-xs text-slate-400 font-medium">
-                        {% if selected_product %}{{ selected_product.name }} • ID: {{ selected_product.id }}{% else %}Isi formulir di bawah untuk menambah stok/item baru{% endif %}
+                        {% if selected_product %}{{ selected_product.name }} • ID: {{ selected_product.id }}{% else
+                        %}Isi formulir di bawah untuk menambah stok/item baru{% endif %}
                     </p>
                 </div>
                 {% if selected_product %}
-                <a href="{{ url_for('admin_products') }}#form-produk" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                <a href="{{ url_for('admin_products') }}#form-produk"
+                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg transition">
                     ✕ Batal Edit
                 </a>
                 {% endif %}
@@ -157,35 +226,50 @@
 
             <form action="{{ url_for('save_product') }}" method="POST" enctype="multipart/form-data">
                 {% if selected_product %}
-                    <input type="hidden" name="product_id" value="{{ selected_product.id }}">
+                <input type="hidden" name="product_id" value="{{ selected_product.id }}">
                 {% endif %}
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-2 space-y-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">Nama produk *</label>
-                            <input type="text" name="name" value="{{ selected_product.name if selected_product else '' }}" placeholder="Masukkan nama produk" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" required>
+                            <input type="text" name="name"q
+                                value="{{ selected_product.name if selected_product else '' }}"
+                                placeholder="Masukkan nama produk"
+                                class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                required>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Kategori *</label>
-                                <select name="category" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                                    <option value="Laptop" {% if selected_product and selected_product.category == 'Laptop' %}selected{% endif %}>Laptop</option>
-                                    <option value="Aksessori" {% if selected_product and selected_product.category == 'Aksessori' %}selected{% endif %}>Aksessori</option>
-                                    <option value="Monitor" {% if selected_product and selected_product.category == 'Monitor' %}selected{% endif %}>Monitor</option>
-                                    <option value="Komponen" {% if selected_product and selected_product.category == 'Komponen' %}selected{% endif %}>Komponen</option>
-                                    <option value="Audio" {% if selected_product and selected_product.category == 'Audio' %}selected{% endif %}>Audio</option>
+                                <select name="category"
+                                    class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                    <option value="Laptop" {% if selected_product and
+                                        selected_product.category=='Laptop' %}selected{% endif %}>Laptop</option>
+                                    <option value="Aksessori" {% if selected_product and
+                                        selected_product.category=='Aksessori' %}selected{% endif %}>Aksessori</option>
+                                    <option value="Monitor" {% if selected_product and
+                                        selected_product.category=='Monitor' %}selected{% endif %}>Monitor</option>
+                                    <option value="Komponen" {% if selected_product and
+                                        selected_product.category=='Komponen' %}selected{% endif %}>Komponen</option>
+                                    <option value="Audio" {% if selected_product and selected_product.category=='Audio'
+                                        %}selected{% endif %}>Audio</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Merek *</label>
-                                <select name="brand" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                                    <option value="ASUS" {% if selected_product and selected_product.brand == 'ASUS' %}selected{% endif %}>ASUS</option>
-                                    <option value="Logitech" {% if selected_product and selected_product.brand == 'Logitech' %}selected{% endif %}>Logitech</option>
-                                    <option value="Samsung" {% if selected_product and selected_product.brand == 'Samsung' %}selected{% endif %}>Samsung</option>
-                                    <option value="HyperX" {% if selected_product and selected_product.brand == 'HyperX' %}selected{% endif %}>HyperX</option>
+                                <select name="brand"
+                                    class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                                    <option value="ASUS" {% if selected_product and selected_product.brand=='ASUS'
+                                        %}selected{% endif %}>ASUS</option>
+                                    <option value="Logitech" {% if selected_product and
+                                        selected_product.brand=='Logitech' %}selected{% endif %}>Logitech</option>
+                                    <option value="Samsung" {% if selected_product and selected_product.brand=='Samsung'
+                                        %}selected{% endif %}>Samsung</option>
+                                    <option value="HyperX" {% if selected_product and selected_product.brand=='HyperX'
+                                        %}selected{% endif %}>HyperX</option>
                                 </select>
                             </div>
                         </div>
@@ -194,36 +278,69 @@
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Harga (Rp) *</label>
                                 <p class="text-[10px] text-slate-400 mb-1">Harga harus lebih dari Rp0.</p>
-                                <input type="text" name="price" value="{{ selected_product.price_num if selected_product else '' }}" placeholder="Contoh: 8499000" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" required>
+                                <input type="text" name="price"
+                                    value="{{ selected_product.price_num if selected_product else '' }}"
+                                    placeholder="Contoh: 8499000"
+                                    class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    required>
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Stok *</label>
                                 <p class="text-[10px] text-slate-400 mb-1">Bilangan bulat, minimal 0.</p>
-                                <input type="number" name="stock" value="{{ selected_product.stock if selected_product else '' }}" placeholder="0" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" required>
+                                <input type="number" name="stock"
+                                    value="{{ selected_product.stock if selected_product else '' }}" placeholder="0"
+                                    class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    required>
                             </div>
                         </div>
 
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">Deskripsi produk *</label>
-                            <textarea name="description" rows="3" class="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">{{ selected_product.description if selected_product else '' }}</textarea>
+                            <textarea name="description" rows="3"
+                                class="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">{{ selected_product.description if selected_product else '' }}</textarea>
                         </div>
                     </div>
 
-                    <div class="space-y-4">
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Foto produk</label>
-                        <input type="file" name="image" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <div class="space-y-3">
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Foto Produk</label>
+
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1 min-w-0">
+                                <input type="file" id="product-image" name="image"
+                                    accept="image/png,image/jpeg,image/webp"
+                                    class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+
+                                <p class="text-[10px] text-slate-400 mt-2">
+                                    Format JPG, PNG, atau WebP.
+                                </p>
+                            </div>
+
+                            <div class="w-28 shrink-0">
+                                <div
+                                    class="w-28 h-28 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden">
+                                    <img id="image-preview" src="" alt="Preview gambar produk"
+                                        class="hidden w-full h-full object-cover">
+
+                                    <div id="preview-placeholder" class="text-center text-slate-400">
+                                        <span class="text-xs">Preview gambar</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
 
                 <div class="flex justify-between items-center mt-8 pt-6 border-t border-slate-100">
-                    <p class="text-[11px] text-slate-400">Perubahan belum disimpan.</p>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow-sm">
+                    <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow-sm">
                         Simpan perubahan
                     </button>
                 </div>
             </form>
         </div>
     </main>
-
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
+
 </html>

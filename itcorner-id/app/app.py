@@ -1,7 +1,7 @@
 import sys
 import os
 import logging
-
+import uuid
 from dotenv import load_dotenv
 # Membaca konfigurasi dari file .env
 load_dotenv()
@@ -14,7 +14,8 @@ from dummy_db import products_db, users_db, payments_db, format_rupiah, get_curr
 from models.db import execute_query
 from app.extensions import db, migrate
 from sqlalchemy.engine import URL
-from app.models import Product
+from app.models import User, Product, Payment, Order, OrderItem
+from decimal import Decimal, InvalidOperation
 
 
 app = Flask(__name__)
@@ -78,6 +79,7 @@ def home():
                price_num, stock, description, is_promo,
                image, specs
         FROM products
+        WHERE is_active = TRUE
         ORDER BY id
         """,
         fetch_all=True
@@ -534,114 +536,431 @@ def forgot_password():
 # ==========================================
 # RUTE ADMIN (SEMUA LOGIKA HITUNG OTOMATIS)
 # ==========================================
+
 @app.route('/admin')
 @app.route('/admin/dashboard')
 def admin_dashboard():
     if 'role' not in session or session['role'] != 'Admin':
-        logging.warning(f"UNAUTHORIZED ACCESS: Percobaan akses admin tanpa izin dari IP {request.remote_addr}")
+        logging.warning(
+            "UNAUTHORIZED ACCESS: Percobaan akses admin tanpa izin dari IP %s",
+            request.remote_addr
+        )
         return redirect(url_for('login'))
-    current_date = get_current_date_indo()
 
-    total_omzet = sum(p['amount_num'] for p in payments_db if p['status'] == 'Disetujui')
+    from datetime import date, timedelta
 
-    status_counts = {
-        "menunggu_bayar": len([p for p in payments_db if p['status'] == 'Menunggu Approval']),
-        "disetujui": len([p for p in payments_db if p['status'] == 'Disetujui']),
-        "ditolak": len([p for p in payments_db if p['status'] == 'Ditolak'])
-    }
+    try:
+        current_date = get_current_date_indo()
 
-    stats = {
-        "total_penjualan": format_rupiah(total_omzet),
-        "pesanan_baru": status_counts["menunggu_bayar"],
-        "total_produk": len(products_db),
-        "total_user": len(users_db)
-    }
+        # Mengambil ringkasan pembayaran dari PostgreSQL
+        payment_stats = execute_query("""
+            SELECT
+                COALESCE(
+                    SUM(amount_num) FILTER (
+                        WHERE status = 'Disetujui'
+                    ), 0
+                ) AS total_omzet,
+                COUNT(*) FILTER (
+                    WHERE status = 'Menunggu Approval'
+                ) AS menunggu_bayar,
+                COUNT(*) FILTER (
+                    WHERE status = 'Disetujui'
+                ) AS disetujui,
+                COUNT(*) FILTER (
+                    WHERE status = 'Ditolak'
+                ) AS ditolak
+            FROM payments
+        """, fetch_one=True)
 
-    formatted_products = []
-    for p in products_db:
-        p_copy = p.copy()
-        p_copy['price'] = format_rupiah(p['price_num'])
-        formatted_products.append(p_copy)
+        product_stats = execute_query(
+            "SELECT COUNT(*) AS total FROM products",
+            fetch_one=True
+        )
 
-    return render_template('admin/dashboard.html', stats=stats, products=formatted_products, status_counts=status_counts, current_date=current_date)
+        user_stats = execute_query(
+            "SELECT COUNT(*) AS total FROM users",
+            fetch_one=True
+        )
 
-@app.route('/admin/products', methods=['GET', 'POST'])
+        # Mengambil omzet harian selama 7 hari terakhir
+        daily_revenue = execute_query("""
+            SELECT
+                payment_date::date AS tanggal,
+                SUM(amount_num) AS omzet
+            FROM payments
+            WHERE status = 'Disetujui'
+              AND payment_date >= CURRENT_DATE - INTERVAL '6 days'
+              AND payment_date < CURRENT_DATE + INTERVAL '1 day'
+            GROUP BY payment_date::date
+            ORDER BY tanggal
+        """, fetch_all=True)
+
+        # Mengubah hasil query menjadi dictionary berdasarkan tanggal
+        revenue_by_date = {
+            row['tanggal']: row['omzet']
+            for row in daily_revenue
+        }
+
+        # Melengkapi tanggal yang tidak memiliki transaksi dengan omzet 0
+        chart_data = []
+
+        for i in range(6, -1, -1):
+            chart_date = date.today() - timedelta(days=i)
+            omzet = revenue_by_date.get(chart_date, 0)
+
+            chart_data.append({
+                'tanggal': chart_date,
+                'label': chart_date.strftime('%d/%m'),
+                'omzet': float(omzet)
+            })
+
+        # Menentukan nilai tertinggi untuk skala tinggi batang grafik
+        max_omzet = max(
+            (item['omzet'] for item in chart_data),
+            default=0
+        )
+
+        for item in chart_data:
+            item['tinggi'] = (
+                max(8, (item['omzet'] / max_omzet) * 100)
+                if max_omzet > 0 and item['omzet'] > 0
+                else 0
+            )
+
+        # Menghitung jumlah pesanan berdasarkan status
+        order_stats = execute_query("""
+            SELECT
+                COUNT(*) FILTER (
+                    WHERE status = 'Menunggu Pembayaran'
+                ) AS menunggu_bayar,
+                COUNT(*) FILTER (
+                    WHERE status = 'Diproses'
+                ) AS diproses,
+                COUNT(*) FILTER (
+                    WHERE status = 'Dikirim'
+                ) AS dikirim,
+                COUNT(*) FILTER (
+                    WHERE status = 'Selesai'
+                ) AS selesai
+            FROM orders
+        """, fetch_one=True)
+
+        status_counts = {
+            "menunggu_bayar": payment_stats['menunggu_bayar'],
+            "disetujui": payment_stats['disetujui'],
+            "ditolak": payment_stats['ditolak'],
+            "diproses": order_stats['diproses'],
+            "dikirim": order_stats['dikirim'],
+            "selesai": order_stats['selesai']
+        }
+
+        stats = {
+            "total_penjualan": format_rupiah(
+                payment_stats['total_omzet']
+            ),
+            "pesanan_baru": status_counts['menunggu_bayar'],
+            "total_produk": product_stats['total'],
+            "total_user": user_stats['total']
+        }
+
+        # Mengambil 5 produk untuk ringkasan dashboard
+        products_db_list = execute_query("""
+            SELECT *
+            FROM products
+            ORDER BY id ASC
+            LIMIT 5
+        """, fetch_all=True)
+
+        formatted_products = []
+
+        for product in products_db_list:
+            product_copy = dict(product)
+            product_copy['price'] = format_rupiah(
+                product['price_num']
+            )
+            formatted_products.append(product_copy)
+
+        logging.info(
+            "ADMIN DASHBOARD: Admin '%s' membuka dashboard",
+            session.get('user_name')
+        )
+
+        return render_template(
+            'admin/dashboard.html',
+            stats=stats,
+            products=formatted_products,
+            status_counts=status_counts,
+            current_date=current_date,
+            chart_data=chart_data
+        )
+
+    except Exception:
+        logging.exception(
+            "ERROR: Gagal mengambil data dashboard Admin"
+        )
+        flash("Gagal mengambil data dashboard.", "error")
+        return redirect(url_for('login'))
+
+
+@app.route('/admin/products', methods=['GET'])
 def admin_products():
     if 'role' not in session or session['role'] != 'Admin':
+        logging.warning(
+            "UNAUTHORIZED ACCESS: User '%s' mencoba mengakses halaman produk admin",
+            session.get('email', 'Unknown')
+        )
         return redirect(url_for('login'))
 
-    formatted_products = []
-    for p in products_db:
-        p_copy = p.copy()
-        p_copy['price'] = format_rupiah(p['price_num'])
-        formatted_products.append(p_copy)
+    try:
+        products_db_list = Product.query.order_by(Product.id.asc()).all()
 
-    edit_id = request.args.get('edit', type=int)
-    selected_product = next((p for p in products_db if p['id'] == edit_id), None)
+        logging.info(
+            "ADMIN VIEW PRODUCTS: Admin '%s' melihat daftar produk",
+            session.get('user_name')
+        )
 
-    return render_template(
-        'admin/products.html',
-        products=formatted_products,
-        selected_product=selected_product
-    )
+        formatted_products = []
+
+        for p in products_db_list:
+            formatted_products.append({
+                "id": p.id,
+                "name": p.name,
+                "sku": p.sku,
+                "category": p.category,
+                "brand": p.brand,
+                "price_num": p.price_num,
+                "price": format_rupiah(p.price_num),
+                "stock": p.stock,
+                "is_active": p.is_active,
+                "description": p.description
+            })
+
+        edit_id = request.args.get('edit', type=int)
+        selected_product = None
+
+        if edit_id is not None:
+            selected_product = db.session.get(Product, edit_id)
+
+        return render_template(
+            'admin/products.html',
+            products=formatted_products,
+            selected_product=selected_product
+        )
+
+    except Exception:
+        logging.exception("ERROR: Gagal mengambil daftar produk dari database")
+        flash("Terjadi kesalahan saat mengambil data produk.", "error")
+        return redirect(url_for('admin_dashboard'))
+
 
 @app.route('/admin/product/save', methods=['POST'])
 def save_product():
+    # 1. Memeriksa hak akses Admin
     if 'role' not in session or session['role'] != 'Admin':
         return redirect(url_for('login'))
 
-    product_id = request.form.get('product_id')
+    # 2. Mengambil data dari form
+    product_id = request.form.get('product_id', '').strip()
     name = request.form.get('name', '').strip()
     category = request.form.get('category', '').strip()
     brand = request.form.get('brand', '').strip()
-
-    price_raw = request.form.get('price', '0').replace('.', '').replace('Rp', '').strip()
-    price_num = int(price_raw) if price_raw.isdigit() else 0
-    stock_raw = str(request.form.get('stock', '0')).strip()
-    stock = int(stock_raw) if stock_raw.isdigit() else 0
     description = request.form.get('description', '').strip()
 
+    # 3. Validasi nama produk
     if not name:
+        flash('Nama produk wajib diisi.', 'danger')
         return redirect(url_for('admin_products'))
 
+    # 4. Mengambil dan membersihkan harga
+    price_raw = request.form.get('price', '').strip()
+
+    price_raw = (
+        price_raw
+        .replace('Rp', '')
+        .replace('rp', '')
+        .replace('.', '')
+        .replace(' ', '')
+    )
+
+    # 5. Validasi harga menggunakan Decimal
+    try:
+        price_num = Decimal(price_raw)
+
+        if not price_num.is_finite() or price_num <= 0:
+            raise InvalidOperation
+
+    except (InvalidOperation, ValueError):
+        flash('Harga harus berupa angka lebih dari Rp0.', 'danger')
+        return redirect(url_for('admin_products'))
+
+    # 6. Mengambil dan memvalidasi stok
+    stock_raw = request.form.get('stock', '').strip()
+
+    if not stock_raw.isdigit():
+        flash('Stok harus berupa bilangan bulat nonnegatif.', 'danger')
+        return redirect(url_for('admin_products'))
+
+    stock = int(stock_raw)
+
+    # 7. UPDATE PRODUK (menggunakan PostgreSQL)
     if product_id:
-        p_id = int(product_id)
-        product = next((p for p in products_db if p['id'] == p_id), None)
-        if product:
-            product['name'] = name
-            product['category'] = category
-            product['brand'] = brand
-            product['price_num'] = price_num
-            product['stock'] = stock
-            product['description'] = description
-            logging.info(f"PRODUCT UPDATED: Admin '{session.get('user_name')}' memperbarui produk '{name}' (ID: {p_id})")
+        try:
+            p_id = int(product_id)
+
+            # Mencari produk berdasarkan ID di PostgreSQL
+            product = db.session.get(Product, p_id)
+
+            if not product:
+                flash('Produk tidak ditemukan.', 'danger')
+                return redirect(url_for('admin_products'))
+
+            # Memperbarui data produk
+            product.name = name
+            product.category = category or None
+            product.brand = brand or None
+            product.price_num = price_num
+            product.stock = stock
+            product.description = description or None
+
+            # Menyimpan perubahan ke database
+            db.session.commit()
+
+            logging.info(
+                f"PRODUCT UPDATED: Admin '{session.get('user_name')}' "
+                f"memperbarui produk '{name}' (ID: {p_id})"
+            )
+
+            flash('Produk berhasil diperbarui.', 'success')
+
+            return redirect(
+                url_for('admin_products', edit=p_id) + '#form-produk'
+            )
+
+        except ValueError:
+            db.session.rollback()
+            flash('ID produk tidak valid.', 'danger')
+
+        except Exception:
+            db.session.rollback()
+            logging.exception("Gagal memperbarui produk.")
+            flash('Produk gagal diperbarui.', 'danger')
+
+    # 8. CREATE PRODUK (menggunakan PostgreSQL)
     else:
-        new_id = max([p['id'] for p in products_db], default=0) + 1
-        products_db.append({
-            "id": new_id,
-            "sku": f"PROD-{new_id:03d}",
-            "name": name,
-            "category": category,
-            "brand": brand,
-            "price_num": price_num,
-            "stock": stock,
-            "description": description
-        })
-        logging.info(f"PRODUCT ADDED: Admin '{session.get('user_name')}' menambahkan produk '{name}' (ID: {new_id})")
+        new_product = Product(
+            sku=f"ITC-{uuid.uuid4().hex[:12].upper()}",
+            name=name,
+            category=category or None,
+            brand=brand or None,
+            price_num=price_num,
+            stock=stock,
+            description=description or None,
+            is_promo=False
+        )
+
+        try:
+            db.session.add(new_product)
+            db.session.commit()
+
+            logging.info(
+                f"PRODUCT ADDED: Admin '{session.get('user_name')}' "
+                f"menambahkan produk '{name}' (ID: {new_product.id})"
+            )
+
+            flash('Produk berhasil ditambahkan.', 'success')
+
+        except Exception:
+            db.session.rollback()
+
+            logging.exception(
+                "Gagal menambahkan produk ke database."
+            )
+
+            flash('Produk gagal ditambahkan.', 'danger')
 
     return redirect(url_for('admin_products'))
 
-@app.route('/admin/product/delete/<int:product_id>', methods=['POST'])
-def delete_product(product_id):
+@app.route('/admin/product/toggle/<int:product_id>', methods=['POST'])
+def toggle_product_status(product_id):
     if 'role' not in session or session['role'] != 'Admin':
         return redirect(url_for('login'))
 
-    global products_db
-    product = next((p for p in products_db if p['id'] == product_id), None)
+    try:
+        product = db.session.get(Product, product_id)
 
-    if product:
-        products_db = [p for p in products_db if p['id'] != product_id]
-        logging.info(f"PRODUCT DELETED: Admin '{session.get('user_name')}' menghapus produk '{product['name']}' (ID: {product_id})")
+        if not product:
+            flash("Produk tidak ditemukan.", "error")
+            return redirect(url_for('admin_products'))
+
+        product.is_active = not product.is_active
+        new_status = "Aktif" if product.is_active else "Nonaktif"
+
+        db.session.commit()
+
+        logging.info(
+            "PRODUCT STATUS CHANGED: Admin '%s' mengubah status produk '%s' menjadi %s",
+            session.get('user_name'),
+            product.name,
+            new_status
+        )
+
+        flash(f"Status produk berhasil diubah menjadi {new_status}.", "success")
+
+    except Exception:
+        db.session.rollback()
+        logging.exception(
+            "ERROR: Gagal mengubah status produk ID %s",
+            product_id
+        )
+        flash("Gagal mengubah status produk.", "error")
+
+    return redirect(url_for('admin_products'))
+
+@app.route('/admin/product/permanently-delete/<int:product_id>', methods=['POST'])
+def permanently_delete_product(product_id):
+    if 'role' not in session or session['role'] != 'Admin':
+        return redirect(url_for('login'))
+
+    try:
+        product = db.session.get(Product, product_id)
+
+        if not product:
+            flash("Produk tidak ditemukan.", "error")
+            return redirect(url_for('admin_products'))
+
+        # Periksa apakah produk pernah digunakan dalam pesanan
+        order_item = OrderItem.query.filter_by(
+            product_id=product_id
+        ).first()
+
+        if order_item:
+            flash(
+                "Produk tidak dapat dihapus karena memiliki riwayat pesanan.",
+                "error"
+            )
+            return redirect(url_for('admin_products'))
+
+        product_name = product.name
+
+        db.session.delete(product)
+        db.session.commit()
+
+        logging.info(
+            "PRODUCT PERMANENTLY DELETED: Admin '%s' menghapus produk '%s' (ID: %s)",
+            session.get('user_name'),
+            product_name,
+            product_id
+        )
+
+        flash("Produk berhasil dihapus permanen.", "success")
+
+    except Exception:
+        db.session.rollback()
+        logging.exception(
+            "ERROR: Gagal menghapus permanen produk ID %s",
+            product_id
+        )
+        flash("Gagal menghapus produk.", "error")
 
     return redirect(url_for('admin_products'))
 
@@ -703,6 +1022,9 @@ def save_user_settings():
         logging.info(f"USER UPDATED: Admin '{session.get('user_name')}' mengubah user ID {user_id} (Role: {new_role}, Status: {new_status})")
 
     return redirect(url_for('admin_users'))
+
+
+
 
 
 # ==========================================
