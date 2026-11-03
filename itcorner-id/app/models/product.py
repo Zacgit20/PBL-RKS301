@@ -13,6 +13,12 @@ class Product(db.Model):
     stock = db.Column(db.Integer, nullable=False, default=0)
     description = db.Column(db.Text, nullable=True)
     is_promo = db.Column(db.Boolean, nullable=False, default=False)
+    is_active = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=True,
+        server_default=db.true()
+    )
     image = db.Column(db.Text, nullable=True)
     specs = db.Column(db.Text, nullable=True)
 
