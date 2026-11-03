@@ -1,5 +1,4 @@
 
-from datetime import date
 
 from app.extensions import db
 
@@ -19,7 +18,6 @@ class User(db.Model):
 
     email = db.Column(
         db.String(150),
-        unique=True,
         nullable=False
     )
 
@@ -42,7 +40,7 @@ class User(db.Model):
     joined = db.Column(
         db.Date,
         nullable=False,
-        default=date.today
+        server_default=db.func.current_date()
     )
 
     status = db.Column(
@@ -52,8 +50,17 @@ class User(db.Model):
     )
 
     __table_args__ = (
-        db.Index(
-            "idx_users_email",
-            "email"
-        ),
-    )
+    db.UniqueConstraint(
+        "email",
+        name="users_email_key"
+    ),
+    db.Index(
+        "idx_users_email",
+        "email"
+    ),
+    db.Index(
+        "uq_users_email_lower",
+        db.func.lower(email),
+        unique=True
+    ),
+)
