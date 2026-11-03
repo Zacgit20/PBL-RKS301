@@ -16,6 +16,13 @@ class Payment(db.Model):
         nullable=False
     )
 
+    order_id = db.Column(
+        db.String(50),
+        db.ForeignKey("orders.id"),
+        nullable=False,
+        index=True
+    )
+ 
     amount_num = db.Column(
         db.Numeric(15, 2),
         nullable=False
@@ -43,10 +50,15 @@ class Payment(db.Model):
         backref="payments"
     )
 
+    order = db.relationship(
+        "Order",
+        backref="payments"
+    )
+
     __table_args__ = (
         db.CheckConstraint(
             "amount_num >= 0",
-            name="check_payment_amount_nonnegative"
+            name="payments_amount_num_check" 
         ),
         db.Index(
             "idx_payments_user_id",
