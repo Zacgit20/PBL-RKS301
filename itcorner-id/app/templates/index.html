@@ -173,8 +173,14 @@
                     </span>
                     
                     <a href="{{ url_for('detail', product_id=product.id) }}" class="bg-slate-50 h-44 rounded-xl mb-4 mt-6 overflow-hidden relative flex items-center justify-center p-2 block cursor-pointer">
-                        <img src="{{ product.image }}" alt="{{ product.name }}" class="max-h-full object-contain group-hover:scale-105 transition duration-300">
+                        {% if product.image and product.image.startswith('uploads/products/') %}
+                        <img src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}"
+                            class="max-h-full object-contain group-hover:scale-105 transition duration-300">
+                        {% else %}
+                        <span class="text-xs text-slate-400">Gambar belum tersedia</span>
+                        {% endif %}
                     </a>
+                        
 
                     <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">{{ product.brand if product.brand else 'ITCorner' }} / {{ product.category }}</p>
                     

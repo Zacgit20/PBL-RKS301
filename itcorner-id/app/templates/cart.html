@@ -5,7 +5,7 @@
 {% block content %}
 <div class="bg-slate-50 min-h-screen py-8">
     <div class="max-w-7xl mx-auto px-4">
-        
+
         <!-- Breadcrumb & Top Bar -->
         <div class="flex justify-between items-center mb-6">
             <div>
@@ -13,13 +13,14 @@
                 <h1 class="text-3xl font-bold text-slate-900">Keranjang belanja</h1>
                 <p class="text-sm text-slate-500 mt-1">
                     {% if items %}
-                        {{ items|length }} jenis produk, {{ cart_count }} barang. Periksa kembali sebelum melanjutkan.
+                    {{ items|length }} jenis produk, {{ cart_count }} barang. Periksa kembali sebelum melanjutkan.
                     {% else %}
-                        Keranjang belanja Anda masih kosong.
+                    Keranjang belanja Anda masih kosong.
                     {% endif %}
                 </p>
             </div>
-            <a href="{{ url_for('home') }}" class="border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm transition">
+            <a href="{{ url_for('home') }}"
+                class="border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm transition">
                 Lanjut belanja
             </a>
         </div>
@@ -34,44 +35,59 @@
         {% if items %}
         <!-- Layout Utama (2 Kolom) -->
         <div class="flex flex-col lg:flex-row gap-8">
-            
+
             <!-- Kolom Kiri: Daftar Produk -->
             <div class="w-full lg:w-2/3 space-y-6">
-                
+
                 <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
-                    <div class="flex justify-between text-xs text-slate-400 font-semibold pb-4 border-b border-slate-100">
+                    <div
+                        class="flex justify-between text-xs text-slate-400 font-semibold pb-4 border-b border-slate-100">
                         <span>Produk</span>
                         <span>Jumlah & subtotal</span>
                     </div>
 
                     <!-- Looping Item Dinamis -->
                     {% for item in items %}
-                    <div class="py-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div
+                        class="py-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div class="flex gap-4">
-                            <div class="w-20 h-20 bg-slate-100 rounded-xl flex items-center justify-center text-xs text-slate-400 flex-shrink-0 overflow-hidden p-2">
-                                {% if item.product.image %}
-                                    <img src="{{ item.product.image }}" alt="{{ item.product.name }}" class="max-h-full object-contain">
+                            <div
+                                class="w-20 h-20 bg-slate-100 rounded-xl flex items-center justify-center text-xs text-slate-400 flex-shrink-0 overflow-hidden p-2">
+                                {% if item.product.image and item.product.image.startswith('uploads/products/') %}
+                                <img src="{{ url_for('static', filename=item.product.image) }}"alt="{{ item.product.name }}" class="max-h-full object-contain">
                                 {% else %}
-                                    [{{ item.product.brand if item.product.brand else 'Produk' }}]
+                                <span class="text-xs text-slate-400">Gambar belum tersedia</span>
                                 {% endif %}
                             </div>
                             <div>
                                 <h3 class="font-bold text-slate-900 text-base">{{ item.product.name }}</h3>
-                                <p class="text-xs text-slate-500 mt-0.5">{{ item.product.brand if item.product.brand else 'ITCorner' }} • {{ item.product.category }}</p>
-                                <p class="text-sm font-semibold text-slate-800 mt-1">{{ item.product.price if item.product.price else format_rupiah(item.product.price_num) }}<span class="text-xs text-slate-400 font-normal">/ unit</span></p>
-                                <span class="inline-block text-[11px] text-emerald-600 font-semibold mt-1">Stok {{ item.product.stock }} unit</span>
+                                <p class="text-xs text-slate-500 mt-0.5">{{ item.product.brand if item.product.brand
+                                    else 'ITCorner' }} • {{ item.product.category }}</p>
+                                <p class="text-sm font-semibold text-slate-800 mt-1">{{ item.product.price if
+                                    item.product.price else format_rupiah(item.product.price_num) }}<span
+                                        class="text-xs text-slate-400 font-normal">/ unit</span></p>
+                                <span class="inline-block text-[11px] text-emerald-600 font-semibold mt-1">Stok {{
+                                    item.product.stock }} unit</span>
                             </div>
                         </div>
 
                         <!-- Tombol Ubah Qty & Hapus Item -->
                         <div class="flex flex-col sm:items-end gap-2 w-full sm:w-auto">
-                            <div class="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50 self-start sm:self-auto">
-                                <button type="button" data-id="{{ item.product.id }}" onclick="updateCartQuantity(this.dataset.id, 'decrease')" class="px-2.5 py-1 text-slate-500 hover:bg-slate-200 font-bold text-sm transition">-</button>
-                                <span class="px-3 py-1 text-xs font-bold text-slate-800 bg-white">{{ item.quantity }}</span>
-                                <button type="button" data-id="{{ item.product.id }}" onclick="updateCartQuantity(this.dataset.id, 'increase')" class="px-2.5 py-1 text-blue-600 hover:bg-slate-200 font-bold text-sm transition">+</button>
+                            <div
+                                class="flex items-center border border-slate-200 rounded-lg overflow-hidden bg-slate-50 self-start sm:self-auto">
+                                <button type="button" data-id="{{ item.product.id }}"
+                                    onclick="updateCartQuantity(this.dataset.id, 'decrease')"
+                                    class="px-2.5 py-1 text-slate-500 hover:bg-slate-200 font-bold text-sm transition">-</button>
+                                <span class="px-3 py-1 text-xs font-bold text-slate-800 bg-white">{{ item.quantity
+                                    }}</span>
+                                <button type="button" data-id="{{ item.product.id }}"
+                                    onclick="updateCartQuantity(this.dataset.id, 'increase')"
+                                    class="px-2.5 py-1 text-blue-600 hover:bg-slate-200 font-bold text-sm transition">+</button>
                             </div>
                             <p class="font-bold text-slate-900 text-base">{{ item.subtotal }}</p>
-                            <button type="button" data-id="{{ item.product.id }}" onclick="removeFromCart(this.dataset.id)" class="text-red-500 hover:underline text-xs font-medium">Hapus produk</button>
+                            <button type="button" data-id="{{ item.product.id }}"
+                                onclick="removeFromCart(this.dataset.id)"
+                                class="text-red-500 hover:underline text-xs font-medium">Hapus produk</button>
                         </div>
                     </div>
                     {% endfor %}
@@ -84,14 +100,17 @@
                 </div>
 
                 <!-- Catatan Kecil -->
-                <p class="text-xs text-slate-500 px-2">Jumlah produk dapat diubah sesuai stok. Ketersediaan diperiksa kembali saat checkout.</p>
+                <p class="text-xs text-slate-500 px-2">Jumlah produk dapat diubah sesuai stok. Ketersediaan diperiksa
+                    kembali saat checkout.</p>
 
                 <!-- Section Lengkapi Setup Anda -->
                 <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
                     <h3 class="font-bold text-slate-900 text-base mb-4">Lengkapi setup Anda</h3>
-                    <div class="flex items-center justify-between gap-4 p-3 border border-slate-100 rounded-xl bg-slate-50/50">
+                    <div
+                        class="flex items-center justify-between gap-4 p-3 border border-slate-100 rounded-xl bg-slate-50/50">
                         <div class="flex items-center gap-4">
-                            <div class="w-16 h-16 bg-slate-200 rounded-lg flex items-center justify-center text-[10px] text-slate-400 font-semibold">
+                            <div
+                                class="w-16 h-16 bg-slate-200 rounded-lg flex items-center justify-center text-[10px] text-slate-400 font-semibold">
                                 [Aksesori]
                             </div>
                             <div>
@@ -100,7 +119,8 @@
                                 <p class="text-sm font-bold text-slate-900 mt-1">Rp899.000</p>
                             </div>
                         </div>
-                        <a href="{{ url_for('home', category='Aksesori') }}" class="border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-semibold px-4 py-1.5 rounded-lg text-xs transition">
+                        <a href="{{ url_for('home', category='Aksesori') }}"
+                            class="border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-semibold px-4 py-1.5 rounded-lg text-xs transition">
                             Lihat Aksesori
                         </a>
                     </div>
@@ -121,7 +141,7 @@
                             <span class="font-medium text-slate-800">{{ item.subtotal }}</span>
                         </div>
                         {% endfor %}
-                        
+
                         <div class="flex justify-between pt-2">
                             <span>Subtotal</span>
                             <span class="font-semibold text-slate-800">{{ total }}</span>
@@ -137,7 +157,8 @@
                         <span class="text-2xl font-extrabold text-blue-600">{{ total }}</span>
                     </div>
 
-                    <a href="{{ url_for('checkout') }}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-sm transition shadow-lg shadow-blue-500/20 mb-4 text-center">
+                    <a href="{{ url_for('checkout') }}"
+                        class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl text-sm transition shadow-lg shadow-blue-500/20 mb-4 text-center">
                         Checkout ({{ cart_count }} barang) →
                     </a>
 
@@ -153,7 +174,8 @@
         <!-- Tampilan Jika Keranjang Kosong -->
         <div class="text-center py-16 bg-white rounded-2xl border border-slate-200/80 max-w-xl mx-auto shadow-sm">
             <p class="text-slate-500 text-sm mb-4">Keranjang belanja Anda masih kosong.</p>
-            <a href="{{ url_for('home') }}" class="inline-block bg-blue-600 text-white font-semibold text-xs px-5 py-2.5 rounded-xl hover:bg-blue-700 transition">
+            <a href="{{ url_for('home') }}"
+                class="inline-block bg-blue-600 text-white font-semibold text-xs px-5 py-2.5 rounded-xl hover:bg-blue-700 transition">
                 Mulai Belanja Sekarang
             </a>
         </div>

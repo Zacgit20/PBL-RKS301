@@ -135,6 +135,16 @@ document.addEventListener('DOMContentLoaded', function () {
     imageInput.addEventListener('change', function () {
         const file = this.files[0];
 
+        // Bersihkan preview sebelumnya
+        if (currentPreviewUrl) {
+            URL.revokeObjectURL(currentPreviewUrl);
+            currentPreviewUrl = null;
+        }
+
+        imagePreview.src = '';
+        imagePreview.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+
         if (!file) {
             return;
         }
@@ -157,11 +167,6 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Ukuran gambar maksimal 2 MB.');
             this.value = '';
             return;
-        }
-
-        // Menghapus URL preview sebelumnya
-        if (currentPreviewUrl) {
-            URL.revokeObjectURL(currentPreviewUrl);
         }
 
         // Membuat URL sementara untuk menampilkan gambar
