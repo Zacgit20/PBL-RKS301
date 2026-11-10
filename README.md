@@ -8,7 +8,7 @@
 
 Repositori resmi proyek **PBL-RKS301: ITCorner.id (Secure E-Commerce IT Shop)** pada Program Studi **Rekayasa Keamanan Siber, Politeknik Negeri Batam**.
 
-Proyek ini bertujuan mengonstruksi platform e-commerce IT shop yang aman dan mengintegrasikannya dengan infrastruktur **Well-Architected Security Operations Center (SOC) Level 1** berbasis arsitektur *Dual-Plane* (*Data/Application Plane* & *Control/Security Operations Plane*) serta prinsip *Defense-in-Depth* berlapis.
+Proyek ini bertujuan mengonstruksi platform e-commerce IT shop yang aman dan mengintegrasikannya dengan infrastruktur **Well-Architected Security Operations Center (SOC)** berbasis arsitektur *Dual-Plane* (*Data/Application Plane* & *Control/Security Operations Plane*) serta prinsip *Defense-in-Depth* berlapis.
 
 ---
 
