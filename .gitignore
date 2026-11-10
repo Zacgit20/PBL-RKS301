@@ -18,3 +18,6 @@ uploads/
 # System & Log Files
 *.log
 .DS_Store
+
+# Master context, blueprint, & reference documents (local only)
+Context/
