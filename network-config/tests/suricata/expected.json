@@ -1,0 +1,20 @@
+{
+  "kind": "synthetic offline fixtures; not lab evidence",
+  "engine_test_status": "NOT_RUN",
+  "positive": {
+    "file": "positive.pcap",
+    "expected_sids": [
+      1000001,
+      1000002,
+      1000003,
+      1000004
+    ],
+    "packet_count": 46
+  },
+  "negative": {
+    "file": "negative.pcap",
+    "expected_sids": [],
+    "packet_count": 17
+  },
+  "scope": "No sockets opened. Synthetic PCAP for RPP Rev.3 ruleset verification (SID 1000001-1000004)."
+}

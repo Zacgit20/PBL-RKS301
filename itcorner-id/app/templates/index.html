@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}ITCorner.id - Katalog Produk{% endblock %}
+
+{% block content %}
+<main class="flex-grow">
+    <!-- HERO BANNER -->
+    <section class="max-w-7xl mx-auto px-4 mt-6">
+        <div class="relative bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950 rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between text-white shadow-xl border border-slate-800/80 overflow-hidden">
+            <div class="absolute -top-16 -left-16 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-16 -right-16 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="max-w-lg z-10 space-y-4">
+                <span class="inline-flex items-center gap-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Tingkatkan Produktivitas Anda</span>
+                <h1 class="text-3xl md:text-4xl font-extrabold leading-tight tracking-tight">
+                    Performa baru.<br>
+                    <span class="bg-gradient-to-r from-white via-slate-100 to-blue-300 bg-clip-text text-transparent">Kemungkinan baru.</span>
+                </h1>
+                <p class="text-slate-300 mb-8 text-sm">Laptop pilihan untuk ide besar Anda. Lebih cepat bekerja, lebih nyaman berkarya.</p>
+                <div class="flex items-center space-x-4 pt-2">
+                    <a href="#katalog" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3 px-6 rounded-xl text-xs transition shadow-lg shadow-blue-600/25 hover:scale-[1.02] inline-block">Temukan laptop Anda →</a>
+                    <span class="text-xs text-slate-400 font-medium">Mulai <strong class="text-slate-200">Rp5 jutaan</strong></span>
+                </div>
+            </div>
+
+            <div class="mt-8 md:mt-0 z-10 w-full md:w-80 h-52 bg-slate-800/60 backdrop-blur border border-slate-700/60 rounded-2xl flex items-center justify-center text-slate-400 text-xs shadow-2xl relative group overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&q=80&w=800" 
+                     alt="Modern Laptop Workspace" 
+                     class="w-full h-full object-cover rounded-2xl opacity-90 group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="max-w-7xl mx-auto px-4 mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-b border-slate-200/80 pb-8">
+        <div class="flex items-center space-x-3.5 bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
+            <div class="w-10 h-10 bg-blue-50 text-blue-600 font-bold rounded-xl flex items-center justify-center text-sm flex-shrink-0">✓</div>
+            <div>
+                <p class="text-xs font-bold text-slate-900">Produk pilihan</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Spesifikasi jelas, pilihan tepat</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3.5 bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
+            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-sm flex-shrink-0">✈️</div>
+            <div>
+                <p class="text-xs font-bold text-slate-900">Kirim ke seluruh Indonesia</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Penuhi multi lokasi/kebutuhan</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3.5 bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
+            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-sm flex-shrink-0">💬</div>
+            <div>
+                <p class="text-xs font-bold text-slate-900">Bantuan spesialis</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Konsultasi sebelum membeli</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3.5 bg-white p-3.5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
+            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-sm flex-shrink-0">📄</div>
+            <div>
+                <p class="text-xs font-bold text-slate-900">Pesanan transparan</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Faktur dan status dalam satu akun</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- AREA KATALOG PRODUK & SIDEBAR -->
+    <div id="katalog" class="scroll-mt-24 max-w-7xl mx-auto px-4 mt-8 flex flex-col md:flex-row gap-8 mb-16">
+
+        <!-- SIDEBAR FILTER (BARU: HARGA, SORTING, & STOK) -->
+        <aside class="w-full md:w-1/4">
+            <form action="{{ url_for('home') }}" method="GET" class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm sticky top-24 space-y-5">
+                <!-- Tetapkan Kategori & Pencarian Aktif -->
+                {% if request.args.get('category') %}
+                    <input type="hidden" name="category" value="{{ request.args.get('category') }}">
+                {% endif %}
+                {% if search_query %}
+                    <input type="hidden" name="q" value="{{ search_query }}">
+                {% endif %}
+
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900 mb-1">Temukan perangkat</h2>
+                    <p class="text-xs text-slate-500 pb-4 border-b border-slate-100">Pilihan kurasi untuk produktivitas, kreativitas, dan hiburan.</p>
+                </div>
+                
+                <h3 class="font-bold text-sm text-slate-900">Filter produk</h3>
+
+                <!-- 1. Rentang Harga -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Rentang Harga (Rp)</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" name="min_price" value="{{ request.args.get('min_price', '') }}" placeholder="Min" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500">
+                        <input type="number" name="max_price" value="{{ request.args.get('max_price', '') }}" placeholder="Max" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- 2. Urutkan Produk -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Urutkan</label>
+                    <select name="sort" class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-blue-500">
+                        <option value="">Paling Sesuai</option>
+                        <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Harga: Termurah</option>
+                        <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Harga: Termahal</option>
+                        <option value="name_asc" {% if request.args.get('sort') == 'name_asc' %}selected{% endif %}>Nama: A - Z</option>
+                    </select>
+                </div>
+
+                <!-- 3. Ketersediaan Stok -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Ketersediaan</label>
+                    <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                        <input type="checkbox" name="in_stock" value="1" {% if request.args.get('in_stock') == '1' %}checked{% endif %} class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        Hanya produk ready stock
+                    </label>
+                </div>
+
+                <!-- Tombol Aksi -->
+                <div class="pt-2 space-y-2">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl text-xs transition shadow-md shadow-blue-500/10">
+                        Terapkan filter
+                    </button>
+                    {% if request.args.get('min_price') or request.args.get('max_price') or request.args.get('sort') or request.args.get('in_stock') %}
+                    <a href="{{ url_for('home', category=request.args.get('category', '')) }}" class="block text-center w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2 rounded-xl text-xs transition">
+                        Reset Filter
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </aside>
+
+        <!-- KOLOM GRID PRODUK DINAMIS -->
+        <div class="w-full md:w-3/4">
+            <!-- FORM PENCARIAN SEKUNDER -->
+            <form action="{{ url_for('home') }}" method="GET" class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm">
+                {% if request.args.get('category') %}
+                <input type="hidden" name="category" value="{{ request.args.get('category') }}">
+                {% endif %}
+                {% if request.args.get('min_price') %}
+                <input type="hidden" name="min_price" value="{{ request.args.get('min_price') }}">
+                {% endif %}
+                {% if request.args.get('max_price') %}
+                <input type="hidden" name="max_price" value="{{ request.args.get('max_price') }}">
+                {% endif %}
+                {% if request.args.get('sort') %}
+                <input type="hidden" name="sort" value="{{ request.args.get('sort') }}">
+                {% endif %}
+                {% if request.args.get('in_stock') %}
+                <input type="hidden" name="in_stock" value="{{ request.args.get('in_stock') }}">
+                {% endif %}
+
+                <div class="relative flex-1 w-full">
+                    <button type="submit" class="absolute left-3.5 top-3 text-slate-400 hover:text-blue-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </button>
+                    <input type="text" name="q" value="{{ search_query if search_query else '' }}" placeholder="Cari nama atau spesifikasi..." class="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-10 pr-4 py-2 text-xs focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition">
+                </div>
+            </form>
+
+            <p class="text-xs text-slate-500 mb-4 px-1">
+                Menampilkan {{ products|length }} produk 
+                {% if is_promo %} • <strong class="text-blue-600">🔥 Promo Pilihan</strong>{% endif %}
+                {% if search_query %} • Kata kunci: "<strong class="text-slate-800">{{ search_query }}</strong>"{% endif %}
+                {% if request.args.get('category') and request.args.get('category') != 'Semua produk' %} • Kategori: <strong class="text-slate-800">{{ request.args.get('category') }}</strong>{% endif %}
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {% for product in products %}
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col relative hover:shadow-md transition duration-300 group">
+                    <span class="absolute top-4 left-4 bg-blue-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-lg z-10 shadow-sm">
+                        {{ product.category }}
+                    </span>
+                    
+                    <a href="{{ url_for('detail', product_id=product.id) }}" class="bg-slate-50 h-44 rounded-xl mb-4 mt-6 overflow-hidden relative flex items-center justify-center p-2 block cursor-pointer">
+                        {% if product.image and product.image.startswith('uploads/products/') %}
+                        <img src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}"
+                            class="max-h-full object-contain group-hover:scale-105 transition duration-300">
+                        {% else %}
+                        <span class="text-xs text-slate-400">Gambar belum tersedia</span>
+                        {% endif %}
+                    </a>
+                        
+
+                    <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">{{ product.brand if product.brand else 'ITCorner' }} / {{ product.category }}</p>
+                    
+                    <h3 class="font-bold text-sm mb-1 text-slate-900 leading-snug group-hover:text-blue-600 transition">
+                        <a href="{{ url_for('detail', product_id=product.id) }}">
+                            {{ product.name }}
+                        </a>
+                    </h3>
+
+                    <p class="text-[11px] text-slate-500 mb-2 truncate">{{ product.specs if product.specs else (product.description if product.description else 'Spesifikasi standar') }}</p>
+                    <p class="text-xs text-amber-500 font-semibold mb-3 flex items-center gap-1">★ 4.8 <span class="text-slate-400 font-normal">· Tersedia</span></p>
+                    <p class="text-base font-extrabold text-slate-900 mb-4 mt-auto">{{ product.price }}</p>
+
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+                        <span class="text-emerald-600 text-[11px] font-semibold">Stok {{ product.stock }}</span>
+                        <form onsubmit="addToCart(event, this)">
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1.5 px-3.5 rounded-xl text-xs transition shadow-sm">
+                                + Tambah
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-slate-200">
+                    <p class="text-sm text-slate-500 font-medium mb-3">Tidak ada produk yang sesuai dengan pencarian Anda.</p>
+                    <a href="{{ url_for('home') }}" class="inline-block bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-xs hover:bg-blue-700 transition">
+                        Tampilkan Semua Produk
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>  
+
+    <!-- BOTTOM BANNERS -->
+    <div class="max-w-7xl mx-auto px-4 mb-16 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-slate-100/70 p-8 rounded-3xl border border-slate-200/60 flex flex-col justify-between hover:border-blue-200 transition">
+            <div>
+                <p class="text-blue-600 text-[10px] font-bold uppercase tracking-wider mb-2">Setup yang Lebih Nyaman</p>
+                <h3 class="text-2xl font-bold text-slate-900 mb-2">Detail kecil. Dampak besar.</h3>
+                <p class="text-slate-500 text-xs leading-relaxed mb-6">Lengkapi meja kerja dengan monitor, keyboard, dan mouse pilihan agar kerja lebih fokus.</p>
+            </div>
+            <div>
+                <a href="{{ url_for('home', category='Aksesori') }}" class="inline-block bg-white border border-slate-200 text-slate-800 font-bold py-2.5 px-5 rounded-xl text-xs hover:bg-slate-50 shadow-sm transition">
+                    Jelajahi aksesori
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+            <div>
+                <p class="text-blue-600 text-[10px] font-bold uppercase tracking-wider mb-2">Masih Bingung Memilih?</p>
+                <h3 class="text-2xl font-bold text-slate-900 mb-2">Ceritakan kebutuhan Anda.</h3>
+                <p class="text-slate-500 text-xs leading-relaxed mb-6">Tim spesialis kami siap membantu membandingkan spesifikasi dan menyesuaikan anggaran Anda.</p>
+            </div>
+            <div>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-xl text-xs shadow-md shadow-blue-500/10 transition">
+                    Konsultasi via WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{% endblock %}

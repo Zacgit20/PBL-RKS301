@@ -1,0 +1,38 @@
+%YAML 1.1
+---
+# Kandidat konfigurasi replay terisolasi; belum diuji engine.
+# Jalankan dari root paket. Bukan pengganti YAML OPNsense.
+vars:
+  address-groups:
+    HOME_NET: "[10.10.10.0/29,10.10.20.0/29,10.10.30.0/29,10.10.40.0/29,10.10.50.0/27,10.10.60.0/30]"
+    EXTERNAL_NET: "!$HOME_NET"
+default-log-dir: .
+classification-file: tests/suricata/classification.config
+rule-files: []
+stats:
+  enabled: no
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: eve.json
+      types:
+        - alert
+        - flow
+logging:
+  default-log-level: info
+  outputs:
+    - console:
+        enabled: yes
+app-layer:
+  protocols:
+    http:
+      enabled: yes
+      libhtp:
+        default-config:
+          personality: IDS
+          request-body-limit: 100kb
+          request-body-minimal-inspect-size: 1
+          request-body-inspect-window: 4kb
+stream:
+  checksum-validation: yes
