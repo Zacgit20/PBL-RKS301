@@ -1,10 +1,10 @@
 # Topologi Acuan RPP Rev.3 (12 VM)
 
 **Versi:** 1.0 (Revisi 3) - November 2026  
-**Sumber:** RPP PBL RKS-301 Rev.3 (Bagian Desain Arsitektur & Evaluasi ATS)  
+**Sumber:** `topology/topologi-soc-1.png` / `SOC_1_rev3.drawio` (RPP PBL RKS-301 Rev.3)  
 **Status:** Diagram Arsitektur Target Resmi Tim Well Architected SOC 1.
 
-![Topologi Resmi RPP Rev.3](topologi-rks301.png)
+![Topologi Resmi RPP Rev.3](topologi-soc-1.png)
 
 Diagram topologi di atas merupakan gambar acuan resmi proyek yang telah diselaraskan dengan kebutuhan kurikulum 5 mata kuliah integrasi.
 
