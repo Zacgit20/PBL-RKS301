@@ -1,4 +1,6 @@
-"""Build synthetic Ethernet/IPv4/TCP PCAPs locally. Never sends network traffic."""
+"""Build synthetic Ethernet/IPv4/TCP PCAPs locally for Suricata rules verification.
+Never sends network traffic. Aligned with RPP Rev.3 ruleset (SID 1000001-1000004).
+"""
 from pathlib import Path
 import struct
 import socket
@@ -8,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / 'tests' / 'suricata'
 SRC = '10.10.60.2'
 WEB = '10.10.10.2'
-BASTION = '10.10.10.3'
+DB = '10.10.30.2'
 
 def checksum(data):
     if len(data) % 2:
@@ -89,36 +91,55 @@ def validate_pcap(p):
 
 def main():
     DEST.mkdir(parents=True, exist_ok=True)
-    requests = [
-        http_request('GET', '/?q=UNION%20SELECT%20NULL'),
-        http_request('GET', '/?q=%3Cscript%3Ealert(1)%3C%2Fscript%3E'),
-        http_request('POST','/probe',b'{"probe":"UNION SELECT NULL"}'),
-        http_request('POST','/probe',b'{"probe":"<script>alert(1)</script>"}'),
-    ]
-    requests += [http_request('POST','/login',b'user=lab&password=synthetic','application/x-www-form-urlencoded') for _ in range(8)]
-    positive = []
-    for i, request in enumerate(requests):
-        positive.extend(transaction(i+1, request))
-    positive += [frame(SRC,BASTION,50000+i,22,300000+i*1000,0,2) for i in range(8)]
-    normal = [http_request('GET','/?q=monitor'),
-              http_request('POST','/login',b'user=lab&password=synthetic','application/x-www-form-urlencoded'),
-              http_request('POST','/login',b'user=lab&password=synthetic','application/x-www-form-urlencoded')]
-    negative = []
-    for i, request in enumerate(normal):
-        negative.extend(transaction(i+101,request))
-    negative += [frame(SRC,BASTION,51000+i,22,600000+i*1000,0,2) for i in range(2)]
-    save_pcap('positive.pcap',positive)
-    save_pcap('negative.pcap',negative)
-    counts = {name:validate_pcap(DEST/name) for name in ('positive.pcap','negative.pcap')}
+    
+    # 1. Positive Fixtures:
+    # SID 1000001: SYN Scan to Web DMZ (25 SYN packets within 10s threshold count 20)
+    syn_scan = [frame(SRC, WEB, 45000+i, 80+i, 100000+i*100, 0, 2) for i in range(25)]
+    
+    # SID 1000002: SSH Brute-Force to Web DMZ port 22 (8 SYN packets threshold count 5)
+    ssh_burst = [frame(SRC, WEB, 50000+i, 22, 200000+i*100, 0, 2) for i in range(8)]
+    
+    # SID 1000003: Direct DB Access attempt from unauthorized IP (10.10.60.2 -> 10.10.30.2:5432)
+    db_attempt = [frame(SRC, DB, 55000+i, 5432, 300000+i*100, 0, 2) for i in range(3)]
+    
+    # SID 1000004: SQL Injection attempt in HTTP URI (UNION ... SELECT)
+    sqli_req = http_request('GET', '/products?search=item%20UNION%20SELECT%20username,password%20FROM%20users')
+    sqli_tx = transaction(1, sqli_req)
+    
+    positive = syn_scan + ssh_burst + db_attempt + sqli_tx
+    
+    # 2. Negative Fixtures (Normal Traffic):
+    # Few SYN packets (< 20 threshold)
+    normal_syn = [frame(SRC, WEB, 46000+i, 80, 400000+i*100, 0, 2) for i in range(5)]
+    # Few SSH packets (< 5 threshold)
+    normal_ssh = [frame(SRC, WEB, 51000+i, 22, 500000+i*100, 0, 2) for i in range(2)]
+    # Normal HTTP requests
+    normal_http_req = http_request('GET', '/products?search=monitor')
+    normal_http_tx = transaction(101, normal_http_req)
+    
+    negative = normal_syn + normal_ssh + normal_http_tx
+    
+    save_pcap('positive.pcap', positive)
+    save_pcap('negative.pcap', negative)
+    counts = {name: validate_pcap(DEST/name) for name in ('positive.pcap', 'negative.pcap')}
+    
     manifest = {
-        'kind':'synthetic offline fixtures; not lab evidence',
-        'engine_test_status':'NOT_RUN',
-        'positive':{'file':'positive.pcap','expected_sids':list(range(1003001,1003007)),'packet_count':counts['positive.pcap']},
-        'negative':{'file':'negative.pcap','expected_sids':[],'packet_count':counts['negative.pcap']},
-        'scope':'No sockets opened. HTTP plaintext on port8080; no actual service required for replay.',
+        'kind': 'synthetic offline fixtures; not lab evidence',
+        'engine_test_status': 'NOT_RUN',
+        'positive': {
+            'file': 'positive.pcap',
+            'expected_sids': [1000001, 1000002, 1000003, 1000004],
+            'packet_count': counts['positive.pcap']
+        },
+        'negative': {
+            'file': 'negative.pcap',
+            'expected_sids': [],
+            'packet_count': counts['negative.pcap']
+        },
+        'scope': 'No sockets opened. Synthetic PCAP for RPP Rev.3 ruleset verification (SID 1000001-1000004).'
     }
-    (DEST/'expected.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
-    print(json.dumps({'fixture_checksums':'PASS','packets':counts,'suricata_replay':'NOT_RUN'}))
+    (DEST / 'expected.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    print(json.dumps({'fixture_checksums': 'PASS', 'packets': counts, 'suricata_replay': 'NOT_RUN'}))
 
 if __name__ == '__main__':
     main()

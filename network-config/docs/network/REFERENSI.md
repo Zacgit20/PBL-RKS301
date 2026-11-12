@@ -22,7 +22,7 @@ Tanggal riset 18 Oktober 2026. Baseline berasal dari RPP Final yang sebelumnya d
 5. Versi Suricata lab, metode custom rules persisten, titik observasi plaintext, dan tuning threshold.
 6. Verifikasi semua langkah melalui evidence; belum ada XML yang siap restore.
 
-Rules menggunakan keyword yang didokumentasikan Suricata 7.0.10; bukan klaim engine lab memakai versi itu. Daftar hasil uji lab sengaja belum diberi PASS. Gambar topologi sekarang berasal dari RPP perbaikan dan belum menampilkan Bastion. Gambar ini merupakan acuan dokumen, bukan hasil discovery atau bukti semua jalur aktif.
+Rules menggunakan keyword yang didokumentasikan Suricata 7.0.10; bukan klaim engine lab memakai versi itu. Daftar hasil uji lab sengaja belum diberi PASS. Gambar topologi sekarang berasal dari RPP perbaikan dan belum menampilkan Bastion (ditiadakan pada Rev.3). Gambar ini merupakan acuan dokumen, bukan hasil discovery atau bukti semua jalur aktif.
 
 ## Sumber kapasitas VM - revisi 0.3
 
@@ -39,7 +39,7 @@ Sumber diperiksa 18 Oktober 2026. Angka pada tabel VM adalah usulan lab berdasar
 
 **Pembaruan 0.4:** pengguna mengonfirmasi CPU i9-10900K, RAM 32 GB dan sisa ruang kosong sekitar 300 GB pada 18 Oktober 2026. Angka 300 GB bukan kapasitas total disk.
 
-Keputusan kapasitas yang masih terbuka: RAM usable/pemakaian host, kapasitas total/jenis disk, ukuran VM aktual dan pertumbuhan data, versi guest dan container, pemakaian RAM SOC-IR gabungan, serta apakah penilaian mensyaratkan seluruh 13 VM live bersamaan. Total 48 GiB dan batas profil 24 GiB adalah hitungan alokasi, bukan hasil benchmark. Lihat [rencana kapasitas](spesifikasi-vm-32gb.md).
+Keputusan kapasitas yang masih terbuka: RAM usable/pemakaian host, kapasitas total/jenis disk, ukuran VM aktual dan pertumbuhan data, versi guest dan container, pemakaian RAM SOC-IR gabungan, serta apakah penilaian mensyaratkan seluruh 12 VM live bersamaan. Total 48 GiB dan batas profil 24 GiB adalah hitungan alokasi, bukan hasil benchmark. Lihat [rencana kapasitas](spesifikasi-vm-32gb.md).
 
 ## Revisi 0.5 - target IPS dan rencana bukti
 
@@ -55,4 +55,4 @@ Keputusan yang belum selesai: driver dan mode inline lab, parent Edge, pemuatan 
 
 ## Revisi 0.6 - sumber gambar topologi
 
-Gambar diambil dari RPP PBL RKS-301 perbaikan.docx, bagian Desain Umum, media word/media/image1.png. File PNG dipertahankan tanpa menggambar ulang. Sumber lokal tersebut masih memuat rancangan 12 VM dan belum menggambarkan Bastion; daftar target 13 VM tetap dipertahankan sesuai arahan terbaru. RPP Final asli belum tersedia untuk dicocokkan. Identitas dan hash sumber ada di [topologi-rpp.md](topologi-rpp.md), dengan catatan ekstraksi pada validasi paket.
+Gambar diambil dari RPP PBL RKS-301 perbaikan.docx, bagian Desain Umum, media word/media/image1.png. File PNG dipertahankan tanpa menggambar ulang. Sumber lokal tersebut masih memuat rancangan 12 VM dan belum menggambarkan Bastion (ditiadakan pada Rev.3); daftar target 12 VM tetap dipertahankan sesuai arahan terbaru. RPP Final asli belum tersedia untuk dicocokkan. Identitas dan hash sumber ada di [topologi-rpp.md](topologi-rpp.md), dengan catatan ekstraksi pada validasi paket.

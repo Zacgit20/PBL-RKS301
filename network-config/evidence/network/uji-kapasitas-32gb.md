@@ -55,7 +55,7 @@ Salin tabel ini untuk setiap profil dan setiap percobaan. Simpan bukti pada fold
 | Kesimpulan | BELUM DIUJI |
 | Penyesuaian / tindak lanjut | Belum dicatat |
 
-Kesimpulan boleh menjadi LULUS PROFIL hanya bila fungsi dalam profil berhasil, tidak ada OOM/restart karena RAM, host tidak macet akibat paging berkelanjutan, dan cadangan RAM available host memadai (target awal minimal 2 GiB saat beban). Bila gagal, catat PERLU PENYESUAIAN; revisi profil/alokasi kemudian ulangi uji. Lulus satu profil tidak berarti 13 VM atau seluruh integrasi live sudah berjalan bersamaan.
+Kesimpulan boleh menjadi LULUS PROFIL hanya bila fungsi dalam profil berhasil, tidak ada OOM/restart karena RAM, host tidak macet akibat paging berkelanjutan, dan cadangan RAM available host memadai (target awal minimal 2 GiB saat beban). Bila gagal, catat PERLU PENYESUAIAN; revisi profil/alokasi kemudian ulangi uji. Lulus satu profil tidak berarti 12 VM atau seluruh integrasi live sudah berjalan bersamaan.
 
 ## Inventaris disk sebelum dan sesudah instalasi layanan
 
@@ -66,7 +66,7 @@ Isi ukuran terpakai folder VM saat guest shutdown untuk memperoleh titik awal ya
 | VM-01 Edge OPNsense | 40 | Belum dicatat | Belum dicatat | Belum dicatat |
 | VM-02 Internal OPNsense | 40 | Belum dicatat | Belum dicatat | Belum dicatat |
 | VM-03 Web/App | 32 | Belum dicatat | Belum dicatat | Belum dicatat |
-| VM-04 Bastion | 16 | Belum dicatat | Belum dicatat | Belum dicatat |
+| VM-04 Management | 16 | Belum dicatat | Belum dicatat | Belum dicatat |
 | VM-05 Management + Runner | 40 | Belum dicatat | Belum dicatat | Belum dicatat |
 | VM-06 Database | 32 | Belum dicatat | Belum dicatat | Belum dicatat |
 | VM-07 Backup | 64 | Belum dicatat | Belum dicatat | Belum dicatat |
