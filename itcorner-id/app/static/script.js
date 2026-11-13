@@ -50,6 +50,11 @@ function tambahKeKeranjang(namaProduk) {
     alert(namaProduk + " berhasil ditambahkan ke keranjang!");
 }
 
+function getCsrfHeaders() {
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    return token ? { "X-CSRFToken": token } : {};
+}
+
 // AGAR CART TIDAK REALOD JIKA DI KLIK +
 function addToCart(event, formElement) {
     event.preventDefault(); // Mencegah reload halaman
@@ -58,6 +63,7 @@ function addToCart(event, formElement) {
 
     fetch("/add-to-cart", {
         method: "POST",
+        headers: getCsrfHeaders(),
         body: formData
     })
     .then(response => {
@@ -85,6 +91,7 @@ function updateCartQuantity(productId, action) {
 
     fetch('/update-cart', {
         method: 'POST',
+        headers: getCsrfHeaders(),
         body: formData
     })
     .then(response => {
@@ -106,6 +113,7 @@ function removeFromCart(productId) {
 
     fetch('/remove-from-cart', {
         method: 'POST',
+        headers: getCsrfHeaders(),
         body: formData
     })
     .then(response => {

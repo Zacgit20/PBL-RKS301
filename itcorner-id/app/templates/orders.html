@@ -7,9 +7,9 @@
     
     <!-- Breadcrumb -->
     <nav class="text-xs text-slate-500 mb-3 flex items-center gap-2">
-        <a href="{{ url_for('home') }}" class="hover:text-blue-600">Beranda</a>
+        <a href="{{ url_for('main.home') }}" class="hover:text-blue-600">Beranda</a>
         <span>/</span>
-        <a href="{{ url_for('profile') }}" class="hover:text-blue-600">Akun saya</a>
+        <a href="{{ url_for('customer.profile') }}" class="hover:text-blue-600">Akun saya</a>
         <span>/</span>
         <span class="text-slate-800 font-medium">Riwayat pesanan</span>
     </nav>
@@ -33,17 +33,14 @@
 
                 <!-- Navigasi Sidebar -->
                 <nav class="space-y-1 text-sm font-medium">
-                    <a href="{{ url_for('profile') }}" class="block px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition">
+                    <a href="{{ url_for('customer.profile') }}" class="block px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition">
                         Profil saya
                     </a>
-                    <a href="{{ url_for('orders') }}" class="block px-4 py-2.5 rounded-xl bg-blue-50/80 text-blue-600 font-semibold transition">
+                    <a href="{{ url_for('customer.orders') }}" class="block px-4 py-2.5 rounded-xl bg-blue-50/80 text-blue-600 font-semibold transition">
                         Riwayat pesanan
                     </a>
                     <a href="#" class="block px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition">
                         Alamat pengiriman
-                    </a>
-                    <a href="{{ url_for('logout') if 'logout' in mapper else '#' }}" class="block px-4 py-2.5 rounded-xl text-red-500 hover:bg-red-50 transition mt-4">
-                        Keluar
                     </a>
                 </nav>
             </div>

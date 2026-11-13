@@ -29,17 +29,16 @@
             </div>
 
             <nav class="space-y-1 text-xs font-semibold pt-2 border-t border-slate-100">
-                <a href="{{ url_for('profile') }}" class="block bg-blue-50 text-blue-600 px-3 py-2 rounded-xl">Profil saya</a>
+                <a href="{{ url_for('customer.profile') }}" class="block bg-blue-50 text-blue-600 px-3 py-2 rounded-xl">Profil saya</a>
                 
                 {% if user.role == 'Admin' %}
-                    <a href="{{ url_for('admin_dashboard') }}" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">⚡ Dashboard Admin</a>
-                    <a href="{{ url_for('admin_products') }}" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">📦 Kelola Produk</a>
+                    <a href="{{ url_for('admin.admin_dashboard') }}" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">⚡ Dashboard Admin</a>
+                    <a href="{{ url_for('admin.admin_products') }}" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">📦 Kelola Produk</a>
                 {% else %}
                     <a href="#" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">Riwayat pesanan</a>
                     <a href="#" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">Alamat pengiriman</a>
                 {% endif %}
 
-                <a href="{{ url_for('logout') }}" class="block text-rose-600 hover:bg-rose-50 px-3 py-2 rounded-xl transition pt-2">Keluar</a>
             </nav>
         </div>
 
@@ -95,16 +94,6 @@
                 </form>
             </div>
 
-            <!-- PREFERENSI AKUN -->
-            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex justify-between items-center">
-                <div>
-                    <h2 class="text-sm font-bold text-slate-900 mb-0.5">Selesai menggunakan akun?</h2>
-                    <p class="text-xs text-slate-400">Keluar dari akun jika menggunakan komputer bersama.</p>
-                </div>
-                <a href="{{ url_for('logout') }}" class="border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold px-4 py-2 rounded-xl transition">
-                    Keluar
-                </a>
-            </div>
 
         </div>
 

@@ -11,7 +11,7 @@
     <!-- 1. HEADER (Sama seperti Register) -->
     <header class="bg-white border-b border-slate-200">
         <div class="max-w-8xl mx-auto px-4 py-3 flex justify-between items-center">
-            <a href="{{ url_for('home') }}" class="text-xl font-extrabold text-blue-600 tracking-tighter hover:opacity-80">
+            <a href="{{ url_for('main.home') }}" class="text-xl font-extrabold text-blue-600 tracking-tighter hover:opacity-80">
                 ITCorner<span class="text-slate-800">.id</span>
             </a>
         </div>
@@ -49,7 +49,8 @@
                 <p class="text-slate-500 text-xs mb-8">Masuk untuk melanjutkan belanja dan melihat pesanan Anda.</p>
 
 
-                <form action="{{ url_for('login') }}" method="POST" class="space-y-5">
+                <form action="{{ url_for('auth.login') }}" method="POST" class="space-y-5">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     
                     <!-- Input Email -->
                     <div>
@@ -82,7 +83,7 @@
                             <input id="remember" type="checkbox" class="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
                             <label for="remember" class="ml-2 text-[11px] text-slate-600">Ingat saya di aplikasi ini</label>
                         </div>
-                        <a href="{{ url_for('forgot_password') }}" class="text-[11px] text-blue-600 font-semibold hover:underline">Lupa kata sandi?</a>
+                        <a href="{{ url_for('auth.forgot_password') }}" class="text-[11px] text-blue-600 font-semibold hover:underline">Lupa kata sandi?</a>
                     </div>
 
                     <!-- Peringatan Error (Kotak Merah Muda)perbaikan -->
@@ -112,7 +113,7 @@
 
                 <!-- Link ke Halaman Daftar (Register) -->
                 <div class="mt-6 text-center">
-                    <a href="{{ url_for('register') }}" class="text-slate-800 text-[11px] font-bold hover:text-blue-600 transition flex items-center justify-center">
+                    <a href="{{ url_for('auth.register') }}" class="text-slate-800 text-[11px] font-bold hover:text-blue-600 transition flex items-center justify-center">
                         Belum punya akun? Daftar sekarang
                         <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                     </a>

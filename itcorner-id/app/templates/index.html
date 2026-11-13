@@ -69,7 +69,7 @@
 
         <!-- SIDEBAR FILTER (BARU: HARGA, SORTING, & STOK) -->
         <aside class="w-full md:w-1/4">
-            <form action="{{ url_for('home') }}" method="GET" class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm sticky top-24 space-y-5">
+            <form action="{{ url_for('main.home') }}" method="GET" class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm sticky top-24 space-y-5">
                 <!-- Tetapkan Kategori & Pencarian Aktif -->
                 {% if request.args.get('category') %}
                     <input type="hidden" name="category" value="{{ request.args.get('category') }}">
@@ -120,7 +120,7 @@
                         Terapkan filter
                     </button>
                     {% if request.args.get('min_price') or request.args.get('max_price') or request.args.get('sort') or request.args.get('in_stock') %}
-                    <a href="{{ url_for('home', category=request.args.get('category', '')) }}" class="block text-center w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2 rounded-xl text-xs transition">
+                    <a href="{{ url_for('main.home', category=request.args.get('category', '')) }}" class="block text-center w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2 rounded-xl text-xs transition">
                         Reset Filter
                     </a>
                     {% endif %}
@@ -131,7 +131,7 @@
         <!-- KOLOM GRID PRODUK DINAMIS -->
         <div class="w-full md:w-3/4">
             <!-- FORM PENCARIAN SEKUNDER -->
-            <form action="{{ url_for('home') }}" method="GET" class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm">
+            <form action="{{ url_for('main.home') }}" method="GET" class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm">
                 {% if request.args.get('category') %}
                 <input type="hidden" name="category" value="{{ request.args.get('category') }}">
                 {% endif %}
@@ -172,7 +172,7 @@
                         {{ product.category }}
                     </span>
                     
-                    <a href="{{ url_for('detail', product_id=product.id) }}" class="bg-slate-50 h-44 rounded-xl mb-4 mt-6 overflow-hidden relative flex items-center justify-center p-2 block cursor-pointer">
+                    <a href="{{ url_for('customer.detail', product_id=product.id) }}" class="bg-slate-50 h-44 rounded-xl mb-4 mt-6 overflow-hidden relative flex items-center justify-center p-2 block cursor-pointer">
                         {% if product.image and product.image.startswith('uploads/products/') %}
                         <img src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}"
                             class="max-h-full object-contain group-hover:scale-105 transition duration-300">
@@ -185,7 +185,7 @@
                     <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">{{ product.brand if product.brand else 'ITCorner' }} / {{ product.category }}</p>
                     
                     <h3 class="font-bold text-sm mb-1 text-slate-900 leading-snug group-hover:text-blue-600 transition">
-                        <a href="{{ url_for('detail', product_id=product.id) }}">
+                        <a href="{{ url_for('customer.detail', product_id=product.id) }}">
                             {{ product.name }}
                         </a>
                     </h3>
@@ -208,7 +208,7 @@
                 {% else %}
                 <div class="col-span-full text-center py-12 bg-white rounded-2xl border border-slate-200">
                     <p class="text-sm text-slate-500 font-medium mb-3">Tidak ada produk yang sesuai dengan pencarian Anda.</p>
-                    <a href="{{ url_for('home') }}" class="inline-block bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-xs hover:bg-blue-700 transition">
+                    <a href="{{ url_for('main.home') }}" class="inline-block bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-xs hover:bg-blue-700 transition">
                         Tampilkan Semua Produk
                     </a>
                 </div>
@@ -226,7 +226,7 @@
                 <p class="text-slate-500 text-xs leading-relaxed mb-6">Lengkapi meja kerja dengan monitor, keyboard, dan mouse pilihan agar kerja lebih fokus.</p>
             </div>
             <div>
-                <a href="{{ url_for('home', category='Aksesori') }}" class="inline-block bg-white border border-slate-200 text-slate-800 font-bold py-2.5 px-5 rounded-xl text-xs hover:bg-slate-50 shadow-sm transition">
+                <a href="{{ url_for('main.home', category='Aksesori') }}" class="inline-block bg-white border border-slate-200 text-slate-800 font-bold py-2.5 px-5 rounded-xl text-xs hover:bg-slate-50 shadow-sm transition">
                     Jelajahi aksesori
                 </a>
             </div>
@@ -246,5 +246,5 @@
         </div>
     </div>
 </main>
-<script src="{{ url_for('static', filename='script.js') }}"></script>
+
 {% endblock %}
