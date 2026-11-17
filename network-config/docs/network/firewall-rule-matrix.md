@@ -1,77 +1,56 @@
-# Matriks aturan firewall ITCorner.id
+# Matriks Aturan Firewall ITCorner.id
 
-Versi 0.5 - 18 Oktober 2026. Seluruh baris adalah rencana akses; bukan file konfigurasi yang bisa diimpor langsung. Terapkan setelah memeriksa pemetaan interface dan akses pemulihan console.
+**Versi:** 1.0 (Revisi 3) - November 2026  
+**Penanggung Jawab:** Muhammad Danish - System Integrator & Network Engineer  
+**Status:** Baseline Arsitektur RPP Rev.3 (12 VM) & Penegakan ACL Least Privilege.
 
-## Cara membaca
+## Cara Membaca Matriks
 
-Aturan dievaluasi pada interface masuk, dengan exception yang spesifik sebelum penolakan umum. Trafik yang melewati dua firewall perlu rule dan route yang sesuai pada keduanya. Kontrol sesama subnet seperti Bastion ke Web/App atau Database ke Backup dipasang pada host/kontrol lokal karena tidak otomatis melewati router.
+Aturan dievaluasi pada antarmuka paket masuk (*ingress interface*), menerapkan prinsip *Default Deny* di mana semua trafik ditolak secara implisit kecuali dideklarasikan secara eksplisit. Trafik lintas dua firewall (Edge dan Internal) memerlukan deklarasi aturan dan rute yang selaras pada kedua sisi. Pengendalian trafik pada segmen VLAN yang sama (seperti Runner ke Windows DC pada VLAN 20, atau Database ke Backup pada VLAN 30) ditangani melalui firewall berbasis host (*Windows Firewall / UFW / iptables*).
 
-| ID | Kontrol / interface masuk | Sumber | Tujuan | Layanan | Aksi target | Kapan aktif / status |
+| ID | Kontrol / Antarmuka Masuk | Sumber (Source) | Tujuan (Destination) | Protokol & Port | Aksi | Deskripsi & Kebutuhan Operasional |
 | --- | --- | --- | --- | --- | --- | --- |
-| E01 | Edge / WAN | Internet | WAN address -> Web/App 10.10.10.2 | TCP / 443 | DNAT + PASS | Saat HTTPS siap / RENCANA |
-| E02 | Edge / WAN | Peer admin terdaftar | WAN address | UDP / 51820 | PASS | Saat WireGuard siap / RENCANA |
-| E03 | Edge / WireGuard | Peer admin terdaftar | Bastion 10.10.10.3 | TCP / 22 | PASS | Administrasi / RENCANA |
-| E04 | Edge + Internal / WireGuard Edge; Transit Internal | Peer admin terdaftar | Management 10.10.20.2 | TCP / 22;443 | PASS | Administrasi / RENCANA |
-| D01 | Edge + Internal / DMZ Edge; Transit Internal | Web/App 10.10.10.2 | DB 10.10.30.2 | TCP / 5432 | PASS | Layanan aplikasi / RENCANA |
-| D02 | Edge + Internal / DMZ Edge; Transit Internal | Web/App; Bastion | Wazuh 10.10.40.2 | TCP / 1514 | PASS | Agent siap / RENCANA |
-| D03 | Edge + Internal / DMZ Edge; Transit Internal | Agent terdaftar | Wazuh 10.10.40.2 | TCP / 1515 | PASS | Enrollment sementara / RENCANA |
-| C01 | Internal + Edge / VLAN50 Internal; Transit Edge | Client VLAN50 | Web/App 10.10.10.2 | TCP / 443 | PASS | Layanan aplikasi / RENCANA |
-| M01 | Internal + Edge / VLAN20 Internal; Transit Edge | Management 10.10.20.2 | Web/App 10.10.10.2 | TCP / 22;443 | PASS | Deployment/health check / RENCANA |
-| M02 | Internal / VLAN20 | Management 10.10.20.2 | DC 10.10.30.4 | TCP / 3389;5986 | PASS | Administrasi Windows / RENCANA |
-| M03 | Internal / VLAN20 | Management 10.10.20.2 | Alamat pengelolaan firewall | TCP / 443 | PASS | Administrasi / RENCANA |
-| M04 | Internal + Edge / VLAN20 Internal; Transit Edge | Runner 10.10.20.2 | Alias GitHub/GHCR/dependency disetujui | TCP / 443 | PASS | CI/CD / RENCANA |
-| A01 | Internal / VLAN50 | Windows11 10.10.50.10; Ubuntu10.10.50.20 | DC 10.10.30.4 | TCP / 53;88;135;389;445;464;49152-65535 | PASS | AD siap / RENCANA |
-| A02 | Internal / VLAN50 | Windows11 10.10.50.10; Ubuntu10.10.50.20 | DC 10.10.30.4 | UDP / 53;88;123;389;464 | PASS | AD siap / RENCANA |
-| L01 | Internal / VLAN20/30/50/60 | Agent yang disetujui | Wazuh 10.10.40.2 | TCP / 1514 | PASS | Agent siap / RENCANA |
-| L02 | Internal / VLAN20/30/50/60 | Agent yang didaftarkan | Wazuh 10.10.40.2 | TCP / 1515 | PASS | Enrollment sementara / RENCANA |
-| L03 | Edge + Internal / Keluar firewall; Transit sesuai jalur | IP firewall pengirim | Wazuh/collector 10.10.40.2 | UDP / 514 | PASS | Collector disepakati / RENCANA |
-| L04 | Internal + Edge / VLAN40 Internal; Transit Edge | Wazuh 10.10.40.2 | Alias Telegram API | TCP / 443 | PASS | Notifikasi siap / RENCANA |
-| N01 | Internal + Edge / Interface asal sesuai zona | Host yang disetujui | Resolver/NTP yang disepakati | Sesuai layanan / 53;123 sesuai keputusan | PASS | Setelah target ditentukan / BUTUH PARAMETER |
-| T01 | Internal + Edge / VLAN60 Internal; Transit Edge | Kali 10.10.60.2 | Web/App 10.10.10.2 | TCP / 8080 | PASS | Jendela uji HTTP terisolasi / RENCANA SEMENTARA |
-| T02 | Internal + Edge / VLAN60 Internal; Transit Edge | Kali 10.10.60.2 | Bastion 10.10.10.3 | TCP / 22 | PASS | Jendela uji disetujui / RENCANA SEMENTARA |
-| B01 | Internal / VLAN60 | Kali 10.10.60.2 | Jaringan proyek lainnya | Any / Any | BLOCK + LOG | Selain exception uji / RENCANA |
-| B02 | Internal / VLAN50 | Client VLAN50 | DB 10.10.30.2; Backup10.10.30.3; SOC10.10.40.0/29 | Any / Any | BLOCK + LOG | Operasional / RENCANA |
-| B03 | Edge / WAN | Internet | Jaringan internal dan admin | Any / Any | BLOCK | Default / RENCANA |
-| H01 | Firewall host / DMZ sesama subnet | Bastion 10.10.10.3 | Web/App10.10.10.2 | TCP / 22 | PASS terbatas | Administrasi / RENCANA |
-| H02 | Firewall host / Server sesama subnet | Database10.10.30.2 | Backup10.10.30.3 | TCP / 22 / port Restic yang dipilih | PASS terbatas | Backup terjadwal / BUTUH PARAMETER |
+| E01 | Edge / WAN | Internet Publik | WAN IP -> Web/App 10.10.10.2 | TCP / 443 | DNAT + PASS | Akses e-commerce publik (HTTPS Nginx). Port 80 di-redirect ke 443. |
+| E02 | Edge / WAN | Edge Local (Tailscale daemon) | Server Koordinasi & Relay Tailscale | UDP / 41641, TCP / 443 | PASS (Outbound) | Koneksi outbound control plane Tailscale. Tidak ada port inbound terbuka pada WAN. |
+| E03 | Edge / Tailscale (`tailscale0`) | Admin Terotentikasi (100.64.0.0/10) | Web/App 10.10.10.2 | TCP / 443 | PASS | Akses dashboard `/admin` dengan allowlist IP Tailnet pada Nginx. |
+| E04 | Edge + Internal / Tailscale Edge; Transit Internal | Admin Terotentikasi (100.64.0.0/10) | Management Server 10.10.20.2 | TCP / 22 | PASS | Akses administrasi SSH jarak jauh via Subnet Router. |
+| D01 | Edge + Internal / DMZ Edge; Transit Internal | Web/App Server 10.10.10.2 | Database Server 10.10.30.2 | TCP / 5432 | PASS | Koneksi aplikasi Flask / SQLAlchemy ke basis data PostgreSQL. |
+| D02 | Edge + Internal / DMZ Edge; Transit Internal | Web/App Server 10.10.10.2 | Wazuh SIEM 10.10.40.2 | TCP / 1514 | PASS | Pengiriman event dan alert agent Wazuh dari Web Server. |
+| D03 | Edge + Internal / DMZ Edge; Transit Internal | Host terdaftar sementara | Wazuh SIEM 10.10.40.2 | TCP / 1515 | PASS | Pendaftaran / enrollment agent Wazuh baru (autentikasi kunci). |
+| C01 | Internal + Edge / VLAN 50 Internal; Transit Edge | Client LAN (10.10.50.0/27) | Web/App Server 10.10.10.2 | TCP / 443 | PASS | Akses berbelanja pengguna internal ke web e-commerce ITCorner.id. |
+| M01 | Internal + Edge / VLAN 20 Internal; Transit Edge | Management 10.10.20.2 | Web/App Server 10.10.10.2 | TCP / 22, 443 | PASS | Deployment pipeline CI/CD runner dan health check aplikasi. |
+| M02 | Host Firewall / VLAN 20 (Local Host) | Management 10.10.20.2 | Windows Server 10.10.20.3 | TCP / 3389, 5986 | PASS (Host) | Remote administrasi Windows (RDP / WinRM) dari Management host. |
+| M03 | Internal / VLAN 20 | Management 10.10.20.2 | Web GUI Firewall (10.10.1.1, 10.10.1.2) | TCP / 443 | PASS | Administrasi GUI OPNsense Edge dan Internal dari zona manajemen. |
+| M04 | Internal + Edge / VLAN 20 Internal; Transit Edge | Runner 10.10.20.2 | GitHub API / Repositori / PyPI | TCP / 443 | PASS | Egress Runner CI/CD untuk fetch artefak dependensi & trigger pipeline. |
+| A01 | Internal / VLAN 50 | Windows 11 (10.10.50.10), Ubuntu (10.10.50.20) | Windows Server 10.10.20.3 | TCP / 53, 88, 135, 389, 445, 464, 49152-65535 | PASS | Layanan Active Directory: Kerberos, RPC endpoint, LDAP, SMB file share. |
+| A02 | Internal / VLAN 50 | Windows 11 (10.10.50.10), Ubuntu (10.10.50.20) | Windows Server 10.10.20.3 | UDP / 53, 88, 123, 389, 464 | PASS | Layanan DNS query, Kerberos auth, NTP waktu domain internal. |
+| L01 | Internal / VLAN 20, 30, 50, 60 | Seluruh Wazuh Agent terpasang | Wazuh SIEM 10.10.40.2 | TCP / 1514 | PASS | Pengiriman telemetri, log audit, dan security events ke SIEM Manager. |
+| L02 | Internal / VLAN 20, 30, 50, 60 | Agent belum terdaftar | Wazuh SIEM 10.10.40.2 | TCP / 1515 | PASS | Port registrasi agent Wazuh (authd). |
+| L03 | Edge + Internal / Firewall Transit | OPNsense Edge & Internal | Wazuh SIEM 10.10.40.2 | UDP / 514 | PASS | Pengiriman syslog filterlog OPNsense (firewall events) ke SIEM. |
+| L04 | Internal + Edge / VLAN 40 Internal; Transit Edge | Wazuh SIEM 10.10.40.2 | Telegram Bot API (`api.telegram.org`) | TCP / 443 | PASS | Notifikasi otomatis alert Wazuh Level >= 10 ke grup Telegram SOC. |
+| N01 | Internal + Edge / Egress Semua Zona | Seluruh Host & Firewall | Upstream NTP Server / Pool | UDP / 123 | PASS | Sinkronisasi waktu sistem (presisi offset < 0.03s untuk korelasi forensik). |
+| T01 | Internal + Edge / VLAN 60 Internal; Transit Edge | Kali Linux 10.10.60.2 | Web/App Server 10.10.10.2 | TCP / 80, 443 | PASS (Jadwal) | Simulasi serangan web & port scan terkontrol (dengan izin/tiket teruji). |
+| B01 | Internal / VLAN 60 | Kali Linux 10.10.60.2 | VLAN 20, 30, 40, 50 | Any / Any | BLOCK + LOG | Isolasi ketat host penyerang; dilarang mengakses zona internal lain. |
+| B02 | Internal / VLAN 50 | Client LAN 10.10.50.0/27 | DB (10.10.30.2), Backup, SOC Zone | Any / Any | BLOCK + LOG | Pelanggan dan staf umum dilarang langsung menyentuh basis data / SOC. |
+| B03 | Edge / WAN | Internet Publik | Seluruh Segmen Internal & Manajemen | Any / Any | BLOCK + LOG | Penolakan *Default Deny* terhadap seluruh koneksi tak diizinkan dari luar. |
+| H01 | Host Firewall / VLAN 30 (Local Host) | Database Server 10.10.30.2 | Backup Server 10.10.30.3 | TCP / 22 (SFTP) | PASS (Host) | Replikasi pencadangan otomatis terenkripsi Restic mode *append-only*. |
 
-## Catatan setiap aturan
+## Catatan Teknis & Penegakan Keamanan
 
-- **E01:** Filter terkait DNAT; tidak membuka SSH/DB/RDP.
-- **E02:** Kunci dan peer tidak termasuk paket.
-- **E03:** Tidak membuka SSH dari WAN langsung.
-- **E04:** Route tunnel balik dan AllowedIPs harus sesuai.
-- **D01:** Pertahankan source; PostgreSQL juga membatasi host/user.
-- **D02:** Cocokkan port/protokol agent aktual.
-- **D03:** Cabut/batasi setelah enrollment sesuai prosedur.
-- **C01:** Akses via alamat DNS lab yang benar.
-- **M01:** SSH runner exception terpisah dari jalur admin manual Bastion.
-- **M02:** WinRM HTTPS; 5985 hanya bila disetujui terpisah.
-- **M03:** Tujuan alias admin spesifik; jaga console pemulihan.
-- **M04:** Domain/IP CDN berubah; kelola alias tujuan sesuai kebutuhan.
-- **A01:** Dynamic RPC dibatasi sumber dan tujuan; LDAP secure/GC opsional ditinjau.
-- **A02:** Sesuaikan kebutuhan integrasi Ubuntu.
-- **L01:** Per VLAN; tidak mengizinkan seluruh layanan SOC.
-- **L02:** Batasi masa aktif.
-- **L03:** Contoh syslog; ganti ke transport TLS bila collector mendukung; jangan buka dua-duanya tanpa kebutuhan.
-- **L04:** Token dikelola privat; uji notifikasi bersama SOC.
-- **N01:** Pisahkan DNS TCP/UDP dan NTP UDP; bukan rule any.
-- **T01:** Bukan layanan publik; tutup setelah uji; parser HTTP harus melihat request.
-- **T02:** Untuk uji koneksi; kegagalan auth dari log host.
-- **B01:** Setelah allow spesifik; tidak ada akses permanen menyeluruh.
-- **B02:** Tempatkan setelah exception yang disetujui; tidak mengubah akses DC.
-- **B03:** Exception hanya layanan publik dan tunnel yang disepakati.
-- **H01:** Tidak melewati router; perlu kontrol host/akses SSH.
-- **H02:** Tidak melewati router; definisikan push/pull dan transport.
+1. **Penggantian WireGuard dengan Tailscale:**
+   * Tidak ada port WAN inbound yang dibuka untuk VPN (aturan lama E02 dihapus). Edge OPNsense menjalankan Tailscale dalam mode Subnet Router (`--advertise-routes=10.10.10.0/29,10.10.20.0/29 --snat-subnet-routes=false`).
+   * Internal OPNsense memiliki rute statis: `100.64.0.0/10` via `10.10.1.1` (Edge Transit) sehingga alur kembali (*return path*) tidak terputus.
+2. **Ketiadaan Bastion Terpisah:**
+   * Fungsi Bastion VM digantikan oleh perpaduan Tailscale ACL, MFA pada identity provider, dan akses terarah ke Management Server (`10.10.20.2`).
+3. **Pemisahan Trafik Windows DC (VLAN 20):**
+   * Windows DC kini berada pada VLAN 20 (`10.10.20.3`). Akses dari Client (VLAN 50) hanya diizinkan untuk port esensial domain (DNS, Kerberos, LDAP, SMB, RPC). Akses administratif RDP dibatasi hanya dari host Management (`10.10.20.2`) melalui Windows Firewall.
+4. **Pencegahan Bypass pada Kali Linux (VLAN 60):**
+   * Kali Linux (`10.10.60.2/29`) dibatasi penuh oleh aturan `B01`. Akses uji ke Web Server (`T01`) hanya diaktifkan selama simulasi pengujian penetrasi terjadwal.
 
-## Pemeriksaan sebelum penerapan
+## Integrasi dengan Suricata NIDS/IPS
 
-Pastikan target DNS/NTP, listener log, port backup, peer VPN, dan alias egress yang belum diketahui sudah diisi dengan nilai nyata. Rule sementara Kali dicabut setelah pengujian. Periksa NAT agar source IP antar-zona tidak berubah tanpa sengaja. Status RENCANA pada dokumen ini tidak sama dengan rule yang sudah aktif atau lulus uji.
-
-## Hubungan aturan firewall dengan Suricata IPS
-
-Target akhir kedua OPNsense adalah IPS sesuai [rencana IPS](rencana-ips-opnsense.md). Baris PASS pada matriks menetapkan izin firewall. Sebuah alur yang diizinkan firewall tetap dapat diblokir oleh rule IPS pada titik inspeksi yang dipilih; ini menjelaskan hubungan kebijakan, bukan urutan hook internal. Matriks firewall dan policy IPS dicatat terpisah agar aksi keduanya bisa ditelusuri.
-
-Untuk uji drop HTTP terkontrol, T01 harus aktif terbatas pada sumber Kali dan endpoint lab yang sudah tersedia. Buktikan request normal pada jalur tersebut lolos sebelum menguji pola kandidat. Bila koneksi diblokir firewall/WAF, jangan mencatatnya sebagai bukti Suricata IPS. Akses management dan console pemulihan harus dipastikan sebelum uji.
-
-Policy drop SID terpilih dicatat terpisah dari firewall ACL: SID/rev, sensor/interface, mode, waktu aktif, scope, hasil normal/serangan dan rollback. Matriks belum mencakup seluruh akses admin SOC, backup Wazuh, ICMP diagnostik dan egress; backlog tersebut tetap perlu diselesaikan sebelum skenario yang bergantung padanya diuji.
+Aturan firewall di atas bertindak sebagai lapisan penyaring paket (*Packet Filter Layer 3/4*). Trafik yang diizinkan (PASS) pada tabel di atas tetap diinspeksi secara *inline* oleh engine Suricata pada router OPNsense:
+* **SID 1000001:** Memantau lonjakan SYN scan dari Kali ke Web Server.
+* **SID 1000002:** Memantau percobaan brute-force SSH ke Web Server.
+* **SID 1000003:** Memblokir langsung percobaan akses ilegal ke port 5432 PostgreSQL yang tidak bersumber dari Web Server `10.10.10.2`.
+* **SID 1000004:** Mendeteksi percobaan injeksi SQL (`UNION SELECT`) pada lalu lintas HTTP.

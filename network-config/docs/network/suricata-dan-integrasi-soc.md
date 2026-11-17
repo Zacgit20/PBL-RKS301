@@ -1,69 +1,73 @@
-# Suricata IPS dan koordinasi SOC
+# Integrasi Suricata IPS dan Operasional SOC
 
-Versi 0.5 - 18 Oktober 2026. **Target akhir adalah Suricata IPS pada Edge dan Internal.** Rules yang disertakan masih baseline alert untuk tahap observasi sebelum pemblokiran terpilih. IPS belum diterapkan, rules belum dimuat pada engine/OPNsense, dan pengujian lab belum dimulai.
+**Versi:** 1.0 (Revisi 3) - November 2026  
+**Penanggung Jawab:** Muhammad Danish (Network & Security Defender) & Nur Arsyika Juana (SOC Analyst)  
+**Status:** Baseline Arsitektur RPP Rev.3 (12 VM) & Threat Matrix SOC Terpadu.
 
-Panduan mode, interface, aksi per SID, logging drop, rollback dan bukti pemblokiran ada di [rencana IPS OPNsense](rencana-ips-opnsense.md).
+Dokumen ini mengatur koordinasi teknis antara modul deteksi jaringan Suricata IPS pada firewall OPNsense dengan Security Operations Center (SOC) berbasis Wazuh SIEM dan Incident Response Stack (TheHive, Cortex, MISP).
 
-## Batas deteksi yang perlu disepakati
+---
 
-Sensor pada trafik HTTPS tidak melihat URL/body yang terenkripsi. Rules HTTP di paket memerlukan titik observasi plaintext yang nyata. Gunakan replay PCAP sintetis atau endpoint HTTP khusus lab yang dibatasi sumber Kali; jangan membuka HTTP publik atau mematikan HTTPS untuk demo. Jika plaintext hanya ada pada loopback/container host, sensor Edge tidak otomatis melihatnya. Untuk SQLi/XSS ke layanan HTTPS, tim SOC harus mengumpulkan log ModSecurity/WAF dari Web/App.
+## 1. Pembagian Peran Sensor & Batas Deteksi
 
-SSH terenkripsi dan banyak percobaan password dapat berlangsung dalam satu koneksi. Rule SYN burst hanya petunjuk lonjakan koneksi; cocokkan kegagalan autentikasi dari log SSH host/Wazuh. Rule POST /login menghitung request, bukan hasil login gagal. Jangan menulis evidence “brute force terkonfirmasi” hanya karena dua rule tersebut berbunyi.
+1. **Inspeksi Level Jaringan (L3/L4/L7 Plaintext) - Suricata IPS:**
+   * Memantau anomali koneksi TCP/IP seperti port scanning (Nmap SYN scan), percobaan brute-force SSH, dan percobaan koneksi langsung tanpa izin antar-zona (seperti akses ilegal ke PostgreSQL).
+   * Pada alur HTTPS terenkripsi, Suricata tidak melakukan terminasi TLS publik.
+2. **Inspeksi Level Aplikasi (L7 HTTPS Payload) - ModSecurity WAF:**
+   * Dijalankan pada Web/App Server DMZ (`10.10.10.2`) di balik Nginx Reverse Proxy setelah proses TLS termination selesai.
+   * Bertanggung jawab penuh mendeteksi serangan injeksi aplikasi web (SQL Injection, XSS, Path Traversal, File Inclusion) menggunakan OWASP Core Rule Set (CRS). Log audit WAF (`/var/log/nginx/modsec_audit.log`) diteruskan ke Wazuh SIEM.
 
-| SID | Deteksi kandidat | Bukti tambahan yang diperlukan |
-|---:|---|---|
-| 1003001 | UNION diikuti whitespace dan SELECT pada URI HTTP ternormalisasi | Request dan alert; bukan semua pola SQLi |
-| 1003002 | Awalan tag script pada URI HTTP | Request dan alert; tidak mencakup seluruh XSS |
-| 1003003 | UNION SELECT pada body request yang terlihat | Parser body aktif; form URL-encoded tidak otomatis didekode semantik |
-| 1003004 | Awalan tag script pada body yang terlihat | Uji JSON/plaintext; encoded entity dapat lolos |
-| 1003005 | POST /login berulang, threshold 6 match per 60 detik per sumber | Log aplikasi untuk status sukses/gagal; NAT/proxy dapat menggabungkan sumber |
-| 1003006 | SYN menuju Bastion TCP22 berulang, threshold 6 match per 60 detik per sumber | Log SSH; retransmission bisa menaikkan hitungan |
+---
 
-Fixture positif memakai 8 request login dan 8 SYN dalam rentang tersebut agar melewati batas threshold. Fixture negatif memakai pencarian biasa, dua POST login, dan dua SYN. Jumlah persis alert perlu diamati pada versi engine aktual, bukan diasumsikan dari nama rule. Tuning dilakukan setelah hasil normal/serangan terkontrol dibandingkan.
+## 2. Aturan Kustom Suricata (`itcorner-local.rules`)
 
-## Urutan pemasangan dan uji
+| SID | Nama Deteksi / Signature | Protokol & Target | Kriteria Pemicu (Threshold/Pattern) | Kategori Ancaman |
+| --- | --- | --- | --- | --- |
+| **1000001** | `ITCORNER-IDS Possible Nmap SYN Scan to DMZ Web Server` | `tcp any any -> 10.10.10.2 any` | `flags:S`, 20 SYN dalam 10 detik per sumber IP. | *Reconnaissance / Port Scanning* |
+| **1000002** | `ITCORNER-IDS Potential SSH Brute-Force on DMZ Web Server` | `tcp any any -> 10.10.10.2 22` | `flags:S`, 5 koneksi dalam 60 detik per sumber IP. | *Credential Access / Brute Force* |
+| **1000003** | `ITCORNER-IDS Unauthorized Direct Database Access Attempt` | `tcp !10.10.10.2 any -> 10.10.30.2 5432` | `flags:S`, Upaya koneksi ke PostgreSQL selain dari Web Server. | *Lateral Movement / Policy Violation* (**Inline Drop**) |
+| **1000004** | `ITCORNER-IDS SQL Injection Attempt in HTTP URI` | `http any any -> 10.10.10.2 any` | Keyword `UNION` dan `SELECT` pada URI HTTP. | *Web Application Attack* |
 
-1. Catat versi OPNsense dan `suricata -V`. Backup firewall dan catat ruleset yang sudah aktif.
-2. Jalankan `suricata -T` dan replay offline pada sistem yang memiliki Suricata, mengikuti `tests/suricata/README.md`.
-3. Pastikan keenam SID tidak bentrok. Gunakan observasi alert sebagai tahap awal menuju IPS; setelah tuning, evaluasi Netmap IPS dan drop SID terpilih sesuai rencana IPS. SID 1003005/1003006 tetap alert pada rancangan awal.
-4. Tentukan interface capture dari jalur paket nyata. Untuk trafik bertag dan mode IPS netmap, panduan OPNsense mengarahkan pemilihan parent; validasi driver/offload lebih dahulu. Jangan mengaktifkan parent dan child sekaligus tanpa mengevaluasi duplikasi event.
-5. Di OPNsense periksa Services > Intrusion Detection. UI User defined hanya mendukung sebagian rule; jangan menganggap ada tombol impor file .rules penuh tanpa melihat versi lab.
-6. Untuk rules custom penuh, gunakan mekanisme ruleset/plugin yang didukung versi tersebut. Template source OPNsense saat riset memiliki include conf.d, tetapi itu bukan verifikasi versi lab. Jika memakai custom YAML/template, simpan daftar rule aktif dan tambahkan file lokal tanpa menimpa ruleset lain. Periksa hasil render dan ulangi -T sebelum reload. Jangan hanya menyalin file ke suatu folder lalu menganggapnya sudah dimuat.
-7. Setelah metode persistensi dipilih, catat lokasi file, konfigurasi pemuatan, hash, enam SID yang dimuat, hasil -T, dan metode rollback. Verifikasi tetap dimuat setelah Apply/restart.
-8. Jalankan baseline normal dan skenario terbatas; kemudian aktifkan drop terpilih pada mode inline. Simpan aksi efektif, bukti drop lokal, capture dan hasil endpoint. Ubah rev bila isi rule berubah. Ulangi uji normal dan rollback setelah perubahan.
+---
 
-Metode pemuatan persisten untuk OPNsense 26.7 masih perlu diperiksa pada VM aktual. Paket ini tidak menimpa YAML hasil generate, tidak mengubah template vendor, dan tidak menjanjikan file .rules sudah aktif setelah sekadar di-upload. Ini pekerjaan integrasi yang tersisa, bukan hasil pengujian.
+## 3. Matriks Aliran Data Telemetri ke SOC
 
-## Pengiriman ke anggota SOC
+| Sumber Log / Sensor | Format Data | Metode Pengiriman / Port | Tujuan / Agen Pengumpul |
+|---|---|---|---|
+| **OPNsense Firewall (Filterlog)** | Syslog RFC 5424 (UDP) | UDP / 514 | Wazuh SIEM (`10.10.40.2`) - Syslog Listener |
+| **Suricata IDS/IPS Engine** | JSON (`eve.json`) | Wazuh Agent File Collector | Wazuh SIEM (`10.10.40.2`) |
+| **Nginx Access & Error Log** | Plaintext / Custom Log | Wazuh Agent (`/var/log/nginx/`) | Wazuh SIEM (`10.10.40.2`) |
+| **ModSecurity WAF Audit Log** | JSON / ModSec Serialized | Wazuh Agent (`modsec_audit.log`) | Wazuh SIEM (`10.10.40.2`) |
+| **PostgreSQL Audit Log** | Plaintext (`postgresql.log`) | Wazuh Agent (`/var/log/postgresql/`) | Wazuh SIEM (`10.10.40.2`) |
+| **Windows Server (AD DS)** | Windows Event Log (Security/Sys) | Wazuh Agent (Channel: Security) | Wazuh SIEM (`10.10.40.2`) |
 
-| Sumber | Data | Tujuan koordinasi |
-|---|---|---|
-| Suricata Edge/Internal | EVE alert: timestamp, signature_id, signature, severity, src/dest IP/port, proto, flow_id bila tersedia | Wazuh 10.10.40.2 |
-| Web/App WAF | ModSecurity audit log; path aktual ditentukan konfigurasi Nginx/ModSecurity | Wazuh 10.10.40.2 |
-| Bastion | Log autentikasi SSH, lokasi sesuai OS | Wazuh 10.10.40.2 |
-| Aplikasi | Keberhasilan/kegagalan login, tanpa password/token | Wazuh 10.10.40.2 |
+---
 
-OPNsense menyediakan EVE syslog output dan target logging untuk alert, tetapi dokumentasinya menyebut drop logs hanya dikirim ke logger internal. Jangan menganggap raw record drop otomatis diteruskan lewat EVE syslog; verifikasi format alert yang diterima Wazuh dan sediakan bukti drop lokal/metode koleksi yang didukung. Gunakan filter aplikasi suricata sesuai dokumentasi, lalu sepakati listener/transport dengan SOC. Path EVE pada template source adalah /var/log/suricata/eve.json; cek konfigurasi hasil generate pada lab sebelum menetapkan path monitoring. WAF `/var/log/modsec_audit.log` dari arahan tugas adalah calon path, bukan bukti file sudah ada.
+## 4. Alur Eskalasi & Incident Response
 
-Nur Arsyika Juana menangani Threat Matrix dan kesiapan SOC berdasarkan arahan tugas yang dibagikan. Tim Network menyediakan sumber event dan evidence; tim SOC memverifikasi decoder/rule Wazuh, notifikasi Telegram, serta case TheHive 10.10.40.3. Token Telegram, API key, dan private key dikelola terpisah.
+```
+[ Sensor / Endpoint Log ]
+          │
+          ▼
+[ Wazuh Manager (10.10.40.2) ]
+          │
+          ├── Evaluasi Ruleset (local_rules.xml)
+          ├── Level < 10 ──► Simpan ke Indexer (OpenSearch)
+          │
+          └── Level >= 10 ──┬──► Notifikasi Instan: Telegram Bot API (SOC Channel)
+                            │
+                            └──► Pembuatan Tiket Otomatis: TheHive (10.10.40.3)
+                                      │
+                                      ▼
+                             Enrichment IoC via MISP
+                                      │
+                                      ▼
+                             Respon Terpilih via Cortex
+```
 
-## Acceptance criteria
+## 5. Kriteria Keberhasilan Integrasi (Acceptance Criteria)
 
-Target penerimaan akhir adalah IPS dengan drop terpilih yang terbukti pada jalur live. Observasi dan replay merupakan tahap persiapan.
-
-- Enam SID lulus parser engine yang benar, tidak ada rule gagal dimuat.
-- Replay positif memunculkan SID yang diharapkan; replay negatif tidak memicu SID paket.
-- Uji live membuktikan mode inline, aksi drop SID terpilih dan payload uji diblokir oleh IPS; bukan hanya alert, timeout, firewall atau WAF.
-- Trafik normal pada jalur yang sama tetap lolos; false positive serta rollback dicatat.
-- Pemuatan policy/rules tetap benar setelah Apply/restart; lihat IPS-01 sampai IPS-08.
-- Event EVE yang sama dapat ditelusuri ke Wazuh; tim SOC mencatat alert ID/case ID jika diteruskan.
-- Laporan membedakan pola berbahaya, lonjakan request/koneksi, dan kegagalan autentikasi yang terkonfirmasi.
-
-## Sumber
-
-- https://docs.opnsense.org/manual/ips.html
-- https://docs.suricata.io/en/suricata-7.0.10/rules/http-keywords.html
-- https://docs.suricata.io/en/suricata-7.0.10/rules/thresholding.html
-- https://docs.suricata.io/en/suricata-7.0.10/rules/ssh-keywords.html
-- https://docs.suricata.io/en/suricata-7.0.10/command-line-options.html
-- https://raw.githubusercontent.com/opnsense/core/master/src/opnsense/service/templates/OPNsense/IDS/suricata.yaml
+1. **Parser Engine Valid:** Menjalankan verifikasi `suricata -T` pada ruleset kustom tanpa menghasilkan peringatan error sintaks.
+2. **Korelasi Terpusat:** Event port scan (SID 1000001) dari Kali Linux (`10.10.60.2`) muncul di *Wazuh Dashboard > Security Events* lengkap dengan label host penyerang.
+3. **Penegakan Inline Drop:** Percobaan akses langsung port 5432 dari luar Web Server memicu SID 1000003 dan koneksi langsung diputus oleh Internal OPNsense, tercatat di log *drop action*.
+4. **Alert Eskalasi:** Alert tingkat kritis (Level >= 10) berhasil masuk ke grup Telegram SOC dalam waktu < 5 detik.

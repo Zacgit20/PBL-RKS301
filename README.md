@@ -59,6 +59,10 @@ Proyek ini bertujuan mengonstruksi platform e-commerce IT shop yang aman dan men
 
 ## 🏛️ Arsitektur Sistem & Topologi Jaringan
 
+<p align="center">
+  <img src="network-config/docs/network/topologi-soc-1.png" alt="Topologi Jaringan ITCorner.id Well Architected SOC 1" width="850"/>
+</p>
+
 Sistem ITCorner.id mengimplementasikan arsitektur berorientasi keamanan tinggi dengan pemisahan bidang kerja:
 - **Data & Application Plane:** Melayani interaksi pelanggan, web server di DMZ, reverse proxy, dan basis data transaksional.
 - **Control & Security Operations Plane:** Jalur manajemen terisolasi untuk CI/CD Runner, Active Directory, Wazuh SIEM, serta SOC-IR Tooling.

@@ -224,7 +224,7 @@ Target akhirnya adalah IPS. SEC-01/02/03 merupakan persiapan deteksi offline, se
 | Bagian | Isi |
 | --- | --- |
 | Sumber / tujuan | positive.pcap offline |
-| Hasil yang diharapkan | SID1003001 sampai1003006 terlihat; bukan bukti lab live |
+| Hasil yang diharapkan | SID 1000001 sampai 1000004 terlihat; bukan bukti lab live |
 | Hasil aktual | Belum dicatat |
 | Status | BELUM DIUJI |
 | Tanggal | Belum dicatat |
@@ -334,7 +334,7 @@ Target akhirnya adalah IPS. SEC-01/02/03 merupakan persiapan deteksi offline, se
 
 | Bagian | Isi |
 | --- | --- |
-| Sumber / tujuan | Endpoint HTTP lab; SID 1003001 atau 1003003 yang dipilih |
+| Sumber / tujuan | Endpoint HTTP lab; SID 1000004 (SQLi URI) |
 | Hasil yang diharapkan | Log lokal, capture dan endpoint menunjukkan payload yang cocok diblokir Suricata IPS; bukan hanya alert/timeout. |
 | Mode / sensor / interface | Belum dicatat |
 | SID / rev / aksi efektif | Belum dicatat |
@@ -351,7 +351,7 @@ Target akhirnya adalah IPS. SEC-01/02/03 merupakan persiapan deteksi offline, se
 
 | Bagian | Isi |
 | --- | --- |
-| Sumber / tujuan | Endpoint HTTP lab; SID 1003002 atau 1003004 yang dipilih |
+| Sumber / tujuan | Endpoint HTTP lab; SID 1000003 (Unauthorized Direct DB Access) |
 | Hasil yang diharapkan | Payload uji yang cocok diblokir dan request normal pembanding tetap lolos; tidak ada klaim dekripsi HTTPS. |
 | Mode / sensor / interface | Belum dicatat |
 | SID / rev / aksi efektif | Belum dicatat |
@@ -368,7 +368,7 @@ Target akhirnya adalah IPS. SEC-01/02/03 merupakan persiapan deteksi offline, se
 
 | Bagian | Isi |
 | --- | --- |
-| Sumber / tujuan | SID 1003005/1003006 dan log autentikasi |
+| Sumber / tujuan | SID 1000001 (SYN Scan) & SID 1000002 (SSH Brute-Force) |
 | Hasil yang diharapkan | Keduanya tetap alert pada rancangan awal; aktivitas sah dibandingkan dan kesimpulan gagal login didukung log auth. |
 | Mode / sensor / interface | Belum dicatat |
 | SID / rev / aksi efektif | Belum dicatat |
@@ -415,4 +415,4 @@ Target akhirnya adalah IPS. SEC-01/02/03 merupakan persiapan deteksi offline, se
 | Pelaksana | Belum dicatat |
 | Bukti | Belum dilampirkan |
 
-IPS-06 memerlukan profil yang menyalakan Bastion bila SSH diuji. P7 hanya menyalakan VM untuk skenario HTTP IPS dan logging Wazuh; SOC-IR/DC/Bastion/Management mati. Sesuaikan profil dan aturan akses sebelum uji yang memerlukan komponen tersebut. Jangan menyalin hasil replay sebagai bukti drop live.
+Pengujian SSH dan SYN scan (SID 1000001/1000002) diarahkan ke Web/App Server DMZ (10.10.10.2). Sesuaikan profil operasional sebelum pengujian live. Jangan menyalin hasil replay sebagai bukti drop live.
