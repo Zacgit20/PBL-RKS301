@@ -1,45 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ============================================================================
-# SKRIP DEPLOYMENT DEVSECOPS ITCORNER.ID (RPP Rev.3 - 12 VM Architecture)
-# Sumber: Management Server Runner (10.10.20.2 - VLAN 20 DevOps/Mgmt)
-# Target: Web/App Server DMZ (10.10.10.2 - VLAN 10 DMZ)
-# Jalur  : Direct SSH melalui Inter-VLAN Routing OPNsense / Tailscale VPN
-# ============================================================================
-
 WEB_SERVER_IP="${WEB_SERVER_IP:-10.10.10.2}"
-WEB_SERVER_USER="${WEB_SERVER_USER:-ubuntu}"
+WEB_SERVER_USER="${WEB_SERVER_USER:-rks301}"
 CONTAINER_NAME="itcorner_web"
-HEALTHCHECK_SCRIPT="$(dirname "$0")/healthcheck.sh"
 
-SSH_OPTS=(-o StrictHostKeyChecking=no -o ConnectTimeout=10)
+SSH_CMD=(ssh -o StrictHostKeyChecking=no "${WEB_SERVER_USER}@${WEB_SERVER_IP}")
 
-echo "[DEPLOY] Menyimpan snapshot kontainer aktif untuk persiapan auto-rollback..."
-ssh "${SSH_OPTS[@]}" "${WEB_SERVER_USER}@${WEB_SERVER_IP}" "
+echo "[DEPLOY] Menyimpan snapshot image kontainer aktif untuk persiapan Auto-Rollback..."
+"${SSH_CMD[@]}" "
   if docker ps -a --format '{{.Names}}' | grep -Eq \"^${CONTAINER_NAME}\$\"; then
     docker commit ${CONTAINER_NAME} itcorner-app:rollback || true
   fi
 "
 
-echo "[DEPLOY] Mengirim dan menerapkan image Docker terbaru ke Web Server DMZ (${WEB_SERVER_IP})..."
-docker save itcorner-app:latest | ssh "${SSH_OPTS[@]}" "${WEB_SERVER_USER}@${WEB_SERVER_IP}" "
+echo "[DEPLOY] Mengirim dan menjalankan image terbaru di Web Server DMZ (${WEB_SERVER_IP})..."
+docker save itcorner-app:latest | "${SSH_CMD[@]}" "
   docker load &&
   docker stop ${CONTAINER_NAME} || true &&
   docker rm ${CONTAINER_NAME} || true &&
   docker run -d --name ${CONTAINER_NAME} \
     --restart always \
-    -p 5000:5000 \
+    -p 127.0.0.1:5000:5000 \
     -e FLASK_ENV=production \
     -e DB_HOST=10.10.30.2 \
     -e DB_PORT=5432 \
     -e DB_NAME=itcorner_db \
+    -e DB_USER=postgres \
+    -e DB_PASSWORD=postgrespassword \
     itcorner-app:latest
 "
 
-echo "[DEPLOY] Kontainer baru berjalan. Menjalankan verifikasi health check..."
-if [ -f "${HEALTHCHECK_SCRIPT}" ]; then
-  bash "${HEALTHCHECK_SCRIPT}"
-else
-  echo "[DEPLOY] Deployment selesai tanpa eksekusi healthcheck terpisah."
-fi
+echo "[DEPLOY] Status kontainer pada Web Server DMZ:"
+"${SSH_CMD[@]}" "docker ps --filter name=${CONTAINER_NAME}"
