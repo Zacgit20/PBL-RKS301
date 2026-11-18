@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 set -euo pipefail
 
 WEB_SERVER_IP="${WEB_SERVER_IP:-10.10.10.2}"
