@@ -8,6 +8,7 @@ on:
 
 jobs:
   security-and-testing:
+    name: security-and-testing
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -36,16 +37,35 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Static Application Security Testing (Bandit SAST)
-        run: |
-          echo "Menjalankan pemindaian keamanan kode Python di folder app/..."
-          bandit -r app/ -ll
+        run: bandit -r app/ -ll
 
       - name: Dependency Vulnerability Audit (pip-audit)
-        run: |
-          echo "Memeriksa kerentanan pustaka Python..."
-          pip-audit -r requirements.txt || true
+        run: pip-audit -r requirements.txt || true
 
       - name: Run Automated Unit Tests (Pytest)
-        run: |
-          echo "Menjalankan Unit Testing..."
-          PYTHONPATH=. pytest tests/unit/
+        run: PYTHONPATH=. pytest tests/unit/ -v
+
+  build-and-deploy:
+    name: build-and-deploy (DMZ 10.10.10.2)
+    needs: security-and-testing
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/development' || github.ref == 'refs/heads/main')
+    runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: ./itcorner-id
+
+    steps:
+      - name: 1. Checkout Repository Code
+        uses: actions/checkout@v4
+
+      - name: 2. Build Production Docker Image
+        run: docker build -t itcorner-app:latest .
+
+      - name: 3. Container Vulnerability Scan (Trivy)
+        run: trivy image --severity HIGH,CRITICAL --exit-code 0 itcorner-app:latest
+
+      - name: 4. Deploy Container to Web Server DMZ (10.10.10.2)
+        run: bash scripts/deploy.sh
+
+      - name: 5. Verify Deployment & Auto-Rollback Check
+        run: bash scripts/healthcheck.sh
