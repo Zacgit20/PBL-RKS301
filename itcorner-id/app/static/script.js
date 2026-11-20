@@ -35,24 +35,15 @@ document.addEventListener('DOMContentLoaded', function () {
     setupRegisterToggle('togglePassword1', 'password');
     setupRegisterToggle('togglePassword2', 'confirm_password');
 });
-// penambahan script untuk menambahkan produk ke keranjang
-let totalKeranjang = 0;
-
-function tambahKeKeranjang(namaProduk) {
-    totalKeranjang++;
-
-    // Update angka di navbar secara otomatis
-    const badgeCount = document.getElementById('cart-count');
-    if (badgeCount) {
-        badgeCount.innerText = totalKeranjang;
-    }
-
-    alert(namaProduk + " berhasil ditambahkan ke keranjang!");
-}
-
 function getCsrfHeaders() {
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    return token ? { "X-CSRFToken": token } : {};
+
+    if (!token) {
+        console.error("Token CSRF tidak ditemukan. Request dibatalkan.");
+        return null;
+    }
+
+    return { "X-CSRFToken": token };
 }
 
 // AGAR CART TIDAK REALOD JIKA DI KLIK +
@@ -60,10 +51,12 @@ function addToCart(event, formElement) {
     event.preventDefault(); // Mencegah reload halaman
 
     const formData = new FormData(formElement);
+    const csrfHeaders = getCsrfHeaders();
+    if (!csrfHeaders) return;
 
     fetch("/add-to-cart", {
         method: "POST",
-        headers: getCsrfHeaders(),
+        headers: csrfHeaders,
         body: formData
     })
     .then(response => {
@@ -89,9 +82,12 @@ function updateCartQuantity(productId, action) {
     formData.append('product_id', productId);
     formData.append('action', action);
 
+    const csrfHeaders = getCsrfHeaders();
+    if (!csrfHeaders) return;
+
     fetch('/update-cart', {
         method: 'POST',
-        headers: getCsrfHeaders(),
+        headers: csrfHeaders,
         body: formData
     })
     .then(response => {
@@ -111,9 +107,12 @@ function removeFromCart(productId) {
     const formData = new FormData();
     formData.append('product_id', productId);
 
+    const csrfHeaders = getCsrfHeaders();
+    if (!csrfHeaders) return;
+
     fetch('/remove-from-cart', {
         method: 'POST',
-        headers: getCsrfHeaders(),
+        headers: csrfHeaders,
         body: formData
     })
     .then(response => {

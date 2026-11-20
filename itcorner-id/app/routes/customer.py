@@ -1,6 +1,7 @@
 
 from flask import (
     Blueprint,
+    current_app,
     render_template,
     redirect,
     url_for,
@@ -10,6 +11,7 @@ from flask import (
     flash
 )
 
+from pathlib import Path
 from decimal import Decimal
 from uuid import uuid4
 
@@ -110,6 +112,19 @@ def detail(product_id):
     if not product or not product.is_active:
         return redirect(url_for('main.home'))
 
+    # Pastikan gambar benar-benar berada di folder upload produk.
+    image_url = None
+    if product.image:
+        upload_dir = (
+            Path(current_app.static_folder) / 'uploads' / 'products'
+        ).resolve()
+        image_path = (
+            Path(current_app.static_folder) / product.image
+        ).resolve()
+
+        if image_path.is_relative_to(upload_dir) and image_path.is_file():
+            image_url = url_for('static', filename=product.image)
+
     product_data = {
         'id': product.id,
         'sku': product.sku,
@@ -122,6 +137,7 @@ def detail(product_id):
         'description': product.description,
         'is_promo': product.is_promo,
         'image': product.image,
+        'image_url': image_url,
         'specs': product.specs
     }
 
