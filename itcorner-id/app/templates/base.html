@@ -86,7 +86,7 @@
                             {{ cart_count }}
                         </span>
                     </a>
-                    {% if session.get('user_id') and session.get('role') != 'Admin' and request.endpoint == 'main.home' %}
+                    {% if session.get('user_id') %}
                     <form method="POST" action="{{ url_for('auth.logout') }}" class="inline">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="text-rose-600 hover:text-rose-700 font-semibold text-sm transition">

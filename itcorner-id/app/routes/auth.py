@@ -16,19 +16,34 @@ from werkzeug.security import (
     check_password_hash
 )
 
-from app.extensions import db
+from app.extensions import db, limiter
 from app.models import User
 from app.forms.auth_forms import LoginForm, RegisterForm
 
 
 auth_bp = Blueprint('auth', __name__)
 
+@auth_bp.errorhandler(429)
+def handle_rate_limit(error):
+    return render_template(
+        'login.html',
+        form=LoginForm(),
+        email_error=None,
+        password_error=None,
+        login_error=None,
+        rate_limit_error=True
+    ), 429
+
+
+
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute", methods=["POST"])
 def login():
     form = LoginForm()
     email_error = None
     password_error = None
+    login_error = None
 
     if form.validate_on_submit():
         email = form.email.data
@@ -44,7 +59,7 @@ def login():
                 user.password_hash, password
             )
         ):
-            email_error = "Email atau kata sandi salah."
+            login_error = "Email atau kata sandi salah."
 
             logging.warning(
                 "LOGIN FAILED: Kredensial tidak valid "
@@ -53,8 +68,12 @@ def login():
             )
 
         elif user.status != 'Aktif':
-            email_error = (
-                "Akun tidak aktif. Silakan hubungi admin."
+            login_error = "Email atau kata sandi salah."
+
+            logging.warning(
+                "LOGIN BLOCKED: Akun tidak aktif, User ID %s, IP %s",
+                user.id,
+                request.remote_addr
             )
 
         else:
@@ -93,7 +112,8 @@ def login():
         'login.html',
         form=form,
         email_error=email_error,
-        password_error=password_error
+        password_error=password_error,
+        login_error=login_error
     )
 
 
@@ -232,13 +252,10 @@ def forgot_password():
             func.lower(User.email) == email
         ).first()
 
-        if user:
-            logging.info(
-                "Permintaan pemulihan password diterima "
-                "untuk User ID %s dari IP %s",
-                user.id,
-                request.remote_addr
-            )
+        logging.info(
+            "PASSWORD RECOVERY REQUEST: Permintaan diterima dari IP %s",
+            request.remote_addr
+        )
 
         return render_template(
             'forgot_password.html',

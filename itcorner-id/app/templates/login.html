@@ -75,6 +75,9 @@
                          {% if password_error %}
                             <p class="text-red-500 text-xs mt-1 font-medium">{{ password_error }}</p>
                         {% endif %}
+                        {% if login_error %}
+                            <p class="text-red-500 text-xs mt-1 font-medium">{{ login_error }}</p>
+                        {% endif %}
                     </div>
 
                     <!-- Checkbox Ingat Saya & Lupa Sandi -->
@@ -86,13 +89,6 @@
                         <a href="{{ url_for('auth.forgot_password') }}" class="text-[11px] text-blue-600 font-semibold hover:underline">Lupa kata sandi?</a>
                     </div>
 
-                    <!-- Peringatan Error (Kotak Merah Muda)perbaikan -->
-                     {% if error %}
-                    <div class="bg-red-50 text-red-600 border border-red-100 px-4 py-3 rounded-lg text-[10px] font-medium my-6">
-                        Email atau kata sandi tidak cocok. Periksa kembali dan coba lagi.
-                        {{ error }}
-                    </div>
-                    {% endif %}
 
                     <!-- Tombol Masuk perbaikan -->
                     <div class="pt-2">
@@ -107,7 +103,7 @@
 
                 {% if rate_limit_error %}
                 <p class="text-[9px] text-slate-400 mt-6 leading-relaxed pb-6 border-b border-slate-100">
-                    Terlalu banyak percobaan? Tunggu 15 menit sebelum mencoba lagi. Hindari perangkat bersama; keluar setelah selesai.
+                    Terlalu banyak percobaan login. Silakan tunggu sebentar sebelum mencoba lagi.
                 </p>
                 {% endif %}
 
