@@ -35,17 +35,6 @@ admin_bp = Blueprint('admin', __name__)
 @admin_bp.route('/admin/dashboard')
 def admin_dashboard():
 
-    # =========================
-    # AUTHORIZATION
-    # =========================
-
-    if session.get('role') != 'Admin':
-        logging.warning(
-            "UNAUTHORIZED ACCESS: Percobaan akses admin tanpa izin dari IP %s",
-            request.remote_addr
-        )
-        return redirect(url_for('auth.login'))
-
     try:
         current_date = get_current_date_indo()
 
@@ -227,10 +216,6 @@ def admin_dashboard():
 
             formatted_products.append(product_copy)
 
-        logging.info(
-            "ADMIN DASHBOARD: Admin '%s' membuka dashboard",
-            session.get('user_name')
-        )
 
         return render_template(
             'admin/dashboard.html',
@@ -313,20 +298,52 @@ def process_product_image(file):
 
 @admin_bp.route('/admin/products', methods=['GET'])
 def admin_products():
-    if 'role' not in session or session['role'] != 'Admin':
-        logging.warning(
-            "UNAUTHORIZED ACCESS: User '%s' mencoba mengakses halaman produk admin",
-            session.get('email', 'Unknown')
-        )
-        return redirect(url_for('auth.login'))
-
     try:
-        products_db_list = Product.query.order_by(Product.id.asc()).all()
+        search_query = request.args.get('q', '').strip()[:100]
+        selected_category = request.args.get('category', 'all')
+        selected_stock = request.args.get('stock', 'all')
 
-        logging.info(
-            "ADMIN VIEW PRODUCTS: Admin '%s' melihat daftar produk",
-            session.get('user_name')
-        )
+        allowed_categories = {
+            'Laptop', 'Aksessori', 'Monitor', 'Komponen', 'Audio'
+        }
+        allowed_stock = {'all', 'available', 'low', 'empty'}
+
+        if selected_category not in allowed_categories:
+            selected_category = 'all'
+
+        if selected_stock not in allowed_stock:
+            selected_stock = 'all'
+
+        query = Product.query
+
+        # Pencarian nama produk atau SKU
+        if search_query:
+            search_pattern = f"%{search_query}%"
+            query = query.filter(
+                or_(
+                    Product.name.ilike(search_pattern),
+                    Product.sku.ilike(search_pattern)
+                )
+            )
+
+        # Filter kategori
+        if selected_category != 'all':
+            query = query.filter(Product.category == selected_category)
+
+        # Filter kondisi stok
+        if selected_stock == 'available':
+            query = query.filter(Product.stock > 5)
+        elif selected_stock == 'low':
+            query = query.filter(Product.stock.between(1, 5))
+        elif selected_stock == 'empty':
+            query = query.filter(Product.stock == 0)
+
+        # Produk terbaru atau terakhir diedit berada di atas
+        products_db_list = query.order_by(
+            Product.updated_at.desc(),
+            Product.id.desc()
+        ).all()
+
 
         formatted_products = []
 
@@ -353,7 +370,10 @@ def admin_products():
         return render_template(
             'admin/products.html',
             products=formatted_products,
-            selected_product=selected_product
+            selected_product=selected_product,
+            search_query=search_query,
+            selected_category=selected_category,
+            selected_stock=selected_stock
         )
 
     except Exception:
@@ -848,12 +868,6 @@ def process_payment_action():
         else:
             payment.status = 'Ditolak'
             log_action = 'REJECTED'
-            logging.warning(
-                "PAYMENT REJECTION REASON: Payment %s, Admin ID %s, Reason: %s",
-                payment_id,
-                admin_user.id,
-                reason
-            )
             flash("Pembayaran berhasil ditolak.", "success")
 
         db.session.commit()
