@@ -9,7 +9,8 @@ load_dotenv()
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
-from app.extensions import db, migrate, csrf
+from werkzeug.middleware.proxy_fix import ProxyFix
+from app.extensions import db, migrate, csrf, limiter
 from app.routes import register_blueprints
 from sqlalchemy.engine import URL
 from app.models import User, Product, Payment, Order, OrderItem
@@ -18,7 +19,25 @@ from io import BytesIO
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 app = Flask(__name__)
+
+# Mempercayai satu reverse proxy (Nginx)
+app.wsgi_app = ProxyFix(
+    app.wsgi_app,
+    x_for=1,
+    x_proto=1,
+    x_host=0,
+    x_port=0,
+    x_prefix=0
+)
+
 app.secret_key = os.environ["FLASK_SECRET_KEY"]
+
+# Keamanan cookie sesi
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SECURE"] = (
+    os.getenv("SESSION_COOKIE_SECURE", "false").lower() == "true"
+)
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 # Konfigurasi upload gambar produk
 app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # Maksimal 2 MB
@@ -104,16 +123,32 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
 migrate.init_app(app, db)
 csrf.init_app(app)
+
+# Konfigurasi Flask-Limiter menggunakan Redis
+redis_password = os.environ["REDIS_PASSWORD"]
+redis_host = os.getenv("REDIS_HOST", "redis")
+redis_port = os.getenv("REDIS_PORT", "6379")
+
+app.config["RATELIMIT_STORAGE_URI"] = (
+    f"redis://:{redis_password}@{redis_host}:{redis_port}/0"
+)
+
+# Aktifkan header informasi rate limit
+app.config["RATELIMIT_HEADERS_ENABLED"] = True
+
+limiter.init_app(app)
+
 register_blueprints(app)
 
 # ==========================================
 # KONFIGURASI LOGGING (MODUL 8 / OWASP A09)
 # ==========================================
 logging.basicConfig(
-    filename='app_activity.log',
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[logging.StreamHandler(sys.stdout)],
+    force=True
 )
 
 log_werkzeug = logging.getLogger('werkzeug')
