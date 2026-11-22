@@ -24,7 +24,14 @@ from flask import (
 from sqlalchemy import func, case, or_
 
 from app.extensions import db
-from app.models import Payment, Product, User, Order, OrderItem
+from app.models import (
+    Payment,
+    Product,
+    ProductSpecification,
+    User,
+    Order,
+    OrderItem
+)
 from app.utils import format_rupiah, get_current_date_indo
 
 
@@ -384,8 +391,9 @@ def admin_products():
 
 @admin_bp.route('/admin/product/save', methods=['POST'])
 def save_product():
-    # 1. Memeriksa hak akses Admin
-    if 'role' not in session or session['role'] != 'Admin':
+    # 1. Memeriksa hak akses dan status Admin di PostgreSQL
+    if not _active_admin():
+        flash('Akses ditolak. Silakan login sebagai Admin aktif.', 'danger')
         return redirect(url_for('auth.login'))
 
     # 2. Mengambil data dari form
@@ -394,8 +402,66 @@ def save_product():
     category = request.form.get('category', '').strip()
     brand = request.form.get('brand', '').strip()
     description = request.form.get('description', '').strip()
+    specs = request.form.get('specs', '').strip()
 
-    # 3. Validasi nama produk
+    # Mengambil atribut spesifikasi dari form dinamis
+    attribute_names = request.form.getlist('attribute_name[]')
+    attribute_values = request.form.getlist('attribute_value[]')
+
+    if len(attribute_names) > 30 or len(attribute_values) > 30:
+        flash('Maksimal 30 atribut spesifikasi.', 'danger')
+        return redirect(url_for('admin.admin_products'))
+
+    if len(attribute_names) != len(attribute_values):
+        flash('Data atribut spesifikasi tidak valid.', 'danger')
+        return redirect(url_for('admin.admin_products'))
+
+    specifications = []
+    used_names = set()
+
+    for attribute_name, attribute_value in zip(
+        attribute_names, attribute_values
+    ):
+        attribute_name = attribute_name.strip()
+        attribute_value = attribute_value.strip()
+
+        if not attribute_name and not attribute_value:
+            continue
+
+        if not attribute_name or not attribute_value:
+            flash(
+                'Nama dan nilai setiap atribut harus diisi.',
+                'danger'
+            )
+            return redirect(url_for('admin.admin_products'))
+
+        if len(attribute_name) > 80:
+            flash('Nama atribut maksimal 80 karakter.', 'danger')
+            return redirect(url_for('admin.admin_products'))
+
+        if len(attribute_value) > 300:
+            flash('Nilai atribut maksimal 300 karakter.', 'danger')
+            return redirect(url_for('admin.admin_products'))
+
+        normalized_name = attribute_name.casefold()
+
+        if normalized_name in used_names:
+            flash('Nama atribut tidak boleh duplikat.', 'danger')
+            return redirect(url_for('admin.admin_products'))
+
+        used_names.add(normalized_name)
+
+        specifications.append({
+            'attribute_name': attribute_name,
+            'attribute_value': attribute_value
+        })
+
+    # 3. Validasi panjang spesifikasi
+    if len(specs) > 5000:
+        flash('Spesifikasi maksimal 5.000 karakter.', 'danger')
+        return redirect(url_for('admin.admin_products'))
+
+    # 4. Validasi nama produk
     if not name:
         flash('Nama produk wajib diisi.', 'danger')
         return redirect(url_for('admin.admin_products'))
@@ -462,6 +528,21 @@ def save_product():
             product.price_num = price_num
             product.stock = stock
             product.description = description or None
+            # Pertahankan spesifikasi teks lama jika field legacy tidak dikirim.
+            if 'specs' in request.form:
+                product.specs = specs or None
+
+            # Mengganti atribut lama dengan atribut terbaru
+            product.specifications.clear()
+
+            for index, item in enumerate(specifications):
+                product.specifications.append(
+                    ProductSpecification(
+                        attribute_name=item['attribute_name'],
+                        attribute_value=item['attribute_value'],
+                        sort_order=index
+                    )
+                )
 
             if image_path:
                 product.image = image_path
@@ -499,12 +580,26 @@ def save_product():
             price_num=price_num,
             stock=stock,
             description=description or None,
+            specs=specs or None,
             image=image_path,
             is_promo=False
         )
 
         try:
             db.session.add(new_product)
+            db.session.flush()
+
+            # Menyimpan atribut spesifikasi produk baru
+            for index, item in enumerate(specifications):
+                db.session.add(
+                    ProductSpecification(
+                        product_id=new_product.id,
+                        attribute_name=item['attribute_name'],
+                        attribute_value=item['attribute_value'],
+                        sort_order=index
+                    )
+                )
+
             db.session.commit()
 
             logging.info(

@@ -338,6 +338,66 @@
                             <textarea name="description" rows="3"
                                 class="w-full bg-white border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">{{ selected_product.description if selected_product else '' }}</textarea>
                         </div>
+
+                        <div class="md:col-span-2">
+                            <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700">
+                                        Spesifikasi produk
+                                    </label>
+                                    <p class="text-[10px] text-slate-400 mt-1">
+                                        Tambahkan nama atribut dan nilainya. Maksimal 30 atribut.
+                                    </p>
+                                </div>
+
+                                <button type="button" id="add-specification"
+                                    class="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-2 rounded-lg">
+                                    + Tambah atribut
+                                </button>
+                            </div>
+
+                            <div id="specification-list" class="space-y-3">
+                                {% if selected_product and selected_product.specifications %}
+                                    {% for spec in selected_product.specifications %}
+                                    <div class="specification-row grid grid-cols-1 md:grid-cols-[1fr_1.5fr_auto] gap-2 items-center">
+                                        <input type="text" name="attribute_name[]" maxlength="80"
+                                            value="{{ spec.attribute_name }}"
+                                            placeholder="Nama atribut"
+                                            class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+
+                                        <input type="text" name="attribute_value[]" maxlength="300"
+                                            value="{{ spec.attribute_value }}"
+                                            placeholder="Nilai spesifikasi"
+                                            class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+
+                                        <button type="button"
+                                            class="remove-specification text-rose-600 hover:bg-rose-50 text-xs font-semibold px-3 py-2 rounded-lg">
+                                            Hapus
+                                        </button>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="specification-row grid grid-cols-1 md:grid-cols-[1fr_1.5fr_auto] gap-2 items-center">
+                                        <input type="text" name="attribute_name[]" maxlength="80"
+                                            placeholder="Contoh: Prosesor"
+                                            class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+
+                                        <input type="text" name="attribute_value[]" maxlength="300"
+                                            placeholder="Contoh: Intel Core i5"
+                                            class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+
+                                        <button type="button"
+                                            class="remove-specification text-rose-600 hover:bg-rose-50 text-xs font-semibold px-3 py-2 rounded-lg">
+                                            Hapus
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <p id="specification-counter" class="text-[10px] text-slate-400 mt-2">
+                                Maksimal 30 atribut spesifikasi.
+                            </p>
+                        </div>
                     </div>
 
                     <div class="space-y-3">
@@ -380,6 +440,84 @@
         </div>
     </main>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <!-- SPECIFICATION_FORM_SCRIPT -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const list = document.getElementById("specification-list");
+        const addButton = document.getElementById("add-specification");
+        const counter = document.getElementById("specification-counter");
+
+        if (!list || !addButton) return;
+
+        const MAX_ROWS = 30;
+
+        function updateCounter() {
+            const count = list.querySelectorAll(".specification-row").length;
+            counter.textContent = `${count}/${MAX_ROWS} atribut digunakan.`;
+            addButton.disabled = count >= MAX_ROWS;
+            addButton.classList.toggle("opacity-50", count >= MAX_ROWS);
+            addButton.classList.toggle("cursor-not-allowed", count >= MAX_ROWS);
+        }
+
+        function createRow() {
+            const row = document.createElement("div");
+            row.className = "specification-row grid grid-cols-1 md:grid-cols-[1fr_1.5fr_auto] gap-2 items-center";
+
+            const name = document.createElement("input");
+            name.type = "text";
+            name.name = "attribute_name[]";
+            name.maxLength = 80;
+            name.placeholder = "Nama atribut";
+            name.className = "w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500";
+
+            const value = document.createElement("input");
+            value.type = "text";
+            value.name = "attribute_value[]";
+            value.maxLength = 300;
+            value.placeholder = "Nilai spesifikasi";
+            value.className = name.className;
+
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "remove-specification text-rose-600 hover:bg-rose-50 text-xs font-semibold px-3 py-2 rounded-lg";
+            remove.textContent = "Hapus";
+
+            row.append(name, value, remove);
+            return row;
+        }
+
+        addButton.addEventListener("click", function () {
+            if (list.querySelectorAll(".specification-row").length >= MAX_ROWS) {
+                return;
+            }
+
+            const row = createRow();
+            list.appendChild(row);
+            row.querySelector('input[name="attribute_name[]"]').focus();
+            updateCounter();
+        });
+
+        list.addEventListener("click", function (event) {
+            const removeButton = event.target.closest(".remove-specification");
+            if (!removeButton) return;
+
+            const rows = list.querySelectorAll(".specification-row");
+
+            if (rows.length === 1) {
+                const inputs = rows[0].querySelectorAll("input");
+                inputs.forEach(input => input.value = "");
+            } else {
+                removeButton.closest(".specification-row").remove();
+            }
+
+            updateCounter();
+        });
+
+        updateCounter();
+    });
+    </script>
+
 </body>
 
 </html>
