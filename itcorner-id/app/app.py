@@ -13,7 +13,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from app.extensions import db, migrate, csrf, limiter
 from app.routes import register_blueprints
 from sqlalchemy.engine import URL
-from app.models import User, Product, Payment, Order, OrderItem
+from app.models import User, Product, Payment, Order, OrderItem, ProductReview
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
 from PIL import Image, ImageOps, UnidentifiedImageError

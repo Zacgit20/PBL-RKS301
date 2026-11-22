@@ -103,28 +103,39 @@
                 <p class="text-xs text-slate-500 px-2">Jumlah produk dapat diubah sesuai stok. Ketersediaan diperiksa
                     kembali saat checkout.</p>
 
-                <!-- Section Lengkapi Setup Anda -->
+                <!-- Rekomendasi Produk Dinamis dari PostgreSQL -->
+                {% if recommendations %}
                 <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm">
                     <h3 class="font-bold text-slate-900 text-base mb-4">Lengkapi setup Anda</h3>
-                    <div
-                        class="flex items-center justify-between gap-4 p-3 border border-slate-100 rounded-xl bg-slate-50/50">
-                        <div class="flex items-center gap-4">
-                            <div
-                                class="w-16 h-16 bg-slate-200 rounded-lg flex items-center justify-center text-[10px] text-slate-400 font-semibold">
-                                [Aksesori]
+
+                    <div class="space-y-3">
+                        {% for product in recommendations %}
+                        <div class="flex items-center justify-between gap-4 p-3 border border-slate-100 rounded-xl bg-slate-50/50">
+                            <div class="flex items-center gap-4 min-w-0">
+                                <div class="w-16 h-16 bg-slate-200 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                                    {% if product.image and product.image.startswith('uploads/products/') %}
+                                    <img src="{{ url_for('static', filename=product.image) }}"
+                                         alt="{{ product.name }}"
+                                         class="w-full h-full object-contain p-1">
+                                    {% else %}
+                                    <span class="text-[10px] text-slate-400 text-center">Gambar belum tersedia</span>
+                                    {% endif %}
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="font-bold text-slate-800 text-sm truncate">{{ product.name }}</h4>
+                                    <p class="text-xs text-slate-500">{{ product.brand or product.category or 'ITCorner' }}</p>
+                                    <p class="text-sm font-bold text-slate-900 mt-1">{{ format_rupiah(product.price_num) }}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 class="font-bold text-slate-800 text-sm">Keychron C1 Mechanical</h4>
-                                <p class="text-xs text-slate-500">Keyboard nyaman untuk kerja sehari-hari</p>
-                                <p class="text-sm font-bold text-slate-900 mt-1">Rp899.000</p>
-                            </div>
+                            <a href="{{ url_for('customer.detail', product_id=product.id) }}"
+                               class="border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-semibold px-4 py-1.5 rounded-lg text-xs transition flex-shrink-0">
+                                Lihat Produk
+                            </a>
                         </div>
-                        <a href="{{ url_for('main.home', category='Aksesori') }}"
-                            class="border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-semibold px-4 py-1.5 rounded-lg text-xs transition">
-                            Lihat Aksesori
-                        </a>
+                        {% endfor %}
                     </div>
                 </div>
+                {% endif %}
 
             </div>
 

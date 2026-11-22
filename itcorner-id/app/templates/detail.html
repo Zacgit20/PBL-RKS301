@@ -3,94 +3,350 @@
 {% block title %}ITCorner.id - {{ product.name }}{% endblock %}
 
 {% block content %}
-    <!-- 2. BREADCRUMB (Navigasi Lokasi) -->
-    <div class="max-w-6xl mx-auto px-4 py-4 text-[10px] text-slate-500">
-        <a href="{{ url_for('main.home') }}" class="hover:underline">Beranda</a> <span class="mx-1">/</span>
-        <a href="{{ url_for('main.home', category=product.category) }}" class="hover:underline">{{ product.category }}</a> <span class="mx-1">/</span>
-        <span class="text-slate-800">{{ product.name }}</span>
-    </div>
 
-    <!-- 3. BAGIAN ATAS: FOTO PRODUK & INFO HARGA -->
-    <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
-        
-        <!-- Sisi Kiri: Galeri Foto -->
-        <div>
-            <!-- Foto Utama -->
-            <div class="bg-white rounded-xl border border-slate-200 aspect-[4/3] flex items-center justify-center mb-3 overflow-hidden">
-                {% if product.image_url %}
+<!-- BREADCRUMB -->
+<div class="max-w-6xl mx-auto px-4 py-4 text-xs text-slate-500">
+    <a href="{{ url_for('main.home') }}" class="hover:text-blue-600 hover:underline">Beranda</a>
+    <span class="mx-2">/</span>
+    <a href="{{ url_for('main.home', category=product.category) }}" class="hover:text-blue-600 hover:underline">{{ product.category }}</a>
+    <span class="mx-2">/</span>
+    <span class="text-slate-800 font-medium">{{ product.name }}</span>
+</div>
+
+<!-- INFORMASI UTAMA PRODUK -->
+<main class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 mb-10">
+
+    <!-- GAMBAR PRODUK -->
+    <div>
+        <div class="bg-white rounded-xl border border-slate-200 aspect-[4/3] flex items-center justify-center overflow-hidden">
+            {% if product.image_url %}
                 <img
                     src="{{ product.image_url }}"
                     alt="{{ product.name }}"
-                    class="w-full h-full object-contain p-4"
+                    class="w-full h-full object-contain p-5"
                     loading="eager"
                 >
-                {% else %}
+            {% else %}
                 <div class="w-full h-full bg-slate-100 flex flex-col items-center justify-center text-slate-400">
                     <span class="text-4xl mb-2">📦</span>
                     <span class="text-sm font-semibold">Gambar belum tersedia</span>
                 </div>
-                {% endif %}
-            </div>
-            <p class="text-[9px] text-slate-400 mt-2">Foto produk. Warna dapat berbeda sesuai layar Anda.</p>
+            {% endif %}
+        </div>
+        <p class="text-xs text-slate-400 mt-3">
+            Foto produk. Warna dapat berbeda sesuai layar Anda.
+        </p>
+    </div>
+
+    <!-- DETAIL DAN TRANSAKSI -->
+    <div class="flex flex-col">
+        <div class="mb-2">
+            <span class="text-xs text-blue-600 font-bold uppercase tracking-wide">
+                {{ product.brand }} · {{ product.category }}
+            </span>
         </div>
 
-        <!-- Sisi Kanan: Informasi & Transaksi -->
-        <div>
-            <p class="text-[10px] text-blue-600 font-bold uppercase tracking-wide mb-1">{{ product.brand }} • {{ product.category }}</p>
-            <h1 class="text-3xl font-bold text-slate-800 mb-1">{{ product.name }}</h1>
-            
-            <div class="mb-6">
-                <p class="text-4xl font-extrabold text-blue-600 mb-1">{{ product.price }}</p>
+        <h1 class="text-2xl md:text-3xl font-bold text-slate-800 leading-snug mb-3">
+            {{ product.name }}
+        </h1>
+
+        <!-- RATING -->
+        <div class="flex items-center flex-wrap gap-2 mb-4 text-sm">
+            {% if reviews %}
+                <div class="flex items-center text-yellow-500" aria-label="Rating {{ '%.1f'|format(average_rating) }} dari 5">
+                    {% for star in range(1, 6) %}
+                        {% if star <= average_rating|round(0, 'common')|int %}
+                            <span>★</span>
+                        {% else %}
+                            <span class="text-slate-300">★</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <span class="font-semibold text-slate-700">{{ "%.1f"|format(average_rating) }}/5</span>
+                <span class="text-slate-400">({{ reviews|length }} ulasan)</span>
+            {% else %}
+                <span class="text-slate-400">Belum ada ulasan</span>
+            {% endif %}
+        </div>
+
+        <!-- SKU -->
+        {% if product.sku %}
+            <p class="text-xs text-slate-500 mb-5">
+                SKU: <span class="font-medium text-slate-700">{{ product.sku }}</span>
+            </p>
+        {% endif %}
+
+        <!-- HARGA -->
+        <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 mb-5">
+            <p class="text-xs text-slate-500 mb-1">Harga produk</p>
+            <p class="text-3xl font-extrabold text-blue-600">{{ product.price }}</p>
+        </div>
+
+        <!-- STATUS STOK -->
+        <div class="{% if product.stock > 0 %}bg-green-50 border-green-100 text-green-700{% else %}bg-red-50 border-red-100 text-red-700{% endif %} border rounded-lg px-4 py-3 mb-6">
+            <div class="flex items-center gap-2">
+                <span class="text-sm">{% if product.stock > 0 %}✓{% else %}!{% endif %}</span>
+                <div>
+                    <p class="text-sm font-semibold">
+                        {% if product.stock > 0 %}
+                            Stok tersedia
+                        {% else %}
+                            Stok habis
+                        {% endif %}
+                    </p>
+                    <p class="text-xs mt-0.5">
+                        {% if product.stock > 0 %}
+                            Tersedia {{ product.stock }} unit.
+                        {% else %}
+                            Produk ini sedang tidak tersedia untuk dibeli.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FORM TRANSAKSI -->
+        <form action="{{ url_for('customer.buy_now') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+
+            <label for="quantity" class="block text-sm font-semibold text-slate-700 mb-2">
+                Jumlah pembelian
+            </label>
+
+            <div class="flex items-center border border-slate-300 rounded-lg overflow-hidden bg-white w-28 mb-5">
+                <input
+                    id="quantity"
+                    type="number"
+                    name="quantity"
+                    value="1"
+                    min="1"
+                    max="{{ product.stock }}"
+                    class="w-full text-center text-sm font-bold text-blue-600 outline-none py-2"
+                    {% if product.stock <= 0 %}disabled{% endif %}
+                >
             </div>
 
-            <!-- Banner Stok -->
-            <div class="{% if product.stock > 0 %}bg-green-50 border-green-100 text-green-700{% else %}bg-red-50 border-red-100 text-red-700{% endif %} border px-4 py-3 rounded-lg text-[10px] mb-6">
-                {% if product.stock > 0 %}
-                Tersedia {{ product.stock }} unit. Jumlah pembelian maksimal mengikuti stok terbaru.
-                {% else %}
-                Stok habis. Produk ini sedang tidak tersedia untuk dibeli.
-                {% endif %}
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button
+                    type="button"
+                    onclick="addToCart(event, this.form)"
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg text-sm transition {% if product.stock <= 0 %}opacity-50 cursor-not-allowed{% endif %}"
+                    {% if product.stock <= 0 %}disabled{% endif %}
+                >
+                    Tambah ke keranjang
+                </button>
+
+                <button
+                    type="submit"
+                    class="flex-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold py-3 rounded-lg text-sm transition {% if product.stock <= 0 %}opacity-50 cursor-not-allowed{% endif %}"
+                    {% if product.stock <= 0 %}disabled{% endif %}
+                >
+                    Beli sekarang
+                </button>
             </div>
+        </form>
+    </div>
+</main>
 
-            <!-- Form Transaksi -->
-            <form action="{{ url_for('customer.buy_now') }}" method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="product_id" value="{{ product.id }}">
+<!-- DESKRIPSI DAN SPESIFIKASI -->
+<section class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
 
-                <div class="flex items-center space-x-4 mb-4">
-                    <!-- Kontrol Jumlah -->
-                    <div class="flex items-center border border-slate-300 rounded-lg overflow-hidden bg-white">
-                        <input type="number" name="quantity" value="1" min="1" max="{{ product.stock }}" class="w-12 text-center text-xs font-bold text-blue-600 outline-none py-1.5" {% if product.stock <= 0 %}disabled{% endif %}>
+    <!-- DESKRIPSI -->
+    <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+        <div class="border-b border-slate-100 pb-3 mb-4">
+            <h2 class="font-bold text-slate-800 text-base">Deskripsi Produk</h2>
+            <p class="text-xs text-slate-400 mt-1">Informasi mengenai produk</p>
+        </div>
+
+        {% if product.description %}
+            <p class="text-sm text-slate-600 leading-7 whitespace-pre-line">{{ product.description }}</p>
+        {% else %}
+            <p class="text-sm text-slate-400 italic">Deskripsi produk belum tersedia.</p>
+        {% endif %}
+    </div>
+
+    <!-- SPESIFIKASI -->
+    <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
+        <div class="border-b border-slate-100 pb-3 mb-4">
+            <h2 class="font-bold text-slate-800 text-base">Spesifikasi Produk</h2>
+            <p class="text-xs text-slate-400 mt-1">Detail teknis produk</p>
+        </div>
+
+        {% if product_specifications %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm border-collapse">
+                    <tbody>
+                        {% for spec in product_specifications %}
+                            <tr class="border-b border-slate-100 last:border-b-0">
+                                <th scope="row" class="w-2/5 py-3 pr-4 text-slate-500 font-medium align-top">
+                                    {{ spec.attribute_name }}
+                                </th>
+                                <td class="py-3 text-slate-800 font-medium align-top break-words">
+                                    {{ spec.attribute_value }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% elif product.specs %}
+            <p class="text-sm text-slate-600 leading-7 whitespace-pre-line">{{ product.specs }}</p>
+        {% else %}
+            <p class="text-sm text-slate-400 italic">Spesifikasi belum tersedia.</p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- ULASAN PEMBELI - FR-005 -->
+<section class="max-w-6xl mx-auto px-4 mb-12">
+    <div class="bg-white border border-slate-100 rounded-xl shadow-sm p-6">
+
+        <div class="border-b border-slate-100 pb-4 mb-5">
+            <h2 class="text-lg font-bold text-slate-800">Ulasan Pembeli</h2>
+            <p class="text-xs text-slate-400 mt-1">Pengalaman pelanggan yang telah membeli produk ini</p>
+        </div>
+
+        <!-- RINGKASAN RATING -->
+        <div class="bg-slate-50 rounded-xl p-5 mb-6">
+            {% if reviews %}
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                    <div class="text-center sm:border-r sm:border-slate-200 sm:pr-6">
+                        <p class="text-3xl font-extrabold text-slate-800">{{ "%.1f"|format(average_rating) }}</p>
+                        <div class="text-yellow-500 text-lg" aria-label="Rating {{ '%.1f'|format(average_rating) }} dari 5">
+                            {% for star in range(1, 6) %}
+                                {% if star <= average_rating|round(0, 'common')|int %}
+                                    ★
+                                {% else %}
+                                    <span class="text-slate-300">★</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">{{ reviews|length }} ulasan</p>
+                    </div>
+
+                    <div>
+                        <p class="text-sm font-semibold text-slate-700">Rating pelanggan</p>
+                        <p class="text-xs text-slate-500 mt-1">
+                            Penilaian berdasarkan ulasan pembeli yang telah melakukan transaksi.
+                        </p>
                     </div>
                 </div>
+            {% else %}
+                <p class="text-sm font-medium text-slate-700">Belum ada ulasan untuk produk ini.</p>
+                <p class="text-xs text-slate-500 mt-1">Jadilah pelanggan pertama yang memberikan ulasan setelah pembelian.</p>
+            {% endif %}
+        </div>
 
-                <div class="flex space-x-3 mb-4">
-                    <button type="button" onclick="addToCart(event, this.form)" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-xs transition {% if product.stock <= 0 %}opacity-50 cursor-not-allowed{% endif %}" {% if product.stock <= 0 %}disabled{% endif %}>
-                        Tambah ke keranjang
-                    </button>
-                    <button type="submit" class="flex-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold py-2.5 rounded-lg text-xs transition {% if product.stock <= 0 %}opacity-50 cursor-not-allowed{% endif %}" {% if product.stock <= 0 %}disabled{% endif %}>
-                        Beli sekarang
-                    </button>
+        <!-- NOTIFIKASI -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="space-y-2 mb-5">
+                    {% for category, message in messages %}
+                        <div class="rounded-lg border px-4 py-3 text-sm
+                            {% if category == 'success' %}
+                                bg-green-50 border-green-200 text-green-700
+                            {% elif category == 'warning' %}
+                                bg-yellow-50 border-yellow-200 text-yellow-700
+                            {% else %}
+                                bg-red-50 border-red-200 text-red-700
+                            {% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
                 </div>
-            </form>
-            
-        </div>
-    </main>
+            {% endif %}
+        {% endwith %}
 
-    <!-- 5. BAGIAN TENGAH: DESKRIPSI & SPESIFIKASI -->
-    <div class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        
-        <!-- Kotak Deskripsi -->
-        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-            <h3 class="font-bold text-slate-800 mb-3 text-sm">Deskripsi Produk</h3>
-            <p class="text-xs text-slate-600 leading-relaxed mb-3">{{ product.description }}</p>
-        </div>
+        <!-- FORM ULASAN PEMBELI -->
+        {% if eligible_order_items %}
+            <div class="mb-7">
+                <h3 class="font-semibold text-slate-800 text-sm mb-3">
+                    Berikan ulasan untuk pembelian Anda
+                </h3>
 
-        <!-- Kotak Spesifikasi -->
-        <div class="bg-white p-6 rounded-xl border border-slate-100 shadow-sm">
-            <h3 class="font-bold text-slate-800 mb-4 text-sm">Spesifikasi produk</h3>
-            <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-line">{{ product.specs or 'Spesifikasi belum tersedia.' }}</p>
+                {% for item in eligible_order_items %}
+                    <form
+                        method="POST"
+                        action="{{ url_for('customer.submit_product_review', product_id=product.id, order_item_id=item.id) }}"
+                        class="border border-slate-200 rounded-lg p-4 mb-4"
+                    >
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <p class="text-xs text-slate-500 mb-4">
+                            Item pembelian #{{ item.id }}
+                        </p>
+
+                        <label for="rating-{{ item.id }}" class="block text-sm font-medium text-slate-700 mb-2">
+                            Rating
+                        </label>
+                        <select
+                            id="rating-{{ item.id }}"
+                            name="rating"
+                            required
+                            class="w-full border border-slate-300 rounded-lg p-2.5 mb-4 text-sm focus:outline-none focus:border-blue-500"
+                        >
+                            <option value="">Pilih rating</option>
+                            <option value="5">5 - Sangat puas</option>
+                            <option value="4">4 - Puas</option>
+                            <option value="3">3 - Cukup</option>
+                            <option value="2">2 - Kurang puas</option>
+                            <option value="1">1 - Tidak puas</option>
+                        </select>
+
+                        <label for="comment-{{ item.id }}" class="block text-sm font-medium text-slate-700 mb-2">
+                            Komentar
+                        </label>
+                        <textarea
+                            id="comment-{{ item.id }}"
+                            name="comment"
+                            required
+                            maxlength="1000"
+                            rows="4"
+                            placeholder="Ceritakan pengalaman Anda..."
+                            class="w-full border border-slate-300 rounded-lg p-3 text-sm mb-4 focus:outline-none focus:border-blue-500"
+                        ></textarea>
+
+                        <button
+                            type="submit"
+                            class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2.5 text-sm font-semibold transition"
+                        >
+                            Kirim ulasan
+                        </button>
+                    </form>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- DAFTAR ULASAN -->
+        <div class="space-y-4">
+            {% for review in reviews %}
+                <article class="border border-slate-100 rounded-lg p-4">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
+                        <div>
+                            <p class="font-semibold text-sm text-slate-800">
+                                {{ review.user.name }}
+                            </p>
+                            <p class="text-xs text-slate-400 mt-1">
+                                Pembelian terverifikasi · {{ review.created_at.strftime("%d %b %Y") }}
+                            </p>
+                        </div>
+
+                        <span class="text-sm font-semibold text-yellow-600 whitespace-nowrap">
+                            {% for star in range(review.rating) %}★{% endfor %}{% for star in range(5 - review.rating) %}<span class="text-slate-300">★</span>{% endfor %}
+                            <span class="text-slate-600 ml-1">{{ review.rating }}/5</span>
+                        </span>
+                    </div>
+
+                    <p class="text-sm text-slate-600 leading-6 whitespace-pre-line break-words">{{ review.comment }}</p>
+                </article>
+            {% else %}
+                <p class="text-sm text-slate-500 text-center py-5">
+                    Ulasan pembeli akan ditampilkan di sini.
+                </p>
+            {% endfor %}
         </div>
     </div>
+</section>
 
 {% endblock %}

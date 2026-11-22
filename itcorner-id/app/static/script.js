@@ -184,3 +184,28 @@ document.addEventListener('DOMContentLoaded', function () {
         placeholder.classList.add('hidden');
     });
 });
+
+// Sinkronisasi badge keranjang saat halaman ditampilkan kembali
+window.addEventListener('pageshow', function () {
+    const cartBadge = document.getElementById('cart-count');
+
+    if (!cartBadge) return;
+
+    fetch('/cart-count', {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Gagal mengambil jumlah keranjang terbaru.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (Number.isInteger(data.cart_count)) {
+            cartBadge.innerText = data.cart_count;
+        }
+    })
+    .catch(error => console.error('Cart badge:', error));
+});

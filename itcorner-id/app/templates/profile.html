@@ -64,32 +64,102 @@
             <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
                 <h2 class="text-sm font-bold text-slate-900 mb-4">Informasi pribadi</h2>
                 
-                <form class="space-y-4">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% for category, message in messages %}
+                        <div class="mb-4 px-4 py-3 rounded-xl text-xs font-medium
+                            {% if category == 'success' %}
+                                bg-emerald-50 text-emerald-700 border border-emerald-200
+                            {% else %}
+                                bg-red-50 text-red-700 border border-red-200
+                            {% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endwith %}
+
+                <form method="POST"
+                      action="{{ url_for('customer.profile') }}"
+                      class="space-y-4">
+
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Nama lengkap *</label>
-                            <input type="text" value="{{ user.name }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 font-medium focus:outline-none focus:bg-white focus:border-blue-500">
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">
+                                Nama lengkap *
+                            </label>
+                            <input
+                                type="text"
+                                name="name"
+                                value="{{ user.name }}"
+                                maxlength="100"
+                                required
+                                autocomplete="name"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 font-medium focus:outline-none focus:bg-white focus:border-blue-500">
                         </div>
+
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Email *</label>
-                            <input type="email" value="{{ user.email }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 font-medium focus:outline-none focus:bg-white focus:border-blue-500" readonly>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                value="{{ user.email }}"
+                                readonly
+                                class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-500 font-medium">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Role / Peran</label>
-                            <input type="text" value="{{ user.role }}" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-500 font-medium" readonly>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">
+                                Nomor telepon
+                            </label>
+                            <input
+                                type="tel"
+                                name="phone"
+                                value="{{ user.phone or '' }}"
+                                maxlength="13"
+                                autocomplete="tel"
+                                placeholder="Contoh: 081234567890"
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-800 font-medium focus:outline-none focus:bg-white focus:border-blue-500">
                         </div>
+
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-600 mb-1">Status Akun</label>
-                            <input type="text" value="Aktif / Terverifikasi" class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-emerald-600 font-semibold" readonly>
+                            <label class="block text-[11px] font-bold text-slate-600 mb-1">
+                                Role / Peran
+                            </label>
+                            <input
+                                type="text"
+                                value="{{ user.role }}"
+                                readonly
+                                class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-500 font-medium">
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1">
+                            Status Akun
+                        </label>
+                        <input
+                            type="text"
+                            value="{{ user.status }}"
+                            readonly
+                            class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-emerald-600 font-semibold">
                     </div>
 
                     <div class="pt-2 flex gap-3">
-                        <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition">Simpan perubahan</button>
-                        <button type="button" class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-2 rounded-xl transition">Batal</button>
+                        <button
+                            type="submit"
+                            class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition">
+                            Simpan perubahan
+                        </button>
+
+                        <button
+                            type="reset"
+                            class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-4 py-2 rounded-xl transition">
+                            Batal
+                        </button>
                     </div>
                 </form>
             </div>

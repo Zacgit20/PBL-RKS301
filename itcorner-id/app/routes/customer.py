@@ -15,8 +15,8 @@ from pathlib import Path
 from decimal import Decimal
 from uuid import uuid4
 
-from app.extensions import db
-from app.models import Product, User, Order, OrderItem, Payment
+from app.extensions import db, limiter
+from app.models import Product, User, Order, OrderItem, Payment, ProductReview
 from app.utils import format_rupiah
 
 
@@ -141,11 +141,160 @@ def detail(product_id):
         'specs': product.specs
     }
 
-    return render_template(
-        'detail.html',
-        product=product_data
+    reviews = (
+        ProductReview.query
+        .join(OrderItem, ProductReview.order_item_id == OrderItem.id)
+        .filter(OrderItem.product_id == product.id)
+        .order_by(ProductReview.created_at.desc())
+        .all()
     )
 
+    review_user = None
+    eligible_order_items = []
+
+    if session.get('user_id'):
+        review_user = db.session.get(User, session.get('user_id'))
+
+    if (
+        review_user
+        and review_user.status == 'Aktif'
+        and review_user.role == 'Pelanggan'
+    ):
+        reviewed_item_ids = {
+            review.order_item_id for review in reviews
+        }
+
+        eligible_order_items = (
+            db.session.query(OrderItem)
+            .join(Order, Order.id == OrderItem.order_id)
+            .join(Payment, Payment.order_id == Order.id)
+            .filter(
+                OrderItem.product_id == product.id,
+                Order.user_id == review_user.id,
+                Payment.user_id == review_user.id,
+                Payment.status == 'Disetujui'
+            )
+            .distinct()
+            .all()
+        )
+
+        eligible_order_items = [
+            item for item in eligible_order_items
+            if item.id not in reviewed_item_ids
+        ]
+
+    average_rating = (
+        sum(review.rating for review in reviews) / len(reviews)
+        if reviews else 0
+    )
+
+    return render_template(
+        'detail.html',
+        product=product_data,
+        product_specifications=product.specifications,
+        reviews=reviews,
+        average_rating=average_rating,
+        eligible_order_items=eligible_order_items
+    )
+
+
+
+
+# =========================
+# PRODUCT REVIEWS (FR-005)
+# =========================
+
+@customer_bp.route(
+    '/detail/<int:product_id>/review/<int:order_item_id>',
+    methods=['POST']
+)
+@limiter.limit("5 per minute", methods=["POST"])
+def submit_product_review(product_id, order_item_id):
+    user_id = session.get('user_id')
+
+    if not user_id:
+        flash("Silakan login untuk memberikan ulasan.", "warning")
+        return redirect(url_for('auth.login'))
+
+    user = db.session.get(User, user_id)
+
+    if (
+        user is None
+        or user.status != 'Aktif'
+        or user.role != 'Pelanggan'
+    ):
+        flash("Akun tidak memiliki izin untuk memberikan ulasan.", "danger")
+        return redirect(url_for('customer.detail', product_id=product_id))
+
+    product = db.session.get(Product, product_id)
+
+    if product is None or not product.is_active:
+        return redirect(url_for('main.home'))
+
+    # Verifikasi item pembelian, pemilik pesanan, dan pembayaran.
+    verified_item = (
+        db.session.query(OrderItem)
+        .join(Order, Order.id == OrderItem.order_id)
+        .join(Payment, Payment.order_id == Order.id)
+        .filter(
+            OrderItem.id == order_item_id,
+            OrderItem.product_id == product_id,
+            Order.user_id == user.id,
+            Payment.user_id == user.id,
+            Payment.status == 'Disetujui'
+        )
+        .first()
+    )
+
+    if verified_item is None:
+        flash(
+            "Ulasan hanya dapat diberikan untuk pembelian milik Anda "
+            "yang pembayarannya telah disetujui.",
+            "danger"
+        )
+        return redirect(url_for('customer.detail', product_id=product_id))
+
+    # Satu item pembelian hanya boleh memiliki satu ulasan.
+    existing_review = ProductReview.query.filter_by(
+        order_item_id=order_item_id
+    ).first()
+
+    if existing_review:
+        flash("Item pembelian ini sudah memiliki ulasan.", "warning")
+        return redirect(url_for('customer.detail', product_id=product_id))
+
+    try:
+        rating = int(request.form.get('rating', ''))
+    except (TypeError, ValueError):
+        rating = 0
+
+    comment = (request.form.get('comment') or '').strip()
+
+    if rating < 1 or rating > 5:
+        flash("Rating harus bernilai 1 sampai 5.", "danger")
+        return redirect(url_for('customer.detail', product_id=product_id))
+
+    if not comment or len(comment) > 1000:
+        flash("Komentar wajib diisi dan maksimal 1.000 karakter.", "danger")
+        return redirect(url_for('customer.detail', product_id=product_id))
+
+    review = ProductReview(
+        order_item_id=verified_item.id,
+        user_id=user.id,
+        rating=rating,
+        comment=comment
+    )
+
+    try:
+        db.session.add(review)
+        db.session.commit()
+        flash("Ulasan berhasil dikirim.", "success")
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Gagal menyimpan ulasan produk.")
+        flash("Ulasan gagal disimpan. Silakan coba kembali.", "danger")
+
+    return redirect(url_for('customer.detail', product_id=product_id))
 
 # =========================
 # KERANJANG
@@ -235,12 +384,49 @@ def cart():
         item['quantity'] for item in displayed_items
     )
 
+    # Rekomendasi produk aktif yang belum ada di keranjang
+    recommendation_query = Product.query.filter(
+        Product.is_active.is_(True),
+        Product.stock > 0
+    )
+
+    if product_ids:
+        recommendation_query = recommendation_query.filter(
+            ~Product.id.in_(product_ids)
+        )
+
+    recommendations = (
+        recommendation_query
+        .order_by(Product.updated_at.desc())
+        .limit(3)
+        .all()
+    )
+
     return render_template(
         'cart.html',
         items=displayed_items,
         total=format_rupiah(total_price),
-        cart_count=cart_count
+        cart_count=cart_count,
+        recommendations=recommendations
     )
+
+
+# =========================
+# JUMLAH KERANJANG TERBARU
+# =========================
+
+@customer_bp.route('/cart-count', methods=['GET'])
+def get_cart_count():
+    cart_items = _get_session_cart()
+
+    response = jsonify({
+        'cart_count': sum(
+            item['quantity'] for item in cart_items
+        )
+    })
+    response.headers['Cache-Control'] = 'no-store'
+
+    return response
 
 
 # =========================
@@ -327,14 +513,14 @@ def update_cart():
             'error': 'Produk tidak ditemukan di keranjang.'
         }), 404
 
+    product = db.session.get(Product, product_id)
+
+    if not product or not product.is_active:
+        return jsonify({
+            'error': 'Produk tidak tersedia.'
+        }), 404
+
     if action == 'increase':
-        product = db.session.get(Product, product_id)
-
-        if not product or not product.is_active:
-            return jsonify({
-                'error': 'Produk tidak tersedia.'
-            }), 404
-
         if item['quantity'] >= product.stock:
             return jsonify({
                 'error': f"Stok maksimal {product.stock} unit."
@@ -750,9 +936,9 @@ def orders():
 # CONTEXT PROCESSOR
 # =========================
 
-@customer_bp.route('/profile')
+@customer_bp.route('/profile', methods=['GET', 'POST'])
 def profile():
-    """Menampilkan profil pengguna dari PostgreSQL."""
+    """Menampilkan dan memperbarui informasi profil pengguna."""
     user_id = session.get('user_id')
 
     if not user_id:
@@ -769,6 +955,52 @@ def profile():
     if not user or user.status != 'Aktif':
         session.clear()
         return redirect(url_for('auth.login'))
+
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        phone = request.form.get('phone', '').strip()
+
+        if not name:
+            flash('Nama lengkap wajib diisi.', 'error')
+            return redirect(url_for('customer.profile'))
+
+        if len(name) > 100:
+            flash('Nama maksimal 100 karakter.', 'error')
+            return redirect(url_for('customer.profile'))
+
+        if phone:
+            phone_digits = phone[1:] if phone.startswith('+') else phone
+
+            if (
+                not phone_digits.isdigit()
+                or not 8 <= len(phone_digits) <= 13
+                or len(phone) > 13
+            ):
+                flash(
+                    'Nomor telepon harus berisi 8–13 digit '
+                    'dan boleh diawali tanda +.',
+                    'error'
+                )
+                return redirect(url_for('customer.profile'))
+
+        try:
+            user.name = name
+            user.phone = phone or None
+
+            db.session.commit()
+
+            session['user_name'] = user.name
+
+            flash('Informasi profil berhasil diperbarui.', 'success')
+
+        except Exception:
+            db.session.rollback()
+            flash(
+                'Perubahan profil gagal disimpan. Silakan coba kembali.',
+                'error'
+            )
+
+        return redirect(url_for('customer.profile'))
 
     return render_template('profile.html', user=user)
 
