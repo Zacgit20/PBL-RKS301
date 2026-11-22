@@ -1,34 +1,60 @@
-version: '3.8'
-
 services:
-  # 1. Layanan Aplikasi Web (Flask + Gunicorn)
   web:
     build: .
     container_name: itcorner_web
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     env_file:
       - .env
     environment:
-      - FLASK_ENV=development
+      FLASK_ENV: production
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD belum diatur}
     depends_on:
-      - db
+      db:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./app/static/uploads:/app/app/static/uploads
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  redis:
+    image: redis:7-alpine
+    container_name: itcorner_redis
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD belum diatur}
+    command:
+      - sh
+      - -c
+      - 'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"'
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'redis-cli -a "$$REDIS_PASSWORD" ping 2>/dev/null | grep -q PONG'
+      interval: 5s
+      timeout: 3s
+      retries: 5
     restart: always
 
-  # 2. Layanan Basis Data (PostgreSQL)
   db:
     image: postgres:15-alpine
     container_name: itcorner_db
     environment:
-      - POSTGRES_DB=itcorner-db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgrespassword
+      POSTGRES_DB: ${DB_NAME:?DB_NAME belum diatur}
+      POSTGRES_USER: ${DB_USER:?DB_USER belum diatur}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD belum diatur}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
 
-# 3. Penyimpanan Data Persisten untuk PostgreSQL
 volumes:
   postgres_data:

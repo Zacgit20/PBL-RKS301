@@ -1,0 +1,8 @@
+-r requirements.txt
+
+# Testing
+pytest>=9.0.3
+
+# Security auditing
+bandit>=1.7.5
+pip-audit>=2.7.3
