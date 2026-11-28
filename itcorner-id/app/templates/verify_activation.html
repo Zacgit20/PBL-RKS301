@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Konfirmasi Email - ITCorner.id</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            font-family: Arial, sans-serif;
+        }
+        main {
+            width: 100%;
+            max-width: 440px;
+            padding: 32px;
+            text-align: center;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,.08);
+        }
+        h1 { color: #0f172a; font-size: 24px; margin-bottom: 12px; }
+        p { color: #475569; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+        button {
+            width: 100%;
+            padding: 14px;
+            border: 0;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:hover { background: #1d4ed8; }
+    </style>
+</head>
+<body >
+    <main >
+        <h1 >
+            Konfirmasi Verifikasi Email
+        </h1>
+        <p >
+            Tekan tombol berikut untuk mengonfirmasi bahwa kamu memiliki
+            akses ke alamat email ini.
+        </p>
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit"
+                >
+                Verifikasi Email
+            </button>
+        </form>
+    </main>
+</body>
+</html>

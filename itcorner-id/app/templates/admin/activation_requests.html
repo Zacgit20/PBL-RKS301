@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pengajuan Aktivasi - ITCorner.id Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 flex min-h-screen font-sans">
+
+    <aside class="w-64 bg-slate-900 text-white p-6 flex flex-col justify-between flex-shrink-0 min-h-screen">
+        <div>
+            <div class="flex items-center gap-2 mb-6">
+                <span class="font-bold text-xl tracking-tight">ITCorner.id</span>
+            </div>
+
+            <div class="inline-block bg-blue-600 text-xs font-bold px-2.5 py-1 rounded mb-6 uppercase tracking-wider">
+                RUANG ADMIN
+            </div>
+
+            <nav class="space-y-4 text-sm font-medium">
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="block text-slate-400 hover:text-white transition">Ringkasan</a>
+    <a href="{{ url_for('admin.admin_products') }}" class="block text-slate-400 hover:text-white transition">Produk</a>
+    <a href="{{ url_for('admin.admin_users') }}" class="block text-slate-400 hover:text-white transition">Akun</a>
+    <a href="{{ url_for('admin.admin_payments') }}" class="block text-slate-400 hover:text-white transition">Approval pembayaran</a>
+    <a href="{{ url_for('admin.admin_reports') }}" class="block text-slate-400 hover:text-white transition">Laporan</a>
+    <a href="{{ url_for('admin.admin_activation_requests') }}" class="block text-blue-400 font-semibold">● Aktivasi Akun</a>
+</nav>
+        </div>
+
+        <div class="text-xs text-slate-500 space-y-1 pt-6 border-t border-slate-800">
+            <p class="font-bold text-slate-400 uppercase tracking-wider">RUANG KERJA TOKO</p>
+            <p>ITCorner.id • Jakarta</p>
+            <p class="mt-2 text-[10px] text-slate-600">Data dashboard dari database ITCorner.id.</p>
+            <a href="{{ url_for('main.home') }}" class="inline-block mt-2 text-[11px] text-blue-400 hover:underline font-medium">← Lihat Toko (Pelanggan)</a>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-x-auto">
+        <header class="mb-8">
+            <p class="text-xs text-slate-400 mb-2">Manajemen toko / Aktivasi akun</p>
+            <h1 class="text-2xl font-bold text-slate-900">
+                Pengajuan aktivasi akun
+            </h1>
+            <p class="text-sm text-slate-500 mt-1">
+                Tinjau pengajuan pelanggan yang telah memverifikasi email.
+            </p>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="space-y-2 mb-6" role="status" aria-live="polite">
+                    {% for category, message in messages %}
+                        <div class="rounded-lg p-3 text-sm
+                            {% if category == 'success' %}
+                                bg-emerald-50 text-emerald-700
+                            {% else %}
+                                bg-rose-50 text-rose-700
+                            {% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-xs text-slate-500 uppercase">
+                    <tr>
+                        <th class="p-4">Pelanggan</th>
+                        <th class="p-4">Email</th>
+                        <th class="p-4">Tanggal verifikasi</th>
+                        <th class="p-4">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in activation_requests %}
+                    <tr>
+                        <td class="p-4 font-semibold">
+                            {{ item.user.name if item.user else 'Pengguna tidak ditemukan' }}
+                        </td>
+                        <td class="p-4 text-slate-500">
+                            {{ item.user.email if item.user else '-' }}
+                        </td>
+                        <td class="p-4 text-slate-500">
+                            {{ item.verified_at.strftime('%d-%m-%Y %H:%M') if item.verified_at else '-' }}
+                        </td>
+                        <td class="p-4">
+                            <div class="flex flex-col gap-3 min-w-48">
+                                <form method="POST"
+                                      action="{{ url_for('admin.decide_activation_request', request_id=item.id) }}">
+                                    <input type="hidden" name="csrf_token"
+                                           value="{{ csrf_token() }}">
+                                    <input type="hidden" name="decision" value="approve">
+                                    <button type="submit"
+                                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-3 py-2 text-xs font-semibold">
+                                        Setujui aktivasi
+                                    </button>
+                                </form>
+
+                                <form method="POST"
+                                      action="{{ url_for('admin.decide_activation_request', request_id=item.id) }}"
+                                      class="space-y-2">
+                                    <input type="hidden" name="csrf_token"
+                                           value="{{ csrf_token() }}">
+                                    <input type="hidden" name="decision" value="reject">
+                                    <input type="text" name="rejection_reason"
+                                           maxlength="255"
+                                           placeholder="Alasan penolakan"
+                                           class="w-full border border-slate-200 rounded-lg px-3 py-2 text-xs">
+                                    <button type="submit"
+                                        class="w-full bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-3 py-2 text-xs font-semibold">
+                                        Tolak pengajuan
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4"
+                            class="p-8 text-center text-slate-400">
+                            Belum ada pengajuan aktivasi yang menunggu persetujuan.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+</body>
+</html>

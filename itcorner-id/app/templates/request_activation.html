@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pengajuan Aktivasi - ITCorner.id</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-100 flex items-center justify-center p-5">
+    <main class="w-full max-w-md bg-white rounded-2xl shadow p-8">
+        <h1 class="text-2xl font-bold text-slate-900 mb-2">
+            Pengajuan Aktivasi Akun
+        </h1>
+        <p class="text-sm text-slate-500 mb-6">
+            Masukkan email dan kata sandi akun Nonaktif untuk meminta
+            verifikasi email.
+        </p>
+
+        {% if message %}
+        <div class="bg-blue-50 text-blue-800 rounded-lg p-4 text-sm mb-5">
+            {{ message }}
+        </div>
+        {% endif %}
+
+        <form method="POST" class="space-y-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div>
+                <label class="block text-sm font-semibold mb-2">Email</label>
+                <input type="email" name="email" required maxlength="150"
+                    autocomplete="username"
+                    class="w-full border rounded-lg p-3 text-sm">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold mb-2">
+                    Kata sandi
+                </label>
+                <input type="password" name="password" required
+                    autocomplete="current-password"
+                    class="w-full border rounded-lg p-3 text-sm">
+            </div>
+
+            <button type="submit"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white
+                       font-semibold rounded-lg p-3 text-sm">
+                Kirim Verifikasi Email
+            </button>
+        </form>
+
+        <a href="{{ url_for('auth.login') }}"
+           class="block text-center text-sm text-blue-600 mt-5">
+            Kembali ke Login
+        </a>
+    </main>
+</body>
+</html>

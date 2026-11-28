@@ -6,3 +6,5 @@ from .order_item import OrderItem
 from .product_review import ProductReview
 from .product_specification import ProductSpecification
 from .user_address import UserAddress
+from .payment_proof import PaymentProof
+from .activation_request import ActivationRequest
