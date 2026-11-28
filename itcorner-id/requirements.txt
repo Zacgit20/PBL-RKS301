@@ -23,3 +23,10 @@ Pillow==13.0.0
 # Environment configuration
 python-dotenv==1.2.4
 Werkzeug==3.1.9
+
+# Email delivery
+Flask-Mail==0.10.0
+
+# Transaction report export
+reportlab==5.1.2
+openpyxl==3.1.5
