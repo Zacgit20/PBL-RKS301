@@ -10,7 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
 from werkzeug.middleware.proxy_fix import ProxyFix
-from app.extensions import db, migrate, csrf, limiter
+from app.extensions import db, migrate, csrf, limiter, mail
 from app.routes import register_blueprints
 from sqlalchemy.engine import URL
 from app.models import User, Product, Payment, Order, OrderItem, ProductReview
@@ -40,7 +40,8 @@ app.config["SESSION_COOKIE_SECURE"] = (
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 # Konfigurasi upload gambar produk
-app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # Maksimal 2 MB
+# Maksimal request 2,5 MB: file 2 MB + ruang overhead multipart.
+app.config["MAX_CONTENT_LENGTH"] = (2 * 1024 * 1024) + (512 * 1024)
 
 app.config["PRODUCT_UPLOAD_FOLDER"] = os.path.join(
     app.root_path,
@@ -50,6 +51,14 @@ app.config["PRODUCT_UPLOAD_FOLDER"] = os.path.join(
 )
 
 os.makedirs(app.config["PRODUCT_UPLOAD_FOLDER"], exist_ok=True)
+
+# Penyimpanan privat bukti pembayaran (tidak berada di static).
+app.config["PAYMENT_PROOF_UPLOAD_FOLDER"] = os.path.join(
+    os.path.dirname(app.root_path),
+    "private_uploads",
+    "payment_proofs"
+)
+os.makedirs(app.config["PAYMENT_PROOF_UPLOAD_FOLDER"], exist_ok=True)
 
 def process_product_image(file):
     if not file or not file.filename:
@@ -120,9 +129,22 @@ database_url = URL.create(
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# ==========================================
+# KONFIGURASI EMAIL (BREVO SMTP)
+# ==========================================
+app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER")
+app.config["MAIL_PORT"] = int(os.getenv("MAIL_PORT", "587"))
+app.config["MAIL_USE_TLS"] = os.getenv("MAIL_USE_TLS", "True").lower() == "true"
+app.config["MAIL_USE_SSL"] = os.getenv("MAIL_USE_SSL", "False").lower() == "true"
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_DEFAULT_SENDER")
+
+
 db.init_app(app)
 migrate.init_app(app, db)
 csrf.init_app(app)
+mail.init_app(app)
 
 # Konfigurasi Flask-Limiter menggunakan Redis
 redis_password = os.environ["REDIS_PASSWORD"]

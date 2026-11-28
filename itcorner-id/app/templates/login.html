@@ -78,6 +78,13 @@
                         {% if login_error %}
                             <p class="text-red-500 text-xs mt-1 font-medium">{{ login_error }}</p>
                         {% endif %}
+
+                        {% if activation_available %}
+                            <a href="{{ url_for('auth.request_activation') }}"
+                               class="inline-block text-blue-600 text-xs font-semibold mt-3 hover:underline">
+                                Ajukan aktivasi kembali untuk akun ini
+                            </a>
+                        {% endif %}
                     </div>
 
                     <!-- Checkbox Ingat Saya & Lupa Sandi -->

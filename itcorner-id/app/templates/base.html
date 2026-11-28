@@ -32,7 +32,7 @@
                 </a>
 
                 <!-- Search Bar (Lebar & Ditengah) -->
-                {% if request.path not in ['/profile', '/login', '/register', '/checkout', '/orders'] %}
+                {% if request.path not in ['/profile', '/login', '/register', '/checkout', '/orders', '/addresses'] and not request.path.startswith('/orders/') %}
                 <form action="{{ url_for('main.home') }}" method="GET" class="flex-1 max-w-2xl relative">
                     <input type="text" name="q" placeholder="Cari laptop, monitor, atau aksesori favoritmu..."
                     value="{{ request.args.get('q', '') }}" class="w-full bg-slate-100 border border-transparent rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:bg-white focus:border-blue-500 transition">
@@ -98,7 +98,7 @@
             </div>
 
             <!-- Menu Kategori Produk -->
-            {% if request.path not in ['/profile', '/login', '/register', '/checkout', '/orders'] %}
+            {% if request.path not in ['/profile', '/login', '/register', '/checkout', '/orders', '/addresses'] and not request.path.startswith('/orders/') %}
             <nav class="flex items-center justify-between gap-8 border-t border-slate-100 text-sm font-medium pt-3 pb-2 overflow-x-auto">
                 <div class="flex shrink-0 items-center gap-8">
                     <a href="{{ url_for('main.home') }}" class="inline-flex h-10 items-center whitespace-nowrap border-b-2 {% if not selected_category or selected_category == 'all' %}text-blue-600 font-semibold border-blue-600{% else %}text-slate-600 border-transparent hover:text-blue-600{% endif %} transition">
