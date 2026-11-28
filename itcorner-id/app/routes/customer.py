@@ -14,9 +14,14 @@ from flask import (
 from pathlib import Path
 from decimal import Decimal
 from uuid import uuid4
+from io import BytesIO
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from app.extensions import db, limiter
-from app.models import Product, User, Order, OrderItem, Payment, ProductReview
+from app.models import (
+    Product, User, UserAddress, Order, OrderItem,
+    Payment, PaymentProof, ProductReview
+)
 from app.utils import format_rupiah
 
 
@@ -295,6 +300,83 @@ def submit_product_review(product_id, order_item_id):
         flash("Ulasan gagal disimpan. Silakan coba kembali.", "danger")
 
     return redirect(url_for('customer.detail', product_id=product_id))
+
+
+@customer_bp.route(
+    '/detail/<int:product_id>/review/<int:review_id>/edit',
+    methods=['POST']
+)
+@limiter.limit("5 per minute", methods=["POST"])
+def edit_product_review(product_id, review_id):
+    user_id = session.get('user_id')
+
+    if not user_id:
+        flash("Silakan login untuk mengedit ulasan.", "warning")
+        return redirect(url_for('auth.login'))
+
+    user = db.session.get(User, user_id)
+
+    if (
+        user is None
+        or user.status != 'Aktif'
+        or user.role != 'Pelanggan'
+    ):
+        flash("Akun tidak memiliki izin untuk mengedit ulasan.", "danger")
+        return redirect(url_for('customer.detail', product_id=product_id))
+
+    product = db.session.get(Product, product_id)
+
+    if product is None or not product.is_active:
+        return redirect(url_for('main.home'))
+
+    # Verifikasi kepemilikan ulasan, produk, pesanan, dan pembayaran.
+    review = (
+        db.session.query(ProductReview)
+        .join(OrderItem, ProductReview.order_item_id == OrderItem.id)
+        .join(Order, Order.id == OrderItem.order_id)
+        .join(Payment, Payment.order_id == Order.id)
+        .filter(
+            ProductReview.id == review_id,
+            ProductReview.user_id == user.id,
+            OrderItem.product_id == product_id,
+            Order.user_id == user.id,
+            Payment.user_id == user.id,
+            Payment.status == 'Disetujui'
+        )
+        .first()
+    )
+
+    if review is None:
+        flash("Ulasan tidak ditemukan atau Anda tidak memiliki akses.", "danger")
+        return redirect(url_for('customer.detail', product_id=product_id))
+
+    try:
+        rating = int(request.form.get('rating', ''))
+    except (TypeError, ValueError):
+        rating = 0
+
+    comment = (request.form.get('comment') or '').strip()
+
+    if rating < 1 or rating > 5:
+        flash("Rating harus bernilai 1 sampai 5.", "danger")
+        return redirect(url_for('customer.detail', product_id=product_id))
+
+    if not comment or len(comment) > 1000:
+        flash("Komentar wajib diisi dan maksimal 1.000 karakter.", "danger")
+        return redirect(url_for('customer.detail', product_id=product_id))
+
+    try:
+        review.rating = rating
+        review.comment = comment
+        db.session.commit()
+        flash("Ulasan berhasil diperbarui.", "success")
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Gagal memperbarui ulasan produk.")
+        flash("Ulasan gagal diperbarui. Silakan coba kembali.", "danger")
+
+    return redirect(url_for('customer.detail', product_id=product_id))
+
 
 # =========================
 # KERANJANG
@@ -692,6 +774,12 @@ def checkout():
             })
 
         total = subtotal + SHIPPING_FEE
+        saved_addresses = UserAddress.query.filter_by(
+            user_id=session['user_id']
+        ).order_by(
+            UserAddress.is_default.desc(),
+            UserAddress.created_at.desc()
+        ).all()
 
         return render_template(
             'checkout.html',
@@ -699,7 +787,8 @@ def checkout():
             subtotal=subtotal,
             shipping_fee=SHIPPING_FEE,
             total=total,
-            current_user=db.session.get(User, session['user_id'])
+            current_user=db.session.get(User, session['user_id']),
+            saved_addresses=saved_addresses
         )
 
     # Pastikan akun masih aktif
@@ -710,24 +799,86 @@ def checkout():
         flash("Sesi akun tidak valid atau akun tidak aktif. Silakan login kembali.", "warning")
         return redirect(url_for('auth.login'))
 
-    # Validasi data penerima
-    recipient_name = request.form.get('nama_penerima', '').strip()
-    recipient_phone = request.form.get('telepon', '').strip()
-    shipping_address = request.form.get('alamat_lengkap', '').strip()
-    province = request.form.get('provinsi', '').strip()
-    city = request.form.get('kota', '').strip()
-    district = request.form.get('kecamatan', '').strip()
-    postal_code = request.form.get('kode_pos', '').strip()
-    payment_method = request.form.get('metode_pembayaran', '').strip()
+    # Ambil dan validasi catatan opsional untuk penjual.
+    customer_note = request.form.get("catatan", "").strip()
+
+    if len(customer_note) > 500:
+        flash("Catatan untuk penjual maksimal 500 karakter.", "danger")
+        return redirect(url_for("customer.checkout"))
+
+    customer_note = customer_note or None
+
+    # Ambil alamat tersimpan atau alamat baru.
+    address_id = request.form.get("address_id", "").strip()
+    save_as_default = False
+
+    if address_id:
+        try:
+            address_id = int(address_id)
+        except (TypeError, ValueError):
+            flash("Pilihan alamat tidak valid.", "danger")
+            return redirect(url_for("customer.checkout"))
+
+        # Cegah IDOR: alamat wajib milik pengguna yang login.
+        selected_address = UserAddress.query.filter_by(
+            id=address_id,
+            user_id=user.id
+        ).first()
+
+        if selected_address is None:
+            flash("Alamat tidak ditemukan atau bukan milik akun Anda.", "danger")
+            return redirect(url_for("customer.checkout"))
+
+        recipient_name = selected_address.recipient_name
+        recipient_phone = selected_address.recipient_phone
+        shipping_address = selected_address.address
+        province = selected_address.province
+        city = selected_address.city
+        district = selected_address.district
+        postal_code = selected_address.postal_code
+
+    else:
+        recipient_name = request.form.get("nama_penerima", "").strip()
+        recipient_phone = request.form.get("telepon", "").strip()
+        shipping_address = request.form.get("alamat_lengkap", "").strip()
+        province = request.form.get("provinsi", "").strip()
+        city = request.form.get("kota", "").strip()
+        district = request.form.get("kecamatan", "").strip()
+        postal_code = request.form.get("kode_pos", "").strip()
+
+        save_as_default = (
+            request.form.get("simpan_utama") in ("on", "1", "true")
+        )
+
+    phone_digits = (
+        recipient_phone[1:]
+        if recipient_phone.startswith("+")
+        else recipient_phone
+    )
+
+    if not phone_digits.isdigit() or not 8 <= len(phone_digits) <= 13:
+        flash(
+            "Nomor telepon harus terdiri dari 8–13 digit, boleh diawali tanda +.",
+            "danger"
+        )
+        return redirect(url_for("customer.checkout"))
+
+    payment_method = request.form.get("metode_pembayaran", "").strip()
 
     required_fields = [
-        recipient_name, recipient_phone, shipping_address,
-        province, city, district, postal_code, payment_method
+        recipient_name,
+        recipient_phone,
+        shipping_address,
+        province,
+        city,
+        district,
+        postal_code,
+        payment_method
     ]
 
     if not all(required_fields):
         flash("Semua data pengiriman dan pembayaran wajib diisi.", "danger")
-        return redirect(url_for('customer.checkout'))
+        return redirect(url_for("customer.checkout"))
 
     if (
         len(recipient_name) > 100
@@ -740,14 +891,17 @@ def checkout():
         or not postal_code.isdigit()
     ):
         flash("Data pengiriman tidak valid. Periksa kembali formulir.", "danger")
-        return redirect(url_for('customer.checkout'))
+        return redirect(url_for("customer.checkout"))
 
-    # Metode pembayaran harus diizinkan server
-    allowed_payment_methods = {'Transfer BCA'}
+    allowed_payment_methods = {
+        "Transfer BCA",
+        "Transfer Mandiri",
+        "Transfer BRI"
+    }
 
     if payment_method not in allowed_payment_methods:
         flash("Metode pembayaran tidak valid.", "danger")
-        return redirect(url_for('customer.checkout'))
+        return redirect(url_for("customer.checkout"))
 
     # Gabungkan produk yang sama agar quantity tidak bisa terhitung terpisah
     quantities = {}
@@ -803,6 +957,7 @@ def checkout():
             id=order_id,
             user_id=user.id,
             total_amount=total_amount,
+            shipping_fee=SHIPPING_FEE,
             status="Menunggu Pembayaran",
             recipient_name=recipient_name,
             recipient_phone=recipient_phone,
@@ -810,7 +965,8 @@ def checkout():
             province=province,
             city=city,
             district=district,
-            postal_code=postal_code
+            postal_code=postal_code,
+            customer_note=customer_note
         )
 
         for item in order_items:
@@ -823,11 +979,34 @@ def checkout():
             order_id=order_id,
             amount_num=total_amount,
             method=payment_method,
-            status="Menunggu Approval"
+            status="Menunggu Pembayaran"
         )
 
         db.session.add(order)
         db.session.add(payment)
+
+        # Simpan alamat baru sebagai alamat utama hanya jika dicentang.
+        if not address_id and save_as_default:
+            UserAddress.query.filter_by(
+                user_id=user.id,
+                is_default=True
+            ).update(
+                {UserAddress.is_default: False},
+                synchronize_session=False
+            )
+
+            db.session.add(UserAddress(
+                user_id=user.id,
+                label="Checkout",
+                recipient_name=recipient_name,
+                recipient_phone=recipient_phone,
+                address=shipping_address,
+                province=province,
+                city=city,
+                district=district,
+                postal_code=postal_code,
+                is_default=True
+            ))
 
         # Kurangi stok dalam transaksi yang sama
         for product_id, quantity in quantities.items():
@@ -853,6 +1032,131 @@ def checkout():
 
     flash("Pesanan berhasil dibuat. Silakan lanjutkan proses pembayaran.", "success")
     return redirect(url_for('customer.orders'))
+
+@customer_bp.route(
+    '/orders/<string:order_id>/payment-proof',
+    methods=['POST']
+)
+@limiter.limit("5 per minute", methods=["POST"])
+def upload_payment_proof(order_id):
+    """Unggah bukti pembayaran hanya untuk pesanan milik customer."""
+
+    user_id = session.get('user_id')
+    if not user_id:
+        flash("Silakan login terlebih dahulu.", "warning")
+        return redirect(url_for('auth.login'))
+
+    user = db.session.get(User, user_id)
+    if user is None or user.status != 'Aktif':
+        session.clear()
+        flash("Akun tidak valid atau tidak aktif.", "warning")
+        return redirect(url_for('auth.login'))
+
+    order = Order.query.filter_by(
+        id=order_id,
+        user_id=user.id
+    ).first_or_404()
+
+    payment = (
+        Payment.query
+        .filter_by(order_id=order.id, user_id=user.id)
+        .with_for_update()
+        .first()
+    )
+
+    if payment is None:
+        flash("Data pembayaran tidak ditemukan.", "danger")
+        return redirect(url_for('customer.order_detail', order_id=order.id))
+
+    if payment.status not in ('Menunggu Pembayaran', 'Ditolak'):
+        flash(
+            "Bukti pembayaran tidak dapat diganti pada status saat ini.",
+            "warning"
+        )
+        return redirect(url_for('customer.order_detail', order_id=order.id))
+
+    uploaded_file = request.files.get('payment_proof')
+    if uploaded_file is None or not uploaded_file.filename:
+        flash("Pilih gambar bukti transfer terlebih dahulu.", "warning")
+        return redirect(url_for('customer.order_detail', order_id=order.id))
+
+    saved_path = None
+
+    try:
+        image_data = uploaded_file.read()
+
+        if not image_data:
+            raise ValueError("File gambar kosong.")
+
+        if len(image_data) > 2 * 1024 * 1024:
+            raise ValueError("Ukuran gambar maksimal 2 MB.")
+
+        # Verifikasi isi file, bukan hanya ekstensi atau MIME dari browser.
+        image = Image.open(BytesIO(image_data))
+
+        # Batasi jumlah piksel untuk mencegah penggunaan memori berlebihan.
+        if image.width * image.height > 16_000_000:
+            raise ValueError("Jumlah piksel gambar maksimal 16 juta.")
+
+        if image.width > 4000 or image.height > 4000:
+            raise ValueError("Dimensi gambar maksimal 4000 x 4000 piksel.")
+
+        if image.format not in ('JPEG', 'PNG', 'WEBP'):
+            raise ValueError("Format harus JPG, JPEG, PNG, atau WEBP.")
+
+        image.verify()
+
+        # Buka ulang setelah verify untuk pemrosesan.
+        image = Image.open(BytesIO(image_data))
+
+        image = ImageOps.exif_transpose(image)
+        image = image.convert("RGB")
+
+        filename = f"{uuid4().hex}.jpg"
+        upload_folder = current_app.config["PAYMENT_PROOF_UPLOAD_FOLDER"]
+        saved_path = Path(upload_folder) / filename
+
+        image.save(
+            saved_path,
+            format="JPEG",
+            quality=85,
+            optimize=True
+        )
+
+        proof = PaymentProof(
+            payment_id=payment.id,
+            filename=filename,
+            review_status="Menunggu"
+        )
+
+        payment.status = "Menunggu Approval"
+        db.session.add(proof)
+        db.session.commit()
+
+        flash("Bukti transfer berhasil diunggah dan menunggu pemeriksaan admin.", "success")
+
+    except (UnidentifiedImageError, OSError, ValueError) as error:
+        db.session.rollback()
+
+        if saved_path and saved_path.exists():
+            saved_path.unlink()
+
+        flash(f"Bukti transfer tidak valid: {error}", "danger")
+
+    except Exception:
+        db.session.rollback()
+
+        if saved_path and saved_path.exists():
+            saved_path.unlink()
+
+        current_app.logger.exception(
+            "Gagal menyimpan bukti pembayaran untuk order %s",
+            order_id
+        )
+        flash("Bukti transfer gagal disimpan. Silakan coba kembali.", "danger")
+
+    return redirect(url_for('customer.order_detail', order_id=order.id))
+
 
 # =========================
 # ORDER HISTORY
@@ -896,20 +1200,32 @@ def orders():
         first_item = items[0] if items else None
 
         product_name = "Pesanan"
-        quantity = 0
-        unit_price = Decimal("0")
+        items_summary = []
 
-        if first_item:
+        if items:
             product_name = (
-                first_item.product.name
-                if first_item.product
+                items[0].product.name
+                if items[0].product
                 else "Produk tidak tersedia"
             )
+
             if len(items) > 1:
                 product_name += f" dan {len(items) - 1} produk lainnya"
 
-            quantity = sum(item.quantity for item in items)
-            unit_price = first_item.price_at_purchase
+            for item in items:
+                item_name = (
+                    item.product.name
+                    if item.product
+                    else "Produk tidak tersedia"
+                )
+                item_subtotal = item.price_at_purchase * item.quantity
+
+                items_summary.append({
+                    'product_name': item_name,
+                    'quantity': item.quantity,
+                    'unit_price': format_rupiah(item.price_at_purchase),
+                    'subtotal': format_rupiah(item_subtotal)
+                })
 
         payments.append({
             'id': order.id,
@@ -919,8 +1235,7 @@ def orders():
             'status': payment.status if payment else order.status,
             'method': payment.method if payment else "-",
             'product_name': product_name,
-            'quantity': quantity,
-            'unit_price': format_rupiah(unit_price)
+            'items': items_summary
         })
 
     latest_payment = payments[0] if payments else None
@@ -1015,3 +1330,316 @@ def inject_cart_count():
         ),
         'format_rupiah': format_rupiah
     }
+
+
+# ============================================================
+# PENGELOLAAN ALAMAT PENGIRIMAN
+# ============================================================
+
+from flask import flash, redirect, render_template, request, session, url_for
+from app.extensions import db as address_db
+from app.models import User, UserAddress
+
+
+def _address_get_active_user():
+    """Mengambil akun aktif dari session login."""
+    user_id = session.get("user_id")
+    if not user_id:
+        return None
+
+    user = address_db.session.get(User, user_id)
+    if not user or user.status != "Aktif":
+        return None
+
+    return user
+
+
+def _address_validate_form():
+    """Validasi seluruh input alamat di sisi server."""
+    data = {
+        "label": request.form.get("label", "").strip(),
+        "recipient_name": request.form.get("recipient_name", "").strip(),
+        "recipient_phone": request.form.get("recipient_phone", "").strip(),
+        "address": request.form.get("address", "").strip(),
+        "province": request.form.get("province", "").strip(),
+        "city": request.form.get("city", "").strip(),
+        "district": request.form.get("district", "").strip(),
+        "postal_code": request.form.get("postal_code", "").strip(),
+    }
+
+    limits = {
+        "label": 30,
+        "recipient_name": 100,
+        "recipient_phone": 20,
+        "address": 500,
+        "province": 100,
+        "city": 100,
+        "district": 100,
+    }
+
+    for field, maximum in limits.items():
+        if not data[field]:
+            return None, f"{field.replace('_', ' ').capitalize()} wajib diisi."
+        if len(data[field]) > maximum:
+            return None, f"{field.replace('_', ' ').capitalize()} maksimal {maximum} karakter."
+
+    phone = data["recipient_phone"]
+    phone_digits = phone[1:] if phone.startswith("+") else phone
+
+    if not phone_digits.isdigit() or not 8 <= len(phone_digits) <= 13:
+        return None, "Nomor telepon harus terdiri dari 8–13 digit, boleh diawali tanda +."
+
+    if not data["postal_code"].isdigit() or len(data["postal_code"]) != 5:
+        return None, "Kode pos harus terdiri dari 5 angka."
+
+    return data, None
+
+
+def _address_set_default(user_id, address_id):
+    """Memastikan hanya satu alamat milik pengguna yang menjadi alamat utama."""
+    address_db.session.query(UserAddress).filter_by(
+        user_id=user_id
+    ).update(
+        {UserAddress.is_default: False},
+        synchronize_session=False
+    )
+
+    selected = UserAddress.query.filter_by(
+        id=address_id,
+        user_id=user_id
+    ).first()
+
+    if selected:
+        selected.is_default = True
+
+
+@customer_bp.route("/addresses", methods=["GET", "POST"])
+def addresses():
+    user = _address_get_active_user()
+    if not user:
+        flash("Silakan login kembali untuk mengelola alamat.", "warning")
+        return redirect(url_for("auth.login"))
+
+    if request.method == "POST":
+        data, error = _address_validate_form()
+
+        if error:
+            flash(error, "danger")
+            return redirect(url_for("customer.addresses"))
+
+        try:
+            address = UserAddress(
+                user_id=user.id,
+                label=data["label"],
+                recipient_name=data["recipient_name"],
+                recipient_phone=data["recipient_phone"],
+                address=data["address"],
+                province=data["province"],
+                city=data["city"],
+                district=data["district"],
+                postal_code=data["postal_code"],
+                is_default=False,
+            )
+
+            address_db.session.add(address)
+            address_db.session.flush()
+
+            has_default = UserAddress.query.filter_by(
+                user_id=user.id,
+                is_default=True
+            ).first()
+
+            make_default = request.form.get("is_default") in ("on", "1", "true")
+            if make_default or not has_default:
+                _address_set_default(user.id, address.id)
+
+            address_db.session.commit()
+            flash("Alamat pengiriman berhasil ditambahkan.", "success")
+
+        except Exception:
+            address_db.session.rollback()
+            flash("Alamat gagal disimpan. Silakan coba kembali.", "danger")
+
+        return redirect(url_for("customer.addresses"))
+
+    address_list = UserAddress.query.filter_by(
+        user_id=user.id
+    ).order_by(
+        UserAddress.is_default.desc(),
+        UserAddress.created_at.desc()
+    ).all()
+
+    return render_template(
+        "addresses.html",
+        user=user,
+        addresses=address_list,
+        edit_address=None
+    )
+
+
+@customer_bp.route("/addresses/<int:address_id>/edit", methods=["GET", "POST"])
+def edit_address(address_id):
+    user = _address_get_active_user()
+    if not user:
+        flash("Silakan login kembali.", "warning")
+        return redirect(url_for("auth.login"))
+
+    address = UserAddress.query.filter_by(
+        id=address_id,
+        user_id=user.id
+    ).first_or_404()
+
+    if request.method == "POST":
+        data, error = _address_validate_form()
+
+        if error:
+            flash(error, "danger")
+            return redirect(url_for("customer.edit_address", address_id=address.id))
+
+        try:
+            for field, value in data.items():
+                setattr(address, field, value)
+
+            if request.form.get("is_default") in ("on", "1", "true"):
+                _address_set_default(user.id, address.id)
+
+            address_db.session.commit()
+            flash("Alamat pengiriman berhasil diperbarui.", "success")
+
+        except Exception:
+            address_db.session.rollback()
+            flash("Alamat gagal diperbarui. Silakan coba kembali.", "danger")
+
+        return redirect(url_for("customer.addresses"))
+
+    address_list = UserAddress.query.filter_by(
+        user_id=user.id
+    ).order_by(
+        UserAddress.is_default.desc(),
+        UserAddress.created_at.desc()
+    ).all()
+
+    return render_template(
+        "addresses.html",
+        user=user,
+        addresses=address_list,
+        edit_address=address
+    )
+
+
+@customer_bp.route("/addresses/<int:address_id>/delete", methods=["POST"])
+def delete_address(address_id):
+    user = _address_get_active_user()
+    if not user:
+        flash("Silakan login kembali.", "warning")
+        return redirect(url_for("auth.login"))
+
+    address = UserAddress.query.filter_by(
+        id=address_id,
+        user_id=user.id
+    ).first_or_404()
+
+    try:
+        address_db.session.delete(address)
+        address_db.session.commit()
+        flash("Alamat pengiriman berhasil dihapus.", "success")
+
+    except Exception:
+        address_db.session.rollback()
+        flash("Alamat gagal dihapus. Silakan coba kembali.", "danger")
+
+    return redirect(url_for("customer.addresses"))
+
+
+@customer_bp.route("/addresses/<int:address_id>/default", methods=["POST"])
+def set_default_address(address_id):
+    user = _address_get_active_user()
+    if not user:
+        flash("Silakan login kembali.", "warning")
+        return redirect(url_for("auth.login"))
+
+    address = UserAddress.query.filter_by(
+        id=address_id,
+        user_id=user.id
+    ).first_or_404()
+
+    try:
+        _address_set_default(user.id, address.id)
+        address_db.session.commit()
+        flash("Alamat utama berhasil diperbarui.", "success")
+
+    except Exception:
+        address_db.session.rollback()
+        flash("Alamat utama gagal diperbarui.", "danger")
+
+    return redirect(url_for("customer.addresses"))
+
+
+@customer_bp.route('/orders/<string:order_id>')
+def order_detail(order_id):
+    if 'user_id' not in session:
+        flash("Silakan login terlebih dahulu.", "warning")
+        return redirect(url_for('auth.login'))
+
+    user = db.session.get(User, session['user_id'])
+
+    if user is None or user.status != 'Aktif':
+        session.clear()
+        flash("Akun tidak valid atau tidak aktif.", "warning")
+        return redirect(url_for('auth.login'))
+
+    # Batasi akses hanya pada pesanan milik pengguna yang login.
+    order = Order.query.filter(
+        Order.id == order_id,
+        Order.user_id == user.id
+    ).first_or_404()
+
+    payment = Payment.query.filter(
+        Payment.order_id == order.id,
+        Payment.user_id == user.id
+    ).first()
+
+    latest_proof = None
+    if payment:
+        latest_proof = (
+            PaymentProof.query
+            .filter_by(payment_id=payment.id)
+            .order_by(PaymentProof.uploaded_at.desc(), PaymentProof.id.desc())
+            .first()
+        )
+
+    items_data = []
+    subtotal_amount = Decimal("0")
+
+    for item in order.items:
+        product_name = (
+            item.product.name
+            if item.product else "Produk tidak tersedia"
+        )
+
+        price = item.price_at_purchase or Decimal("0")
+        quantity = item.quantity or 0
+        item_subtotal = price * quantity
+        subtotal_amount += item_subtotal
+
+        items_data.append({
+            "product_name": product_name,
+            "quantity": quantity,
+            "unit_price": format_rupiah(price),
+            "subtotal": format_rupiah(item_subtotal)
+        })
+
+    return render_template(
+        "order_detail.html",
+        order=order,
+        payment=payment,
+        latest_proof=latest_proof,
+        items_data=items_data,
+        subtotal_amount=format_rupiah(subtotal_amount),
+        shipping_fee=format_rupiah(order.shipping_fee),
+        total_amount=format_rupiah(order.total_amount),
+        order_date=(
+            order.created_at.strftime("%d %b %Y, %H:%M")
+            if order.created_at else "-"
+        )
+    )

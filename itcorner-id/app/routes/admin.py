@@ -8,7 +8,7 @@ from io import BytesIO
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from flask import (
     current_app,
@@ -18,7 +18,9 @@ from flask import (
     url_for,
     session,
     flash,
-    request
+    request,
+    abort,
+    send_file
 )
 
 from sqlalchemy import func, case, or_
@@ -26,11 +28,13 @@ from sqlalchemy import func, case, or_
 from app.extensions import db
 from app.models import (
     Payment,
+    PaymentProof,
     Product,
     ProductSpecification,
     User,
     Order,
-    OrderItem
+    OrderItem,
+    ActivationRequest
 )
 from app.utils import format_rupiah, get_current_date_indo
 
@@ -255,14 +259,22 @@ def process_product_image(file):
         return None
 
     try:
-        # Membaca file gambar
+        # Membaca dan membatasi ukuran file gambar.
         image_data = file.read()
 
         if not image_data:
             raise ValueError("File gambar kosong.")
 
-        # Memeriksa format gambar sebenarnya
+        if len(image_data) > 2 * 1024 * 1024:
+            raise ValueError("Ukuran gambar maksimal 2 MB.")
+
+        # Periksa dimensi sebelum proses decoding penuh.
         image = Image.open(BytesIO(image_data))
+
+        if image.width * image.height > 16_000_000:
+            raise ValueError("Jumlah piksel gambar maksimal 16 juta.")
+
+        # Verifikasi isi file, bukan hanya ekstensi.
         image.verify()
 
         # Membuka ulang untuk pemrosesan
@@ -300,8 +312,15 @@ def process_product_image(file):
 
         return f"uploads/products/{filename}"
 
-    except (UnidentifiedImageError, OSError, ValueError) as error:
-        raise ValueError(f"Gambar tidak valid: {error}")
+    except (
+        UnidentifiedImageError,
+        OSError,
+        ValueError,
+        Image.DecompressionBombError
+    ) as error:
+        raise ValueError(
+            "Gambar tidak valid atau dimensinya terlalu besar."
+        ) from error
 
 @admin_bp.route('/admin/products', methods=['GET'])
 def admin_products():
@@ -815,6 +834,29 @@ def save_user_settings():
             )
             return redirect(url_for('admin.admin_users'))
 
+        # Lindungi agar selalu ada minimal satu Admin aktif.
+        if (
+            target_user.role == 'Admin'
+            and target_user.status == 'Aktif'
+            and (new_role != 'Admin' or new_status != 'Aktif')
+        ):
+            active_admins = (
+                User.query
+                .filter_by(role='Admin', status='Aktif')
+                .order_by(User.id.asc())
+                .with_for_update()
+                .all()
+            )
+
+            if len(active_admins) <= 1:
+                db.session.rollback()
+                flash(
+                    "Tidak dapat menonaktifkan atau menurunkan peran "
+                    "Admin terakhir yang masih aktif.",
+                    "error"
+                )
+                return redirect(url_for('admin.admin_users'))
+
         target_user.role = new_role
         target_user.status = new_status
 
@@ -836,6 +878,36 @@ def save_user_settings():
         flash("Gagal menyimpan pengaturan akun.", "error")
 
     return redirect(url_for('admin.admin_users'))
+
+
+@admin_bp.route('/admin/payments/proof/<int:proof_id>')
+def admin_payment_proof_image(proof_id):
+    """Tampilkan bukti pembayaran hanya kepada admin aktif."""
+
+    admin_user = _active_admin()
+    if not admin_user:
+        abort(403)
+
+    proof = PaymentProof.query.filter_by(
+        id=proof_id
+    ).first_or_404()
+
+    # Nama file dibatasi ke basename agar tidak bisa membaca file di luar folder.
+    filename = os.path.basename(proof.filename)
+    file_path = os.path.join(
+        current_app.config["PAYMENT_PROOF_UPLOAD_FOLDER"],
+        filename
+    )
+
+    if not os.path.isfile(file_path):
+        abort(404)
+
+    return send_file(
+        file_path,
+        mimetype="image/jpeg",
+        as_attachment=False,
+        download_name="bukti-pembayaran.jpg"
+    )
 
 
 @admin_bp.route('/admin/payments', methods=['GET'])
@@ -880,6 +952,48 @@ def admin_payments():
     ).all()
 
     def payment_view(payment):
+        latest_proof = (
+            PaymentProof.query
+            .filter_by(payment_id=payment.id)
+            .order_by(
+                PaymentProof.uploaded_at.desc(),
+                PaymentProof.id.desc()
+            )
+            .first()
+        )
+
+        order = payment.order
+        invoice_items = []
+        subtotal_amount = Decimal("0")
+
+        if order:
+            for item in order.items:
+                product_name = (
+                    item.product.name
+                    if item.product else "Produk tidak tersedia"
+                )
+                quantity = item.quantity or 0
+                unit_price = item.price_at_purchase or Decimal("0")
+                item_subtotal = unit_price * quantity
+                subtotal_amount += item_subtotal
+
+                invoice_items.append({
+                    'product_name': product_name,
+                    'quantity': quantity,
+                    'unit_price': format_rupiah(unit_price),
+                    'subtotal': format_rupiah(item_subtotal)
+                })
+
+        shipping_fee = order.shipping_fee if order else Decimal("0")
+        order_total = order.total_amount if order else Decimal("0")
+
+        amount_matches_order = bool(
+            order and payment.amount_num == order_total
+        )
+        invoice_matches_order = bool(
+            order and subtotal_amount + shipping_fee == order_total
+        )
+
         return {
             'id': payment.id,
             'order_id': payment.order_id,
@@ -890,6 +1004,22 @@ def admin_payments():
             'date': (
                 payment.payment_date.strftime('%d-%m-%Y %H:%M')
                 if payment.payment_date else '-'
+            ),
+            'order_status': order.status if order else '-',
+            'invoice_items': invoice_items,
+            'subtotal': format_rupiah(subtotal_amount),
+            'shipping_fee': format_rupiah(shipping_fee),
+            'order_total': format_rupiah(order_total) if order else '-',
+            'amount_matches_order': amount_matches_order,
+            'invoice_matches_order': invoice_matches_order,
+            'proof_id': latest_proof.id if latest_proof else None,
+            'proof_status': latest_proof.review_status if latest_proof else None,
+            'proof_date': (
+                latest_proof.uploaded_at.strftime('%d-%m-%Y %H:%M')
+                if latest_proof and latest_proof.uploaded_at else '-'
+            ),
+            'proof_rejection_reason': (
+                latest_proof.rejection_reason if latest_proof else None
             )
         }
 
@@ -942,37 +1072,113 @@ def process_payment_action():
         return redirect(url_for('admin.admin_payments', inv=payment_id))
 
     try:
-        payment = Payment.query.filter_by(
-            id=payment_id
-        ).with_for_update().first()
+        payment = (
+            Payment.query
+            .filter_by(id=payment_id)
+            .with_for_update()
+            .first()
+        )
 
         if not payment:
             flash("Pembayaran tidak ditemukan.", "error")
             return redirect(url_for('admin.admin_payments'))
 
         if payment.status != 'Menunggu Approval':
-            flash("Pembayaran ini sudah pernah diproses.", "warning")
+            flash("Pembayaran ini tidak sedang menunggu persetujuan.", "warning")
             return redirect(
                 url_for('admin.admin_payments', inv=payment_id)
             )
 
+        # Pastikan pesanan terkait tersedia dan masih menunggu pembayaran.
+        order = (
+            Order.query
+            .filter_by(id=payment.order_id, user_id=payment.user_id)
+            .with_for_update()
+            .first()
+        )
+
+        if not order or order.status != 'Menunggu Pembayaran':
+            flash("Status pesanan tidak memungkinkan verifikasi pembayaran.", "warning")
+            return redirect(
+                url_for('admin.admin_payments', inv=payment_id)
+            )
+
+        # Hanya bukti terbaru yang boleh diproses.
+        latest_proof = (
+            PaymentProof.query
+            .filter_by(payment_id=payment.id)
+            .order_by(
+                PaymentProof.uploaded_at.desc(),
+                PaymentProof.id.desc()
+            )
+            .with_for_update()
+            .first()
+        )
+
+        if not latest_proof or latest_proof.review_status != 'Menunggu':
+            flash("Bukti transfer belum tersedia atau sudah diproses.", "warning")
+            return redirect(
+                url_for('admin.admin_payments', inv=payment_id)
+            )
+
+        # Validasi integritas invoice sebelum pembayaran disetujui.
+        if action == 'approve':
+            invoice_subtotal = sum(
+                (
+                    (item.price_at_purchase or Decimal("0")) * item.quantity
+                    for item in order.items
+                ),
+                Decimal("0")
+            )
+            invoice_total = invoice_subtotal + (
+                order.shipping_fee or Decimal("0")
+            )
+
+            if (
+                payment.amount_num != order.total_amount
+                or invoice_total != order.total_amount
+            ):
+                db.session.rollback()
+                flash(
+                    "Pembayaran tidak dapat disetujui karena nominal invoice tidak cocok.",
+                    "error"
+                )
+                return redirect(
+                    url_for('admin.admin_payments', inv=payment_id)
+                )
+
         if action == 'approve':
             payment.status = 'Disetujui'
+            order.status = 'Diproses'
+
+            latest_proof.review_status = 'Disetujui'
+            latest_proof.rejection_reason = None
+
             log_action = 'APPROVED'
-            flash("Pembayaran berhasil disetujui.", "success")
+            success_message = "Pembayaran disetujui dan pesanan masuk proses."
+
         else:
             payment.status = 'Ditolak'
+            latest_proof.review_status = 'Ditolak'
+            latest_proof.rejection_reason = reason
+
             log_action = 'REJECTED'
-            flash("Pembayaran berhasil ditolak.", "success")
+            success_message = "Pembayaran ditolak. Customer dapat mengunggah ulang bukti."
+
+        latest_proof.reviewed_at = db.func.now()
+        latest_proof.reviewed_by = admin_user.id
 
         db.session.commit()
 
         logging.info(
-            "PAYMENT %s: Admin ID %s memproses pembayaran %s",
+            "PAYMENT %s: Admin ID %s memproses pembayaran %s, bukti ID %s",
             log_action,
             admin_user.id,
-            payment_id
+            payment_id,
+            latest_proof.id
         )
+
+        flash(success_message, "success")
 
     except Exception:
         db.session.rollback()
@@ -999,3 +1205,356 @@ def protect_admin_routes():
         )
         flash("Akses Admin ditolak. Silakan login dengan akun Admin aktif.", "error")
         return redirect(url_for("auth.login"))
+
+
+# ==========================================
+# FR-009: PERSETUJUAN AKTIVASI AKUN
+# ==========================================
+
+@admin_bp.route('/admin/activation-requests', methods=['GET'])
+def admin_activation_requests():
+    if not _active_admin():
+        flash("Akses admin ditolak. Silakan login kembali.", "error")
+        return redirect(url_for('auth.login'))
+
+    requests_list = ActivationRequest.query.filter_by(
+        status='Menunggu Persetujuan'
+    ).order_by(
+        ActivationRequest.verified_at.asc()
+    ).all()
+
+    return render_template(
+        'admin/activation_requests.html',
+        activation_requests=requests_list
+    )
+
+
+@admin_bp.route(
+    '/admin/activation-requests/<int:request_id>/decision',
+    methods=['POST']
+)
+def decide_activation_request(request_id):
+    admin_user = _active_admin()
+
+    if not admin_user:
+        flash("Akses admin ditolak. Silakan login kembali.", "error")
+        return redirect(url_for('auth.login'))
+
+    decision = request.form.get('decision', '').strip()
+
+    if decision not in ('approve', 'reject'):
+        flash("Keputusan aktivasi tidak valid.", "error")
+        return redirect(url_for('admin.admin_activation_requests'))
+
+    try:
+        activation = ActivationRequest.query.filter_by(
+            id=request_id,
+            status='Menunggu Persetujuan'
+        ).with_for_update().first()
+
+        if not activation:
+            db.session.rollback()
+            flash(
+                "Pengajuan tidak ditemukan atau sudah diproses.",
+                "error"
+            )
+            return redirect(url_for('admin.admin_activation_requests'))
+
+        target_user = db.session.get(User, activation.user_id)
+
+        if (
+            not target_user
+            or target_user.role != 'Pelanggan'
+            or target_user.status != 'Nonaktif'
+            or activation.verified_at is None
+        ):
+            db.session.rollback()
+            flash(
+                "Data akun tidak memenuhi syarat aktivasi.",
+                "error"
+            )
+            return redirect(url_for('admin.admin_activation_requests'))
+
+        activation.reviewed_by = admin_user.id
+        activation.reviewed_at = datetime.now(timezone.utc)
+
+        if decision == 'approve':
+            target_user.status = 'Aktif'
+            activation.status = 'Disetujui'
+            activation.rejection_reason = None
+            success_message = "Pengajuan aktivasi berhasil disetujui."
+        else:
+            reason = request.form.get(
+                'rejection_reason', ''
+            ).strip()
+
+            activation.status = 'Ditolak'
+            activation.rejection_reason = (
+                reason[:255] if reason else "Tidak ada alasan diberikan."
+            )
+            # Status akun tetap Nonaktif.
+            success_message = "Pengajuan aktivasi berhasil ditolak."
+
+        db.session.commit()
+
+        logging.info(
+            "ACTIVATION DECISION: request_id=%s, admin_id=%s, decision=%s",
+            activation.id,
+            admin_user.id,
+            activation.status
+        )
+
+        flash(success_message, "success")
+
+    except Exception:
+        db.session.rollback()
+        logging.exception(
+            "ACTIVATION DECISION FAILED: request_id=%s",
+            request_id
+        )
+        flash("Gagal memproses keputusan aktivasi.", "error")
+
+    return redirect(url_for('admin.admin_activation_requests'))
+
+
+# ==========================================
+# FR-010: LAPORAN TRANSAKSI
+# ==========================================
+
+def _get_report_period():
+    """Validasi periode laporan dari parameter URL."""
+    today = date.today()
+
+    start_raw = request.args.get(
+        'start_date',
+        (today - timedelta(days=29)).isoformat()
+    )
+    end_raw = request.args.get(
+        'end_date',
+        today.isoformat()
+    )
+
+    try:
+        start_date = date.fromisoformat(start_raw)
+        end_date = date.fromisoformat(end_raw)
+    except (TypeError, ValueError):
+        abort(400, description="Format tanggal laporan tidak valid.")
+
+    if start_date > end_date:
+        abort(400, description="Tanggal awal tidak boleh melewati tanggal akhir.")
+
+    if (end_date - start_date).days > 366:
+        abort(400, description="Rentang laporan maksimal 367 hari.")
+
+    return start_date, end_date
+
+
+def _get_approved_report_data(start_date, end_date):
+    """Ambil pembayaran disetujui dalam rentang tanggal inklusif."""
+    start_datetime = datetime.combine(
+        start_date,
+        datetime.min.time()
+    )
+    end_datetime = datetime.combine(
+        end_date + timedelta(days=1),
+        datetime.min.time()
+    )
+
+    payments = Payment.query.join(
+        User,
+        Payment.user_id == User.id
+    ).filter(
+        Payment.status == 'Disetujui',
+        Payment.payment_date >= start_datetime,
+        Payment.payment_date < end_datetime
+    ).order_by(
+        Payment.payment_date.desc()
+    ).all()
+
+    total_revenue = sum(
+        (payment.amount_num or Decimal("0") for payment in payments),
+        Decimal("0")
+    )
+
+    return payments, total_revenue
+
+
+@admin_bp.route('/admin/reports', methods=['GET'])
+def admin_reports():
+    start_date, end_date = _get_report_period()
+
+    payments, total_revenue = _get_approved_report_data(
+        start_date,
+        end_date
+    )
+
+    return render_template(
+        'admin/reports.html',
+        payments=payments,
+        total_revenue=format_rupiah(total_revenue),
+        format_rupiah=format_rupiah,
+        total_transactions=len(payments),
+        start_date=start_date.isoformat(),
+        end_date=end_date.isoformat()
+    )
+
+@admin_bp.route('/admin/reports/export/pdf', methods=['GET'])
+def admin_export_report_pdf():
+    """Ekspor laporan transaksi disetujui ke PDF."""
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+
+    start_date, end_date = _get_report_period()
+    payments, total_revenue = _get_approved_report_data(start_date, end_date)
+
+    buffer = BytesIO()
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(A4),
+        rightMargin=30,
+        leftMargin=30,
+        topMargin=30,
+        bottomMargin=30
+    )
+
+    styles = getSampleStyleSheet()
+    elements = [
+        Paragraph("Laporan Transaksi ITCorner.id", styles["Title"]),
+        Paragraph(
+            f"Periode: {start_date.isoformat()} sampai {end_date.isoformat()}",
+            styles["Normal"]
+        ),
+        Spacer(1, 16)
+    ]
+
+    rows = [[
+        "ID Pembayaran", "ID Pesanan", "Pelanggan",
+        "Metode", "Tanggal", "Nominal"
+    ]]
+
+    for payment in payments:
+        customer_name = payment.user.name if payment.user else "Tidak tersedia"
+        payment_date = (
+            payment.payment_date.strftime("%d-%m-%Y %H:%M")
+            if payment.payment_date else "-"
+        )
+        rows.append([
+            str(payment.id),
+            str(payment.order_id or "-"),
+            str(customer_name or "-"),
+            str(payment.method or "-"),
+            payment_date,
+            format_rupiah(payment.amount_num or Decimal("0"))
+        ])
+
+    table = Table(
+        rows,
+        repeatRows=1,
+        colWidths=[105, 105, 130, 90, 110, 110]
+    )
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#cbd5e1")),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [
+            colors.white, colors.HexColor("#f1f5f9")
+        ]),
+        ("ALIGN", (-1, 1), (-1, -1), "RIGHT"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+    ]))
+    elements.append(table)
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph(
+        f"Total transaksi: {len(payments)} | Total omzet: {format_rupiah(total_revenue)}",
+        styles["Heading2"]
+    ))
+
+    document.build(elements)
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"laporan-transaksi-{start_date.isoformat()}-sampai-{end_date.isoformat()}.pdf"
+    )
+
+def _safe_excel_text(value):
+    """Cegah teks tidak tepercaya dieksekusi sebagai formula Excel."""
+    text = str(value if value is not None else "")
+    check = text.lstrip(" \\t\\r\\n")
+    if check.startswith(("=", "+", "-", "@")):
+        return "'" + text
+    return text
+
+
+
+@admin_bp.route('/admin/reports/export/excel', methods=['GET'])
+def admin_export_report_excel():
+    """Ekspor laporan transaksi disetujui ke Excel."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment
+    from openpyxl.utils import get_column_letter
+
+    start_date, end_date = _get_report_period()
+    payments, total_revenue = _get_approved_report_data(start_date, end_date)
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Laporan Transaksi"
+
+    sheet.append(["LAPORAN TRANSAKSI ITCORNER.ID"])
+    sheet.append([
+        "Periode",
+        f"{start_date.isoformat()} sampai {end_date.isoformat()}"
+    ])
+    sheet.append([])
+    sheet.append([
+        "ID Pembayaran", "ID Pesanan", "Pelanggan",
+        "Metode", "Tanggal Pembayaran", "Nominal (Rp)"
+    ])
+
+    for cell in sheet[4]:
+        cell.font = Font(bold=True, color="FFFFFF")
+        cell.fill = PatternFill("solid", fgColor="1E293B")
+        cell.alignment = Alignment(horizontal="center")
+
+    for payment in payments:
+        sheet.append([
+            _safe_excel_text(payment.id),
+            _safe_excel_text(payment.order_id),
+            _safe_excel_text(payment.user.name if payment.user else "Tidak tersedia"),
+            _safe_excel_text(payment.method),
+            payment.payment_date.strftime("%d-%m-%Y %H:%M")
+            if payment.payment_date else "-",
+            float(payment.amount_num or Decimal("0"))
+        ])
+
+    sheet.append([])
+    sheet.append(["Total transaksi", len(payments)])
+    sheet.append(["Total omzet (Rp)", float(total_revenue)])
+
+    widths = [22, 22, 28, 20, 24, 20]
+    for index, width in enumerate(widths, start=1):
+        sheet.column_dimensions[get_column_letter(index)].width = width
+
+    sheet.freeze_panes = "A5"
+    sheet.auto_filter.ref = f"A4:F{4 + len(payments)}"
+
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+
+    return send_file(
+        buffer,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=f"laporan-transaksi-{start_date.isoformat()}-sampai-{end_date.isoformat()}.xlsx"
+    )
+

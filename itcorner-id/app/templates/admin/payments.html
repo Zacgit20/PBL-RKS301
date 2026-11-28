@@ -20,11 +20,13 @@
             </div>
 
             <nav class="space-y-4 text-sm font-medium">
-                <a href="{{ url_for('admin.admin_dashboard') }}" class="block text-slate-400 hover:text-white transition">Ringkasan</a>
-                <a href="{{ url_for('admin.admin_products') }}" class="block text-slate-400 hover:text-white transition">Produk</a>
-                <a href="{{ url_for('admin.admin_users') }}" class="block text-slate-400 hover:text-white transition">Akun</a>
-                <a href="{{ url_for('admin.admin_payments') }}" class="block text-blue-400 font-semibold">● Approval pembayaran</a>
-            </nav>
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="block text-slate-400 hover:text-white transition">Ringkasan</a>
+    <a href="{{ url_for('admin.admin_products') }}" class="block text-slate-400 hover:text-white transition">Produk</a>
+    <a href="{{ url_for('admin.admin_users') }}" class="block text-slate-400 hover:text-white transition">Akun</a>
+    <a href="{{ url_for('admin.admin_payments') }}" class="block text-blue-400 font-semibold">● Approval pembayaran</a>
+    <a href="{{ url_for('admin.admin_reports') }}" class="block text-slate-400 hover:text-white transition">Laporan</a>
+    <a href="{{ url_for('admin.admin_activation_requests') }}" class="block text-slate-400 hover:text-white transition">Aktivasi Akun</a>
+</nav>
         </div>
 
         <div class="text-xs text-slate-500 space-y-1 pt-6 border-t border-slate-800">
@@ -94,8 +96,15 @@
                         </thead>
                         <tbody class="text-xs divide-y divide-slate-100 font-medium text-slate-700">
                             {% for p in payments %}
-                            <tr class="hover:bg-slate-50/50 transition {% if selected_payment and selected_payment.id == p.id %}bg-blue-50/50{% endif %}">
-                                <td class="py-3.5 px-2 font-bold text-slate-900">{{ p.id }}</td>
+                            <tr data-payment-row="{{ p.id }}" class="hover:bg-slate-50/50 transition {% if selected_payment and selected_payment.id == p.id %}bg-blue-50/50{% endif %}">
+                                <td class="py-3.5 px-2 font-bold text-slate-900">
+                                    {{ p.order_id }}
+                                    <a href="{{ url_for('admin.admin_payments', inv=p.id, q=search_query, status=status_filter) }}"
+                                       data-payment-review
+                                       class="block text-[10px] font-normal text-blue-600 hover:underline">
+                                        {{ p.id }}
+                                    </a>
+                                </td>
                                 <td class="py-3.5 px-2 text-slate-500">{{ p.user }}</td>
                                 <td class="py-3.5 px-2 font-semibold">{{ p.amount }}</td>
                                 <td class="py-3.5 px-2">
@@ -104,7 +113,7 @@
                                     </span>
                                 </td>
                                 <td class="py-3.5 px-2 text-right">
-                                    <a href="{{ url_for('admin.admin_payments', inv=p.id, q=search_query, status=status_filter) }}" class="text-blue-600 hover:underline font-semibold">Tinjau</a>
+                                    <a href="{{ url_for('admin.admin_payments', inv=p.id, q=search_query, status=status_filter) }}" data-payment-review class="text-blue-600 hover:underline font-semibold">Tinjau</a>
                                 </td>
                             </tr>
                             {% else %}
@@ -118,18 +127,103 @@
             </div>
 
             <!-- DETAIL TINJAUAN & BUKTI -->
-            <div>
+            <div id="payment-detail-panel">
                 {% if selected_payment %}
                 <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900">Pesanan #{{ selected_payment.id }}</h2>
+                        <h2 class="text-lg font-bold text-slate-900">Pesanan #{{ selected_payment.order_id }}</h2><p class="text-[11px] text-slate-400">ID Pembayaran: {{ selected_payment.id }}</p>
                         <p class="text-xs text-slate-400">{{ selected_payment.date }} • {{ selected_payment.method }}</p>
                     </div>
 
-                    <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center space-y-2">
-                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">BUKTI TRANSFER SIMULASI</p>
-                        <h3 class="text-2xl font-bold text-slate-900">{{ selected_payment.amount }}</h3>
-                        <p class="text-xs text-slate-500">Pengirim: <span class="font-semibold text-slate-700">{{ selected_payment.user }}</span></p>
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
+                        <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
+                            BUKTI TRANSFER SIMULASI
+                        </p>
+                        <h3 class="text-2xl font-bold text-slate-900">
+                            {{ selected_payment.amount }}
+                        </h3>
+                        <p class="text-xs text-slate-500">
+                            Pengirim:
+                            <span class="font-semibold text-slate-700">{{ selected_payment.user }}</span>
+                        </p>
+
+                        {% if selected_payment.proof_id %}
+                        <p class="text-xs text-slate-500">
+                            Diunggah: {{ selected_payment.proof_date }}
+                        </p>
+                        <p class="text-xs text-slate-500">
+                            Status bukti: {{ selected_payment.proof_status }}
+                        </p>
+                        <img
+                            src="{{ url_for('admin.admin_payment_proof_image', proof_id=selected_payment.proof_id) }}"
+                            alt="Bukti transfer pembayaran"
+                            class="w-full max-h-96 object-contain rounded-xl border border-slate-200 bg-white"
+                        >
+                        {% if selected_payment.proof_rejection_reason %}
+                        <p class="text-xs text-rose-600">
+                            Alasan penolakan sebelumnya:
+                            {{ selected_payment.proof_rejection_reason }}
+                        </p>
+                        {% endif %}
+                        {% else %}
+                        <div class="rounded-xl bg-amber-50 border border-amber-200 p-4">
+                            <p class="text-sm text-amber-700">
+                                Pelanggan belum mengunggah bukti transfer.
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- RINCIAN INVOICE PESANAN -->
+                    <div class="bg-white border border-slate-200 rounded-2xl p-5 space-y-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900">Rincian Pesanan</h3>
+                            <p class="text-[11px] text-slate-400">Detail produk berdasarkan transaksi saat checkout</p>
+                        </div>
+
+                        {% if selected_payment.invoice_items %}
+                        <div class="space-y-3">
+                            {% for item in selected_payment.invoice_items %}
+                            <div class="flex justify-between gap-3 text-xs">
+                                <div class="min-w-0">
+                                    <p class="font-semibold text-slate-700 break-words">{{ item.product_name }}</p>
+                                    <p class="text-slate-400">{{ item.quantity }} × {{ item.unit_price }}</p>
+                                </div>
+                                <p class="font-semibold text-slate-700 whitespace-nowrap">{{ item.subtotal }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-xs text-slate-400 italic">Rincian produk tidak tersedia.</p>
+                        {% endif %}
+
+                        <div class="border-t border-slate-100 pt-3 space-y-2 text-xs">
+                            <div class="flex justify-between gap-3 text-slate-500">
+                                <span>Subtotal produk</span>
+                                <span>{{ selected_payment.subtotal }}</span>
+                            </div>
+                            <div class="flex justify-between gap-3 text-slate-500">
+                                <span>Ongkos kirim</span>
+                                <span>{{ selected_payment.shipping_fee }}</span>
+                            </div>
+                            <div class="flex justify-between gap-3 border-t border-slate-100 pt-3 font-bold text-slate-900">
+                                <span>Total pesanan</span>
+                                <span>{{ selected_payment.order_total }}</span>
+                            </div>
+                            <div class="flex justify-between gap-3 text-slate-500">
+                                <span>Status pesanan</span>
+                                <span>{{ selected_payment.order_status }}</span>
+                            </div>
+                            {% if selected_payment.amount_matches_order and selected_payment.invoice_matches_order %}
+                            <p class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-700">
+                                Nominal invoice dan pembayaran cocok.
+                            </p>
+                            {% else %}
+                            <p class="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
+                                Peringatan: nominal pembayaran atau rincian invoice tidak cocok. Periksa transaksi sebelum mengambil keputusan.
+                            </p>
+                            {% endif %}
+                        </div>
                     </div>
 
                     <form action="{{ url_for('admin.process_payment_action') }}" method="POST" class="space-y-4 pt-2">
@@ -153,6 +247,88 @@
             </div>
         </div>
     </main>
+
+
+<script>
+document.addEventListener("click", async (event) => {
+    const link = event.target.closest("a[data-payment-review]");
+
+    if (
+        !link ||
+        event.button !== 0 ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        event.altKey
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const panel = document.getElementById("payment-detail-panel");
+
+    if (!panel) {
+        window.location.assign(link.href);
+        return;
+    }
+
+    panel.setAttribute("aria-busy", "true");
+
+    try {
+        const response = await fetch(link.href, {
+            method: "GET",
+            credentials: "same-origin",
+            cache: "no-store",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Gagal mengambil detail pembayaran.");
+        }
+
+        const html = await response.text();
+        const parsedPage = new DOMParser().parseFromString(
+            html,
+            "text/html"
+        );
+
+        const updatedPanel = parsedPage.querySelector(
+            "#payment-detail-panel"
+        );
+
+        if (!updatedPanel) {
+            throw new Error("Panel detail pembayaran tidak ditemukan.");
+        }
+
+        // Ganti panel kanan saja, tanpa memuat ulang seluruh halaman.
+        panel.innerHTML = updatedPanel.innerHTML;
+        panel.removeAttribute("aria-busy");
+
+        // Perbarui penanda transaksi yang sedang dipilih.
+        const selectedId = new URL(
+            link.href,
+            window.location.origin
+        ).searchParams.get("inv");
+
+        document.querySelectorAll("[data-payment-row]").forEach((row) => {
+            row.classList.toggle(
+                "bg-blue-50/50",
+                row.dataset.paymentRow === selectedId
+            );
+        });
+
+        // URL mengikuti pembayaran yang sedang ditinjau.
+        window.history.replaceState({}, "", link.href);
+
+    } catch (error) {
+        // Fallback: tetap bisa membuka transaksi jika AJAX gagal.
+        window.location.assign(link.href);
+    }
+});
+</script>
 
 </body>
 </html>
