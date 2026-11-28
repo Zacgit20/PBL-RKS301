@@ -21,11 +21,13 @@
             </div>
 
             <nav class="space-y-4 text-sm font-medium">
-                <a href="{{ url_for('admin.admin_dashboard') }}" class="block text-blue-400 font-semibold">● Ringkasan</a>
-                <a href="{{ url_for('admin.admin_products') }}" class="block text-slate-400 hover:text-white transition">Produk</a>
-                <a href="{{ url_for('admin.admin_users') }}" class="block text-slate-400 hover:text-white transition">Akun</a>
-                <a href="{{ url_for('admin.admin_payments') }}" class="block text-slate-400 hover:text-white transition">Approval pembayaran</a>
-            </nav>
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="block text-blue-400 font-semibold">● Ringkasan</a>
+    <a href="{{ url_for('admin.admin_products') }}" class="block text-slate-400 hover:text-white transition">Produk</a>
+    <a href="{{ url_for('admin.admin_users') }}" class="block text-slate-400 hover:text-white transition">Akun</a>
+    <a href="{{ url_for('admin.admin_payments') }}" class="block text-slate-400 hover:text-white transition">Approval pembayaran</a>
+    <a href="{{ url_for('admin.admin_reports') }}" class="block text-slate-400 hover:text-white transition">Laporan</a>
+    <a href="{{ url_for('admin.admin_activation_requests') }}" class="block text-slate-400 hover:text-white transition">Aktivasi Akun</a>
+</nav>
         </div>
 
         <div class="text-xs text-slate-500 space-y-1 pt-6 border-t border-slate-800">
