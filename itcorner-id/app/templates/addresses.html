@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Alamat Pengiriman - ITCorner.id{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- BREADCRUMB -->
+    <nav class="text-xs text-slate-400 mb-3">
+        <a href="{{ url_for('main.home') }}" class="hover:text-blue-600">Beranda</a>
+        / <a href="{{ url_for('customer.profile') }}" class="hover:text-blue-600">Akun saya</a>
+        / <span class="text-slate-700 font-medium">Alamat pengiriman</span>
+    </nav>
+
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-900">Alamat pengiriman</h1>
+        <p class="text-sm text-slate-500 mt-1">
+            Kelola alamat penerima untuk mempermudah proses pemesanan.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+        <!-- SIDEBAR -->
+        <aside class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm h-fit">
+            <div class="mb-4">
+                <h2 class="font-bold text-slate-900 text-sm">{{ user.name }}</h2>
+                <p class="text-[11px] text-slate-400">Pelanggan ITCorner.id</p>
+            </div>
+
+            <nav class="space-y-1 text-xs font-semibold pt-2 border-t border-slate-100">
+                <a href="{{ url_for('customer.profile') }}"
+                   class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">
+                    Profil saya
+                </a>
+                <a href="{{ url_for('customer.orders') }}"
+                   class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">
+                    Riwayat pesanan
+                </a>
+                <a href="{{ url_for('customer.addresses') }}"
+                   class="block bg-blue-50 text-blue-600 px-3 py-2 rounded-xl">
+                    Alamat pengiriman
+                </a>
+            </nav>
+        </aside>
+
+        <!-- KONTEN -->
+        <main class="md:col-span-3 space-y-6">
+
+            <!-- FLASH MESSAGE -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% for category, message in messages %}
+                    <div class="px-4 py-3 rounded-xl text-xs font-medium
+                        {% if category == 'success' %}
+                            bg-emerald-50 text-emerald-700 border border-emerald-200
+                        {% else %}
+                            bg-red-50 text-red-700 border border-red-200
+                        {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endwith %}
+
+            <!-- FORM TAMBAH / EDIT -->
+            <section class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div class="mb-5">
+                    <h2 class="text-sm font-bold text-slate-900">
+                        {{ 'Edit alamat' if edit_address else 'Tambah alamat baru' }}
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-1">
+                        Lengkapi informasi penerima dan alamat tujuan.
+                    </p>
+                </div>
+
+                <form method="POST"
+                      action="{{ url_for('customer.edit_address', address_id=edit_address.id) if edit_address else url_for('customer.addresses') }}"
+                      class="space-y-4">
+
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">
+                                Label alamat *
+                            </label>
+                            <input type="text" name="label"
+                                   value="{{ edit_address.label if edit_address else '' }}"
+                                   maxlength="30" required placeholder="Rumah, Kantor, Kos"
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">
+                                Nama penerima *
+                            </label>
+                            <input type="text" name="recipient_name"
+                                   value="{{ edit_address.recipient_name if edit_address else '' }}"
+                                   maxlength="100" required autocomplete="name"
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">
+                                Nomor telepon *
+                            </label>
+                            <input type="tel" name="recipient_phone"
+                                   value="{{ edit_address.recipient_phone if edit_address else '' }}"
+                                   maxlength="14" pattern="[+]?[0-9]{8,13}"
+                                   required autocomplete="tel"
+                                   placeholder="08xxxxxxxxxx"
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">
+                                Provinsi *
+                            </label>
+                            <input type="text" name="province"
+                                   value="{{ edit_address.province if edit_address else '' }}"
+                                   maxlength="100" required
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">
+                                Kota / Kabupaten *
+                            </label>
+                            <input type="text" name="city"
+                                   value="{{ edit_address.city if edit_address else '' }}"
+                                   maxlength="100" required
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">
+                                Kecamatan *
+                            </label>
+                            <input type="text" name="district"
+                                   value="{{ edit_address.district if edit_address else '' }}"
+                                   maxlength="100" required
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">
+                                Kode pos *
+                            </label>
+                            <input type="text" name="postal_code"
+                                   value="{{ edit_address.postal_code if edit_address else '' }}"
+                                   maxlength="5" minlength="5" pattern="[0-9]{5}"
+                                   inputmode="numeric" required
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500">
+                        </div>
+
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">
+                            Alamat lengkap *
+                        </label>
+                        <textarea name="address" rows="3" maxlength="500" required
+                                  placeholder="Nama jalan, nomor rumah, RT/RW, patokan..."
+                                  class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-blue-500">{{ edit_address.address if edit_address else '' }}</textarea>
+                    </div>
+
+                    <label class="flex items-center gap-2 text-xs text-slate-600">
+                        <input type="checkbox" name="is_default"
+                               class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                               {% if edit_address and edit_address.is_default %}checked{% endif %}>
+                        Jadikan alamat utama
+                    </label>
+
+                    <div class="flex flex-wrap gap-2 pt-2">
+                        <button type="submit"
+                                class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition">
+                            {{ 'Simpan perubahan' if edit_address else 'Simpan alamat' }}
+                        </button>
+
+                        {% if edit_address %}
+                            <a href="{{ url_for('customer.addresses') }}"
+                               class="bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold px-5 py-2.5 rounded-xl transition">
+                                Batal
+                            </a>
+                        {% endif %}
+                    </div>
+                </form>
+            </section>
+
+            <!-- DAFTAR ALAMAT -->
+            <section class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">Alamat tersimpan</h2>
+                        <p class="text-xs text-slate-500 mt-1">
+                            {{ addresses|length }} alamat tersimpan
+                        </p>
+                    </div>
+                </div>
+
+                {% if addresses %}
+                    <div class="space-y-4">
+                        {% for item in addresses %}
+                            <article class="border border-slate-200 rounded-xl p-4">
+                                <div class="flex flex-wrap items-center gap-2 mb-3">
+                                    <h3 class="text-sm font-bold text-slate-900">
+                                        {{ item.label }}
+                                    </h3>
+                                    {% if item.is_default %}
+                                        <span class="text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full">
+                                            Alamat utama
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <p class="text-xs font-semibold text-slate-700">
+                                    {{ item.recipient_name }}
+                                </p>
+                                <p class="text-xs text-slate-500 mt-1">
+                                    {{ item.recipient_phone }}
+                                </p>
+                                <p class="text-xs text-slate-600 mt-3 leading-relaxed">
+                                    {{ item.address }}<br>
+                                    {{ item.district }}, {{ item.city }}, {{ item.province }} {{ item.postal_code }}
+                                </p>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-4 pt-4 border-t border-slate-100">
+                                    <a href="{{ url_for('customer.edit_address', address_id=item.id) }}"
+                                       class="inline-flex items-center justify-center gap-2 min-h-10 px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 hover:border-slate-300 transition">
+                                        <i class="fas fa-pen text-[11px]"></i>
+                                        Edit
+                                    </a>
+
+                                    {% if not item.is_default %}
+                                        <form method="POST"
+                                              action="{{ url_for('customer.set_default_address', address_id=item.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit"
+                                                    class="inline-flex items-center justify-center gap-2 w-full min-h-10 px-3 py-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition">
+                                                <i class="fas fa-star text-[11px]"></i>
+                                                Jadikan utama
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <div class="inline-flex items-center justify-center gap-2 min-h-10 px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                                            <i class="fas fa-check-circle text-[11px]"></i>
+                                            Alamat utama
+                                        </div>
+                                    {% endif %}
+
+                                    <form method="POST"
+                                          action="{{ url_for('customer.delete_address', address_id=item.id) }}"
+                                          onsubmit="return confirm('Yakin ingin menghapus alamat ini?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit"
+                                                class="inline-flex items-center justify-center gap-2 w-full min-h-10 px-3 py-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold hover:bg-red-100 transition">
+                                            <i class="fas fa-trash-alt text-[11px]"></i>
+                                            Hapus
+                                        </button>
+                                    </form>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-10">
+                        <p class="text-sm font-semibold text-slate-700">
+                            Belum ada alamat tersimpan
+                        </p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Tambahkan alamat melalui formulir di atas.
+                        </p>
+                    </div>
+                {% endif %}
+            </section>
+
+        </main>
+    </div>
+</div>
+{% endblock %}

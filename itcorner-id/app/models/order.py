@@ -21,6 +21,11 @@ class Order(db.Model):
         nullable=False
     )
 
+    shipping_fee = db.Column(
+        db.Numeric(15, 2),
+        nullable=False
+    )
+
     status = db.Column(
         db.String(30),
         nullable=False,
@@ -61,6 +66,11 @@ class Order(db.Model):
     postal_code = db.Column(
         db.String(10),
         nullable=False
+    )
+
+    customer_note = db.Column(
+        db.String(500),
+        nullable=True
     )
 
     created_at = db.Column(

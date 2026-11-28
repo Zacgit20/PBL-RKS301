@@ -44,7 +44,6 @@
 
     <form action="{{ url_for('customer.checkout') }}" method="POST" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="metode_pembayaran" value="Transfer BCA">
         
         <!-- KOLOM KIRI (2 Kolom) -->
         <div class="lg:col-span-2 space-y-6">
@@ -52,11 +51,30 @@
             <!-- Card 1: Alamat Pengiriman -->
             <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
                 <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Alamat pengiriman</h2>
-                
+
+                {% if saved_addresses %}
+                {% set default_address = saved_addresses|selectattr('is_default')|first %}
+                {% set selected_address_id = default_address.id if default_address else saved_addresses[0].id %}
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Pilih alamat tersimpan</label>
+                    <select id="address_id" name="address_id" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                        {% for address in saved_addresses %}
+                        <option value="{{ address.id }}" {% if address.id == selected_address_id %}selected{% endif %}>
+                            {{ address.label }} — {{ address.recipient_name }}{% if address.is_default %} (Utama){% endif %}
+                        </option>
+                        {% endfor %}
+                        <option value="">Gunakan alamat baru</option>
+                    </select>
+                </div>
+                {% else %}
+                <input type="hidden" id="address_id" name="address_id" value="">
+                {% endif %}
+
+                <div id="new-address-fields" {% if saved_addresses %}class="hidden"{% endif %}>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nama penerima *</label>
-                        <input type="text" name="nama_penerima" required maxlength="150" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition">
+                        <input type="text" name="nama_penerima" required maxlength="100" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nomor telepon *</label>
@@ -94,9 +112,10 @@
 
                 <div class="pt-2">
                     <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-600">
-                        <input type="checkbox" name="simpan_utama" checked class="rounded text-blue-600 focus:ring-blue-500 border-slate-300">
-                        <span>Simpan sebagai alamat utama. Semua isian * wajib dilengkapi.</span>
+                        <input type="checkbox" name="simpan_utama" class="rounded text-blue-600 focus:ring-blue-500 border-slate-300">
+                        <span>Simpan sebagai alamat utama untuk pesanan berikutnya.</span>
                     </label>
+                </div>
                 </div>
             </div>
 
@@ -117,7 +136,7 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Catatan untuk penjual (opsional)</label>
-                    <input type="text" name="catatan" value="Mohon kemas dengan pelindung tambahan." class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition">
+                    <input type="text" name="catatan" placeholder="Tulis catatan untuk penjual (opsional)" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition">
                 </div>
             </div>
 
@@ -214,13 +233,17 @@
                     Transfer bank manual
                 </span>
 
-                <div class="text-xs text-slate-700 space-y-1 pt-1">
-                    <p class="font-bold text-slate-900">BCA • 123 456 7890</p>
-                    <p class="text-slate-500">a.n. PT IT Corner Indonesia</p>
+                <div>
+                    <label for="metode_pembayaran" class="block text-xs font-semibold text-slate-700 mb-1.5">Pilih bank tujuan *</label>
+                    <select id="metode_pembayaran" name="metode_pembayaran" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-blue-500">
+                        <option value="Transfer BCA">Transfer BCA</option>
+                        <option value="Transfer Mandiri">Transfer Mandiri</option>
+                        <option value="Transfer BRI">Transfer BRI</option>
+                    </select>
                 </div>
 
                 <p class="text-[11px] text-slate-400 leading-normal pt-2 border-t border-slate-100">
-                    Setelah pesanan dibuat, transfer sesuai total dan unggah bukti pembayaran untuk ditinjau admin.
+                    Pastikan menggunakan nomor rekening resmi yang dikonfirmasi oleh ITCorner.id. Detail rekening perlu dipastikan sebelum transaksi nyata.
                 </p>
             </div>
 
@@ -234,4 +257,31 @@
     </form>
 
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const addressSelect = document.getElementById("address_id");
+    const addressFields = document.getElementById("new-address-fields");
+
+    if (!addressSelect || !addressFields) return;
+
+    const fields = addressFields.querySelectorAll(
+        "input:not([type='checkbox']), textarea"
+    );
+
+    function toggleAddressFields() {
+        const useNewAddress = addressSelect.value === "";
+        addressFields.classList.toggle("hidden", !useNewAddress);
+
+        fields.forEach(function (field) {
+            field.disabled = !useNewAddress;
+            field.required = useNewAddress;
+        });
+    }
+
+    addressSelect.addEventListener("change", toggleAddressFields);
+    toggleAddressFields();
+});
+</script>
+
 {% endblock %}

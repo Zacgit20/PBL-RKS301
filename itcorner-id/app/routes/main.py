@@ -2,9 +2,10 @@
 # Halaman utama dan healthcheck.
 
 from flask import Blueprint, request, render_template, jsonify
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
-from app.models import Product
+from app.extensions import db
+from app.models import Product, OrderItem, ProductReview
 from app.utils import format_rupiah
 
 main_bp = Blueprint('main', __name__)
@@ -21,9 +22,34 @@ def home():
     sort_by = request.args.get('sort', '').strip()
     in_stock_only = request.args.get('in_stock', '').strip()
 
-    # Query produk aktif menggunakan SQLAlchemy ORM
-    query = Product.query.filter(
-        Product.is_active.is_(True)
+    # Agregasi rating dan jumlah ulasan per produk dari PostgreSQL.
+    # Satu query agregasi digunakan agar tidak terjadi N+1 query.
+    review_stats = (
+        db.session.query(
+            OrderItem.product_id.label("product_id"),
+            func.avg(ProductReview.rating).label("average_rating"),
+            func.count(ProductReview.id).label("review_count")
+        )
+        .join(
+            ProductReview,
+            ProductReview.order_item_id == OrderItem.id
+        )
+        .group_by(OrderItem.product_id)
+        .subquery()
+    )
+
+    # Ambil produk aktif beserta rating dan jumlah ulasannya.
+    query = (
+        Product.query
+        .outerjoin(
+            review_stats,
+            review_stats.c.product_id == Product.id
+        )
+        .add_columns(
+            review_stats.c.average_rating,
+            review_stats.c.review_count
+        )
+        .filter(Product.is_active.is_(True))
     )
 
     # Filter pencarian
@@ -70,7 +96,7 @@ def home():
     # Pertahankan format dictionary untuk kompatibilitas template
     formatted_products = []
 
-    for product in products:
+    for product, average_rating, review_count in products:
         product_data = {
             'id': product.id,
             'sku': product.sku,
@@ -83,7 +109,11 @@ def home():
             'description': product.description,
             'is_promo': product.is_promo,
             'image': product.image,
-            'specs': product.specs
+            'specs': product.specs,
+            'average_rating': (
+                float(average_rating) if average_rating is not None else 0.0
+            ),
+            'review_count': int(review_count or 0)
         }
 
         formatted_products.append(product_data)

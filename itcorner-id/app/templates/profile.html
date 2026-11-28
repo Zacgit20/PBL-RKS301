@@ -35,8 +35,8 @@
                     <a href="{{ url_for('admin.admin_dashboard') }}" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">⚡ Dashboard Admin</a>
                     <a href="{{ url_for('admin.admin_products') }}" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">📦 Kelola Produk</a>
                 {% else %}
-                    <a href="#" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">Riwayat pesanan</a>
-                    <a href="#" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">Alamat pengiriman</a>
+                    <a href="{{ url_for('customer.orders') }}" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">Riwayat pesanan</a>
+                    <a href="{{ url_for('customer.addresses') }}" class="block text-slate-600 hover:bg-slate-50 px-3 py-2 rounded-xl transition">Alamat pengiriman</a>
                 {% endif %}
 
             </nav>

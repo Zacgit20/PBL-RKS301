@@ -339,6 +339,57 @@
                     </div>
 
                     <p class="text-sm text-slate-600 leading-6 whitespace-pre-line break-words">{{ review.comment }}</p>
+
+                    {% if review.user_id == (session.get('user_id')|int) %}
+                        <details class="mt-4 border-t border-slate-100 pt-3">
+                            <summary class="cursor-pointer text-sm font-semibold text-blue-600 hover:text-blue-700">
+                                Edit ulasan
+                            </summary>
+
+                            <form
+                                method="POST"
+                                action="{{ url_for('customer.edit_product_review', product_id=product.id, review_id=review.id) }}"
+                                class="mt-4 space-y-3"
+                            >
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                                <label for="edit-rating-{{ review.id }}" class="block text-sm font-medium text-slate-700">
+                                    Rating
+                                </label>
+                                <select
+                                    id="edit-rating-{{ review.id }}"
+                                    name="rating"
+                                    required
+                                    class="w-full border border-slate-300 rounded-lg p-2.5 text-sm"
+                                >
+                                    {% for value in range(5, 0, -1) %}
+                                        <option value="{{ value }}" {% if review.rating == value %}selected{% endif %}>
+                                            {{ value }} - {% if value == 5 %}Sangat puas{% elif value == 4 %}Puas{% elif value == 3 %}Cukup{% elif value == 2 %}Kurang puas{% else %}Tidak puas{% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+
+                                <label for="edit-comment-{{ review.id }}" class="block text-sm font-medium text-slate-700">
+                                    Komentar
+                                </label>
+                                <textarea
+                                    id="edit-comment-{{ review.id }}"
+                                    name="comment"
+                                    required
+                                    maxlength="1000"
+                                    rows="4"
+                                    class="w-full border border-slate-300 rounded-lg p-3 text-sm"
+                                >{{ review.comment }}</textarea>
+
+                                <button
+                                    type="submit"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2.5 text-sm font-semibold"
+                                >
+                                    Simpan perubahan
+                                </button>
+                            </form>
+                        </details>
+                    {% endif %}
                 </article>
             {% else %}
                 <p class="text-sm text-slate-500 text-center py-5">

@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
-    
+
     <!-- Breadcrumb -->
     <nav class="text-xs text-slate-500 mb-3 flex items-center gap-2">
         <a href="{{ url_for('main.home') }}" class="hover:text-blue-600">Beranda</a>
@@ -21,7 +21,7 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        
+
         <!-- SIDEBAR KIRI: Menu Profil -->
         <div class="lg:col-span-1 space-y-6">
             <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
@@ -39,7 +39,7 @@
                     <a href="{{ url_for('customer.orders') }}" class="block px-4 py-2.5 rounded-xl bg-blue-50/80 text-blue-600 font-semibold transition">
                         Riwayat pesanan
                     </a>
-                    <a href="#" class="block px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition">
+                    <a href="{{ url_for('customer.addresses') }}" class="block px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition">
                         Alamat pengiriman
                     </a>
                 </nav>
@@ -48,38 +48,9 @@
 
         <!-- KOLOM KANAN: Daftar Pesanan & Detail Pesanan Terpilih -->
         <div class="lg:col-span-3 space-y-8">
-            
+
             <!-- CARD 1: Tabel Daftar Pesanan -->
             <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
-                
-                <!-- Filter Tabs & Dropdowns -->
-                <div class="flex flex-wrap items-center gap-3">
-                    <button class="bg-blue-600 text-white font-semibold text-xs px-4 py-2 rounded-xl shadow-sm transition">
-                        Semua pesanan
-                    </button>
-                    
-                    <div class="relative">
-                        <select class="bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-3.5 py-2 rounded-xl focus:outline-none focus:border-blue-500 appearance-none pr-8">
-                            <option>Status: semua</option>
-                            <option>Menunggu bayar</option>
-                            <option>Diverifikasi</option>
-                            <option>Diproses</option>
-                            <option>Dikirim</option>
-                            <option>Selesai</option>
-                            <option>Ditolak</option>
-                        </select>
-                        <span class="absolute right-2.5 top-2.5 text-slate-400 text-xs pointer-events-none">↓</span>
-                    </div>
-
-                    <div class="relative">
-                        <select class="bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-3.5 py-2 rounded-xl focus:outline-none focus:border-blue-500 appearance-none pr-8">
-                            <option>30 hari terakhir</option>
-                            <option>3 bulan terakhir</option>
-                            <option>Tahun 2026</option>
-                        </select>
-                        <span class="absolute right-2.5 top-2.5 text-slate-400 text-xs pointer-events-none">↓</span>
-                    </div>
-                </div>
 
                 <!-- Tabel Pesanan -->
                 <div class="overflow-x-auto">
@@ -105,7 +76,14 @@
                                         {{ payment.status }}
                                     </span>
                                 </td>
-                                <td class="py-3.5 px-3 text-right text-slate-400">—</td>
+
+<td class="py-3.5 px-3 text-right">
+    <a href="{{ url_for('customer.order_detail', order_id=payment.id) }}"
+       class="inline-flex items-center gap-1 text-sm font-semibold text-blue-600 hover:text-blue-800 transition">
+        Lihat Detail →
+    </a>
+</td>
+
                             </tr>
                             {% else %}
                             <tr>
@@ -128,12 +106,22 @@
                     <p class="text-xs text-slate-400 mt-1">{{ latest_payment.id }} • {{ latest_payment.date }}</p>
                 </div>
 
-                <div class="flex items-center justify-between gap-4">
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-900">{{ latest_payment.product_name }}</h3>
-                        <p class="text-xs text-slate-500 mt-1">{{ latest_payment.quantity }} × {{ latest_payment.unit_price }}</p>
+                <div class="space-y-4">
+                    {% for item in latest_payment['items'] %}
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-bold text-slate-900">{{ item.product_name }}</h3>
+                            <p class="text-xs text-slate-500 mt-1">
+                                {{ item.quantity }} × {{ item.unit_price }}
+                            </p>
+                        </div>
+                        <span class="text-sm font-semibold text-slate-900 whitespace-nowrap">
+                            {{ item.subtotal }}
+                        </span>
                     </div>
-                    <span class="text-sm font-bold text-slate-900">{{ latest_payment.amount }}</span>
+                    {% else %}
+                    <p class="text-sm text-slate-500">Tidak ada rincian produk.</p>
+                    {% endfor %}
                 </div>
 
                 <div class="flex justify-between border-t border-slate-100 pt-4 text-sm">
